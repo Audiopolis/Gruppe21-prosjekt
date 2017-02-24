@@ -16,7 +16,16 @@ Public Class DatabaseClient
     Public Event ListLoaded(DT As DataTable, ByVal ClientTag As Integer, ByVal Tag As Integer)
     Public Event ExecutionFailed(ByVal ClientTag As Integer)
     Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer)
+    Public Event ValidationCompleted(ByVal Success As Boolean)
     Private DBCSB As MySqlConnectionStringBuilder
+    Public Property UID As String
+        Get
+            Return UIDString
+        End Get
+        Set(value As String)
+            UIDString = value
+        End Set
+    End Property
     Public Property SQLQuery As String
         Get
             Return SQLq
@@ -37,6 +46,37 @@ Public Class DatabaseClient
         DBCSB.Database = Database
         DBCSB.UserID = UID
         DBCSB.Password = Password
+    End Sub
+    Public Sub ValidateConnection()
+        HandledThread = New ThreadStarter(AddressOf AsyncCheckConnection)
+        HandledThread.WhenFinished = AddressOf ValidateFinished
+        HandledThread.Start(Me.Connection.ConnectionString)
+    End Sub
+    Private Function AsyncCheckConnection(Data As Object) As Boolean
+        Dim CS As String = DirectCast(Data, String)
+        Dim DBConnection As New MySqlConnection(CS)
+        Dim Valid As Boolean = False
+        Try
+            DBConnection.Open()
+            If DBConnection.State = ConnectionState.Open Then
+                Debug.Print("OPEN!")
+                Valid = True
+            Else
+                Valid = False
+                Debug.Print("FALSE!! INVALID")
+            End If
+        Catch
+            Debug.Print("CATCH: INVALID")
+            Valid = False
+        Finally
+            DBConnection.Close()
+            DBConnection.Dispose()
+        End Try
+        Return Valid
+    End Function
+    Private Sub ValidateFinished(Result As Object, e As ThreadStarterEventArgs)
+        Dim Valid As Boolean = DirectCast(Result, Boolean)
+        RaiseEvent ValidationCompleted(Valid)
     End Sub
     Public Overloads Sub Execute(Optional CheckIfExistsOnly As Boolean = False, Optional Tag As Integer = 0)
         Dim RegularQueryInstance As New RegularQuery(DBCSB.ConnectionString, SQLq, Tag)
