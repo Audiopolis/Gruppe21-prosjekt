@@ -63,13 +63,11 @@ Public Class ThreadStarter
         ThreadID = ID
     End Sub
     Public Sub New(Func As Func(Of Object), Optional ID As Object = 0)
-        Debug.Print("Func out !!! (New)")
         FuncToRunOut = Func
         MethodType = 3
         ThreadID = ID
     End Sub
     Public Sub New(Func As Func(Of Object, Object), Optional ID As Object = 0)
-        Debug.Print("Func in out (New)")
         FuncToRunInOut = Func
         MethodType = 4
         ThreadID = ID

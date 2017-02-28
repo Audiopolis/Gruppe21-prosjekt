@@ -74,8 +74,6 @@ Public Class LoadingGraphics(Of T As {New, Control})
         If Degrees > ArcAngle Then
             ArcAngle = Degrees
             ParentSurface.Invalidate()
-        Else
-            Debug.Print("EAOIFHEAOIFJEAOIFJEAOFJOIJ")
         End If
     End Sub
     Public Sub Complete(State As Object)

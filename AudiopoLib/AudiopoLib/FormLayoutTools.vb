@@ -139,10 +139,6 @@ Public Class FormLayoutTools
     End Sub
 
     Private Sub onFormResize(sender As Object, e As EventArgs)
-        'For Each Pair As ControlLayoutPair In LayoutStyleControlPairs
-        '    ExecuteLayout(Pair)
-        '    Debug.Print("ExecuteLayout")
-        'Next
     End Sub
 #Region "IDisposable Support"
     Private disposedValue As Boolean

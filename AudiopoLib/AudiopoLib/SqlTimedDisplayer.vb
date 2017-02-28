@@ -85,19 +85,18 @@ Public Class SqlTimedDisplayer
                     Finish()
                 End If
             End If
-        Else
-            Debug.Print("IsFinished; not going again.")
         End If
     End Sub
     Private Sub FetchFinished(DT As DataTable, ClientTag As Integer, CommandTag As Integer) Handles DBC.ListLoaded
-        Dim Result As String = CStr(DT.Rows.Item(0)(0))
-        NotifManager.Display(Result, NotifAppearance, DisplayerDuration, FloatX, FloatY)
+        If Not IsFinished Then
+            Dim Result As String = CStr(DT.Rows.Item(0)(0))
+            NotifManager.Display(Result, NotifAppearance, DisplayerDuration, FloatX, FloatY)
+        End If
     End Sub
     Private Sub DisplayFinished(sender As Notification) Handles NotifManager.NotificationClosed
         If Not IsFinished Then
             DelayTimer.Start()
         Else
-            Debug.Print("SqlTimedDisplayer: IsFinished; disposing.")
             Dispose()
         End If
     End Sub
@@ -108,7 +107,6 @@ Public Class SqlTimedDisplayer
     End Sub
     Public Sub Finish()
         IsFinished = True
-        Debug.Print("IsFinished = TRUE")
     End Sub
     Private Sub DelayTimer_Elapsed() Handles DelayTimer.Elapsed
         SC.Post(AddressOf Fetch, Nothing)
@@ -116,18 +114,11 @@ Public Class SqlTimedDisplayer
 #Region "IDisposable Support"
     Private disposedValue As Boolean
     Protected Overridable Sub Dispose(disposing As Boolean)
-        Debug.Print("DISPOSING SQLTIMEDDISPLAYER")
         If Not disposedValue Then
             If disposing Then
-                Debug.Print("Disposing DBC")
                 DBC.Dispose()
-                Debug.Print("Disposing NotifManager")
                 NotifManager.Dispose()
-                Debug.Print("Disposing DelayTimer")
                 DelayTimer.Dispose()
-                Debug.Print("Disposing Done")
-            Else
-                Debug.Print("DISPOSING = FALSE")
             End If
             ParentControl = Nothing
             Rnd = Nothing
