@@ -97,8 +97,8 @@ Public Class NotificationManager
         RemoveHandler sender.MouseEnter, AddressOf onMouseEnter
         RemoveHandler sender.MouseLeave, AddressOf onMouseLeave
         ' SENDER BLIR DISPOSED, IKKE VIDERESEND SENDER
-        RaiseEvent NotificationClosed(sender)
-        If QueueList.Count = 0 Then
+        Debug.Print("IF COUNT 0")
+        If QueueList IsNot Nothing AndAlso QueueList.Count = 0 Then
             If LinkedLayoutTools IsNot Nothing Then
                 LinkedLayoutTools.SlideToDefault()
             End If
@@ -114,6 +114,7 @@ Public Class NotificationManager
             NewNotification.Display()
         End If
         sender.Dispose()
+        RaiseEvent NotificationClosed(sender)
     End Sub
 #Region "IDisposable Support"
     Private disposedValue As Boolean
@@ -122,6 +123,7 @@ Public Class NotificationManager
             If disposing Then
 
             End If
+            Debug.Print("SETTING QUEUELIST NOTHING")
             QueueList = Nothing
             ParentControl = Nothing
             LinkedLayoutTools = Nothing

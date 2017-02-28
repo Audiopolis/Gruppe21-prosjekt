@@ -62,27 +62,31 @@ Public Class SqlTimedDisplayer
     End Sub
     Private Sub Fetch(State As Object)
         DelayTimer.Stop()
-        If IsRandom = True Then
-            Dim ValArr() As String = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
-            If RandomMinMax(1) + 1 - RandomMinMax(0) > 1 Then
-                Do While CInt(ValArr(0)) = Previous
-                    ValArr = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
-                Loop
-            End If
-            Previous = CInt(ValArr(0))
-            DBC.Execute(ParamArr, ValArr)
-        Else
-            CurrentInt += IncrementStep
-            If CurrentInt <= CounterMax Then
-                Dim ValArr() As String = {CStr(CurrentInt)}
-                DBC.Execute(ParamArr, ValArr)
-            ElseIf DoRepeat Then
-                CurrentInt = 0
-                Dim ValArr() As String = {CStr(CurrentInt)}
+        If Not IsFinished Then
+            If IsRandom = True Then
+                Dim ValArr() As String = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
+                If RandomMinMax(1) + 1 - RandomMinMax(0) > 1 Then
+                    Do While CInt(ValArr(0)) = Previous
+                        ValArr = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
+                    Loop
+                End If
+                Previous = CInt(ValArr(0))
                 DBC.Execute(ParamArr, ValArr)
             Else
-                Finish()
+                CurrentInt += IncrementStep
+                If CurrentInt <= CounterMax Then
+                    Dim ValArr() As String = {CStr(CurrentInt)}
+                    DBC.Execute(ParamArr, ValArr)
+                ElseIf DoRepeat Then
+                    CurrentInt = 0
+                    Dim ValArr() As String = {CStr(CurrentInt)}
+                    DBC.Execute(ParamArr, ValArr)
+                Else
+                    Finish()
+                End If
             End If
+        Else
+            Debug.Print("IsFinished; not going again.")
         End If
     End Sub
     Private Sub FetchFinished(DT As DataTable, ClientTag As Integer, CommandTag As Integer) Handles DBC.ListLoaded
@@ -93,6 +97,7 @@ Public Class SqlTimedDisplayer
         If Not IsFinished Then
             DelayTimer.Start()
         Else
+            Debug.Print("SqlTimedDisplayer: IsFinished; disposing.")
             Dispose()
         End If
     End Sub
@@ -103,6 +108,7 @@ Public Class SqlTimedDisplayer
     End Sub
     Public Sub Finish()
         IsFinished = True
+        Debug.Print("IsFinished = TRUE")
     End Sub
     Private Sub DelayTimer_Elapsed() Handles DelayTimer.Elapsed
         SC.Post(AddressOf Fetch, Nothing)
@@ -110,11 +116,18 @@ Public Class SqlTimedDisplayer
 #Region "IDisposable Support"
     Private disposedValue As Boolean
     Protected Overridable Sub Dispose(disposing As Boolean)
+        Debug.Print("DISPOSING SQLTIMEDDISPLAYER")
         If Not disposedValue Then
             If disposing Then
+                Debug.Print("Disposing DBC")
                 DBC.Dispose()
+                Debug.Print("Disposing NotifManager")
                 NotifManager.Dispose()
+                Debug.Print("Disposing DelayTimer")
                 DelayTimer.Dispose()
+                Debug.Print("Disposing Done")
+            Else
+                Debug.Print("DISPOSING = FALSE")
             End If
             ParentControl = Nothing
             Rnd = Nothing
