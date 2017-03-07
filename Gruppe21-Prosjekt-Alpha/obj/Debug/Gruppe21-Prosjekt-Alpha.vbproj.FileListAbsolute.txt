@@ -1,1 +1,14 @@
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\Gruppe21-Prosjekt-Alpha.exe.config
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21-Prosjekt-Alpha.vbprojResolveAssemblyReference.cache
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.LoggInn_Admin.resources
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.Resources.resources
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21-Prosjekt-Alpha.vbproj.GenerateResource.Cache
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21-Prosjekt-Alpha.xml
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\Gruppe21-Prosjekt-Alpha.exe
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\Gruppe21-Prosjekt-Alpha.pdb
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\Gruppe21-Prosjekt-Alpha.xml
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\AudiopoLib.dll
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\MySql.Data.dll
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\MySql.Data.xml
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21-Prosjekt-Alpha.exe
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21-Prosjekt-Alpha.pdb
