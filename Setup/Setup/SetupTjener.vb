@@ -18,8 +18,7 @@ Public Class SetupTjener
     Private Sub FerdigKnapp_Click() Handles FerdigKnapp.Click
         Me.Hide()
         If CheckKjør.Checked Then
-            'Shell
-            MsgBox("Shell")
+            Shell(Filbane & "\Auditory.mp3")
         End If
         FreeResources()
         End
@@ -57,23 +56,36 @@ Public Class SetupTjener
     End Sub
     Private Sub WriteToDisk()
         Heh = New ResourceDeployer
+        Heh.WhenFinished = AddressOf FinishUp
         Heh.AddResourceName("kek", "txt")
         Heh.AddResourceName("Auditory", "mp3")
         Heh.DeployAll(Filbane & "\Blodbank\")
     End Sub
+    Private Sub FinishUp(ByVal ErrorOccurred As Boolean)
+        If Not ErrorOccurred Then
+            LoadingGraphics.StopSpin()
+            NotifManager.Display("The service is ready to be used.", New NotificationAppearance(Color.LimeGreen, Color.White,,,,, 0))
+            GroupLoggInn.Hide()
+            GroupFerdig.Show()
+            LayoutTool.Refresh()
+        Else
+            MsgBox("Error occurred in FinishUp")
+        End If
+    End Sub
     Private Sub ActionFinished(Valid As Boolean, ErrorOccurred As Boolean)
-        WriteToDisk()
-        LoadingGraphics.StopSpin()
         If Valid Then
             If Not ErrorOccurred Then
-                NotifManager.Display("The service is ready to be used.", New NotificationAppearance(Color.LimeGreen, Color.White,,,,, 0))
-                GroupLoggInn.Hide()
-                GroupFerdig.Show()
-                LayoutTool.Refresh()
+                WriteToDisk()
             Else
+                LoadingGraphics.StopSpin()
+                FWButton.Enabled = True
+                For Each C As Control In GroupLoggInn.Controls
+                    C.Show()
+                Next
                 NotifManager.Display("An error occurred. Please try again later.", NotificationPreset.RedAlert)
             End If
         Else
+            LoadingGraphics.StopSpin()
             FWButton.Enabled = True
             For Each C As Control In GroupLoggInn.Controls
                 C.Show()
@@ -215,7 +227,6 @@ Public Class ResourceDeployer
     Private TS As ThreadStarter
     Private IgnoreDup As Boolean = False
     Private ThreadsStarted, ThreadFinished As UInteger
-
     Private WhenFinishedAction As Action(Of Boolean)
     ''' <summary>
     ''' Gets or sets the delegate to be invoked when all the files have been to disk. This method must accept a boolean value that indicates whether or not the write was successfully completed.
@@ -229,12 +240,6 @@ Public Class ResourceDeployer
             WhenFinishedAction = Action
         End Set
     End Property
-
-    ' Vi trenger en teller som øker hver gang en tråd starter. En tråd for hver fil.
-    ' Når telleren er på 0, startes en ny tråd som tar seg av ResList(0) og øker telleren med 1.
-    ' Når neste tråd starter, tar den seg av ResList(1) og inkrementerer nok en gang telleren.
-    ' Når en tråd er ferdig, øker den en "Ferdig tråd"-teller med 1, og når antall ferdige tråder = antall begynte tråder,
-    ' kjøres WhenFinished.
 
     Public Property IgnoreDuplicateEntries As Boolean
         Get
@@ -319,7 +324,6 @@ Public Class ResourceDeployer
             Next
         Catch
             Debug.Print("CATCH")
-            MsgBox("CATCH IN DOWORK (RESOURCEDEPLOYER)")
             ErrorOccurred = True
         Finally
             RL.Clear()
@@ -327,10 +331,9 @@ Public Class ResourceDeployer
         Return ErrorOccurred
     End Function
     Private Sub WhenFinishedA(ErrorOccurred As Object, e As ThreadStarterEventArgs)
-        If DirectCast(ErrorOccurred, Boolean) = True Then
-            MsgBox("Error occurred in writing")
-        End If
         ResList.Clear()
+        TS.Dispose()
+        WhenFinishedAction.Invoke(DirectCast(ErrorOccurred, Boolean))
     End Sub
 End Class
 
@@ -440,7 +443,6 @@ Public NotInheritable Class DatabaseSetup
     End Sub
 #End Region
 End Class
-
 Public NotInheritable Class EncryptedReadWrite
     Implements IDisposable
     Private TripleDes As New TripleDESCryptoServiceProvider
