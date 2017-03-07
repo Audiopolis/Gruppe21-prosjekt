@@ -62,32 +62,36 @@ Public Class SqlTimedDisplayer
     End Sub
     Private Sub Fetch(State As Object)
         DelayTimer.Stop()
-        If IsRandom = True Then
-            Dim ValArr() As String = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
-            If RandomMinMax(1) + 1 - RandomMinMax(0) > 1 Then
-                Do While CInt(ValArr(0)) = Previous
-                    ValArr = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
-                Loop
-            End If
-            Previous = CInt(ValArr(0))
-            DBC.Execute(ParamArr, ValArr)
-        Else
-            CurrentInt += IncrementStep
-            If CurrentInt <= CounterMax Then
-                Dim ValArr() As String = {CStr(CurrentInt)}
-                DBC.Execute(ParamArr, ValArr)
-            ElseIf DoRepeat Then
-                CurrentInt = 0
-                Dim ValArr() As String = {CStr(CurrentInt)}
+        If Not IsFinished Then
+            If IsRandom = True Then
+                Dim ValArr() As String = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
+                If RandomMinMax(1) + 1 - RandomMinMax(0) > 1 Then
+                    Do While CInt(ValArr(0)) = Previous
+                        ValArr = {CStr(Rnd.Next(RandomMinMax(0), RandomMinMax(1) + 1))}
+                    Loop
+                End If
+                Previous = CInt(ValArr(0))
                 DBC.Execute(ParamArr, ValArr)
             Else
-                Finish()
+                CurrentInt += IncrementStep
+                If CurrentInt <= CounterMax Then
+                    Dim ValArr() As String = {CStr(CurrentInt)}
+                    DBC.Execute(ParamArr, ValArr)
+                ElseIf DoRepeat Then
+                    CurrentInt = 0
+                    Dim ValArr() As String = {CStr(CurrentInt)}
+                    DBC.Execute(ParamArr, ValArr)
+                Else
+                    Finish()
+                End If
             End If
         End If
     End Sub
     Private Sub FetchFinished(DT As DataTable, ClientTag As Integer, CommandTag As Integer) Handles DBC.ListLoaded
-        Dim Result As String = CStr(DT.Rows.Item(0)(0))
-        NotifManager.Display(Result, NotifAppearance, DisplayerDuration, FloatX, FloatY)
+        If Not IsFinished Then
+            Dim Result As String = CStr(DT.Rows.Item(0)(0))
+            NotifManager.Display(Result, NotifAppearance, DisplayerDuration, FloatX, FloatY)
+        End If
     End Sub
     Private Sub DisplayFinished(sender As Notification) Handles NotifManager.NotificationClosed
         If Not IsFinished Then

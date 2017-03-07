@@ -5,9 +5,11 @@ Option Infer Off
 Imports System.Windows.Forms
 Imports System.Threading
 
+''' <summary>
+''' Dynamically creates, displays and disposes of notifications. Notifications should usually be shown using this class or a class that implements it.
+''' </summary>
 Public Class NotificationManager
     Implements IDisposable
-
     Private SC As SynchronizationContext = SynchronizationContext.Current
     Private ParentControl As Control
     Private LinkedLayoutTools As FormLayoutTools
@@ -18,6 +20,10 @@ Public Class NotificationManager
     Public Event Click(sender As Notification)
     Public Event MouseEnter(sender As Notification)
     Public Event MouseLeave(sender As Notification)
+    ''' <summary>
+    ''' (Advanced) Gets or sets the FormLayoutTools instance associated with this NotificationManager, that will respond to the displaying of notifications and automatically resize the top 'reserved area' correspondingly.
+    ''' </summary>
+    ''' <returns>Returns the FormLayoutTools instance associated with the NotificationManager, or Nothing if none is specified.</returns>
     Public Property AssignedLayoutManager() As FormLayoutTools
         Get
             Return LinkedLayoutTools
@@ -26,6 +32,9 @@ Public Class NotificationManager
             LinkedLayoutTools = Instance
         End Set
     End Property
+    ''' <summary>
+    ''' Gets or sets the parent control (usually a Form) in which this NotificationManager will display its notifications.
+    ''' </summary>
     Public Property Parent As Control
         Get
             Return ParentControl
@@ -34,13 +43,17 @@ Public Class NotificationManager
             ParentControl = Parent
         End Set
     End Property
+    ''' <summary>
+    ''' Creates a new NotificationManager.
+    ''' </summary>
+    ''' <param name="Parent">The parent control (usually a Form) in which this NotificationManager will display its notifications.</param>
     Public Sub New(Parent As Control)
         QueueList = New List(Of QueuedNotification)
         ParentControl = Parent
         IsReady = True
     End Sub
     ''' <summary>
-    ''' Display the notification on screen.
+    ''' Displays the notification in the parent.
     ''' </summary>
     ''' <param name="Message">The message to display in the notification.</param>
     ''' <param name="Duration">The notification's duration in seconds before fading out. 0 means no time limit (must be closed by the user).</param>
@@ -56,7 +69,7 @@ Public Class NotificationManager
             If LinkedLayoutTools IsNot Nothing Then
                 LinkedLayoutTools.SlideToHeight(NewNotification.Top + NewNotification.Height)
             End If
-        Else
+        ElseIf QueueList IsNot Nothing Then
             QueueList.Add(New QueuedNotification(Parent, AddressOf onNotificationFinished, Message, Appearance, Duration, AlignmentX, AlignmentY))
         End If
     End Sub
@@ -96,23 +109,24 @@ Public Class NotificationManager
         RemoveHandler sender.Click, AddressOf onClick
         RemoveHandler sender.MouseEnter, AddressOf onMouseEnter
         RemoveHandler sender.MouseLeave, AddressOf onMouseLeave
-        ' SENDER BLIR DISPOSED, IKKE VIDERESEND SENDER
-        RaiseEvent NotificationClosed(sender)
-        If QueueList.Count = 0 Then
-            If LinkedLayoutTools IsNot Nothing Then
-                LinkedLayoutTools.SlideToDefault()
+        If QueueList IsNot Nothing Then
+            If QueueList.Count = 0 Then
+                If LinkedLayoutTools IsNot Nothing Then
+                    LinkedLayoutTools.SlideToDefault()
+                End If
+                IsReady = True
+            Else
+                Dim Temp As QueuedNotification = QueueList(0)
+                Dim NewNotification As New Notification(Temp.vParent, Temp.vAppearance, Temp.vMessage, Temp.vDuration, Temp.vWhenDone, Temp.vFloatX, Temp.vFloatY)
+                If LinkedLayoutTools IsNot Nothing Then
+                    LinkedLayoutTools.SlideToHeight(NewNotification.Top + NewNotification.Height)
+                End If
+                Temp.Clear()
+                QueueList.RemoveAt(0)
+                NewNotification.Display()
             End If
-            IsReady = True
-        Else
-            Dim Temp As QueuedNotification = QueueList(0)
-            Dim NewNotification As New Notification(Temp.vParent, Temp.vAppearance, Temp.vMessage, Temp.vDuration, Temp.vWhenDone, Temp.vFloatX, Temp.vFloatY)
-            If LinkedLayoutTools IsNot Nothing Then
-                LinkedLayoutTools.SlideToHeight(NewNotification.Top + NewNotification.Height)
-            End If
-            Temp.Clear()
-            QueueList.RemoveAt(0)
-            NewNotification.Display()
         End If
+        RaiseEvent NotificationClosed(sender)
         sender.Dispose()
     End Sub
 #Region "IDisposable Support"
@@ -120,7 +134,7 @@ Public Class NotificationManager
     Protected Overridable Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
             If disposing Then
-
+                ' Dispose
             End If
             QueueList = Nothing
             ParentControl = Nothing
@@ -128,6 +142,9 @@ Public Class NotificationManager
         End If
         disposedValue = True
     End Sub
+    ''' <summary>
+    ''' Releases the resources used by this NotificationManager. This should be done when the NotificationManager is no longer needed.
+    ''' </summary>
     Public Sub Dispose() Implements IDisposable.Dispose
         Dispose(True)
     End Sub

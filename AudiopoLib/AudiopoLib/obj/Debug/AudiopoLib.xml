@@ -1,0 +1,81 @@
+﻿<?xml version="1.0"?>
+<doc>
+<assembly>
+<name>
+AudiopoLib
+</name>
+</assembly>
+<members>
+<member name="T:AudiopoLib.My.Resources.Resources">
+<summary>
+  A strongly-typed resource class, for looking up localized strings, etc.
+</summary>
+</member>
+<member name="P:AudiopoLib.My.Resources.Resources.ResourceManager">
+<summary>
+  Returns the cached ResourceManager instance used by this class.
+</summary>
+</member>
+<member name="P:AudiopoLib.My.Resources.Resources.Culture">
+<summary>
+  Overrides the current thread's CurrentUICulture property for all
+  resource lookups using this strongly typed resource class.
+</summary>
+</member>
+<member name="P:AudiopoLib.MenuManager`1.MenuAtIndex(System.String)">
+ <summary>
+ Returns the ListMenu associated with the specified key (string) in the MenuManager's dictionary.
+ </summary>
+ <param name="Key">If specified, the string or name associated with the ListMenu.</param>
+ <returns>The ListMenu associated with the specified key.</returns>
+</member>
+<member name="P:AudiopoLib.MenuManager`1.MenuAtIndex(System.Int32)">
+ <summary>
+ Returns the ListMenu associated at the specified index in the MenuManager's dictionary, usually following the order in which ListMenus were added to or created within the manager.
+ </summary>
+ <param name="Index">The index of the ListMenu in the dictionary.</param>
+ <returns>The ListMenu associated with the specified key.</returns>
+</member>
+<member name="M:AudiopoLib.Notification.#ctor(System.Windows.Forms.Control,AudiopoLib.NotificationAppearance,System.String,System.Double,System.Action{AudiopoLib.Notification},AudiopoLib.FloatX,AudiopoLib.FloatY,System.Int32,AudiopoLib.NotificationBackgroundTransition,AudiopoLib.NotificationTextTransition)">
+ <summary>
+ Creates a new notification to be displayed. In most cases, this should be automatically done by a NotificationManager.
+ </summary>
+ <param name="ParentControl">The container (usually a Form) in which the notification is to appear in.</param>
+ <param name="Appearance">The appearance of the notification. Pass presets using the NotificationPreset class.</param>
+</member>
+<member name="T:AudiopoLib.NotificationManager">
+ <summary>
+ Dynamically creates, displays and disposes of notifications. Notifications should usually be shown using this class or a class that implements it.
+ </summary>
+</member>
+<member name="P:AudiopoLib.NotificationManager.AssignedLayoutManager">
+ <summary>
+ (Advanced) Gets or sets the FormLayoutTools instance associated with this NotificationManager, that will respond to the displaying of notifications and automatically resize the top 'reserved area' correspondingly.
+ </summary>
+ <returns>Returns the FormLayoutTools instance associated with the NotificationManager, or Nothing if none is specified.</returns>
+</member>
+<member name="P:AudiopoLib.NotificationManager.Parent">
+ <summary>
+ Gets or sets the parent control (usually a Form) in which this NotificationManager will display its notifications.
+ </summary>
+</member>
+<member name="M:AudiopoLib.NotificationManager.#ctor(System.Windows.Forms.Control)">
+ <summary>
+ Creates a new NotificationManager.
+ </summary>
+ <param name="Parent">The parent control (usually a Form) in which this NotificationManager will display its notifications.</param>
+</member>
+<member name="M:AudiopoLib.NotificationManager.Display(System.String,AudiopoLib.NotificationAppearance,System.Double,AudiopoLib.FloatX,AudiopoLib.FloatY)">
+ <summary>
+ Displays the notification in the parent.
+ </summary>
+ <param name="Message">The message to display in the notification.</param>
+ <param name="Duration">The notification's duration in seconds before fading out. 0 means no time limit (must be closed by the user).</param>
+</member>
+<member name="M:AudiopoLib.NotificationManager.Dispose">
+ <summary>
+ Releases the resources used by this NotificationManager. This should be done when the NotificationManager is no longer needed.
+ </summary>
+</member>
+</members>
+</doc>

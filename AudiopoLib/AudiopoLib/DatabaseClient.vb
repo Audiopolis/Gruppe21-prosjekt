@@ -59,14 +59,11 @@ Public Class DatabaseClient
         Try
             DBConnection.Open()
             If DBConnection.State = ConnectionState.Open Then
-                Debug.Print("OPEN!")
                 Valid = True
             Else
                 Valid = False
-                Debug.Print("FALSE!! INVALID")
             End If
         Catch
-            Debug.Print("CATCH: INVALID")
             Valid = False
         Finally
             DBConnection.Close()
@@ -109,7 +106,6 @@ Public Class DatabaseClient
             End If
         Catch ex As Exception
             MsgBox(ex.Message)
-            Debug.Print("exception 1")
         End Try
     End Sub
     Private Sub ExistCheck(Result As Object, e As ThreadStarterEventArgs)
@@ -125,13 +121,10 @@ Public Class DatabaseClient
             DBConnection.Open()
             Dim SQLcmd As New MySqlCommand(ParamInstance.Query, DBConnection)
             For i As Integer = 0 To ParamInstance.Count - 1
-                Debug.Print("Adding param " & i)
                 SQLcmd.Parameters.AddWithValue(ParamInstance.Pair(i)(0), ParamInstance.Pair(i)(1))
             Next
             Dim SqlDA As New MySqlDataAdapter(SQLcmd)
-            Debug.Print("Test 1")
             SqlDA.Fill(Ret)
-            Debug.Print("Test 2")
             SqlDA.Dispose()
             SQLcmd.Dispose()
         Catch ex As Exception
@@ -169,7 +162,6 @@ Public Class DatabaseClient
             SQLcmd.Dispose()
             SqlDA.Dispose()
         Catch ex As Exception
-            Debug.Print("Exception 3")
             MsgBox(ex.Message)
         Finally
             DBConnection.Close()
@@ -184,10 +176,8 @@ Public Class DatabaseClient
     Sub GetListFinished(State As Object, e As ThreadStarterEventArgs)
         Dim DT As DataTable = DirectCast(State, DataTable)
         If DT IsNot Nothing Then
-            Debug.Print("Raising ListLoaded, " & DT.Rows.Count)
             RaiseEvent ListLoaded(DT, Me.Tag, DirectCast(e.ID, Integer))
         Else
-            MsgBox("Failed")
             RaiseEvent ExecutionFailed(Me.Tag)
         End If
     End Sub

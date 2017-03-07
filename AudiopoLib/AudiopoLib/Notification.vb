@@ -177,10 +177,7 @@ Public Class Notification
                 FadingIn = True
                 FadeTimerReadyToFinish = True
                 If TextTimerReadyToFinish = True Then
-                    Debug.Print("TextTimerReadyToFinish; Finishing")
                     Finish()
-                Else
-                    Debug.Print("TextTimer not ready to finish; not finishing.")
                 End If
             Else
                 BackColor = Color.FromArgb(Opacity, BackColor)
@@ -237,7 +234,6 @@ Public Class Notification
         ShowTextTimer.Start()
     End Sub
     Private Sub FadeStep(FinalR As Integer, FinalG As Integer, FinalB As Integer, StepR As Double, StepG As Double, StepB As Double)
-        Debug.Print(Text)
         NewR += StepR
         NewG += StepG
         NewB += StepB

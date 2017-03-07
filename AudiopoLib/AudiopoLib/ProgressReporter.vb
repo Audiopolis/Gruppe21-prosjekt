@@ -53,7 +53,6 @@ Public Class ProgressReporter(Of T As {New, Control})
     Public Sub New(ByRef LinkedLoadingGraphics As LoadingGraphics(Of T), ByVal Last As Integer)
         iLast = Last
         IncrementThreshold = CalculateIncrement()
-        Debug.Print(CStr(IncrementThreshold))
         LinkedGraphics = LinkedLoadingGraphics
     End Sub
     Private Function CalculateProgress(ByVal ThisIteration As Integer, ByVal LastIteration As Integer, ByVal TotalSteps As Integer, Optional ByVal Decimals As Integer = -1) As Single

@@ -69,6 +69,9 @@
   <ItemGroup>
     <Compile Include="DatabaseClient.vb" />
     <Compile Include="FormLayoutTools.vb" />
+    <Compile Include="FullWidthControl.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ListMenu.vb" />
     <Compile Include="LoadingGraphics.vb" />
     <Compile Include="MenuManager.vb" />
