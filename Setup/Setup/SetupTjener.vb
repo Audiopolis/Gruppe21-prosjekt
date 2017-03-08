@@ -131,7 +131,6 @@ Public Class SetupTjener
         FerdigKnapp.Text = "Ferdig"
         OKOmrådeKnapp.Text = "Videre"
         GodtaKnapp.Text = "Jeg/vi godtar vilkårene"
-
         Dim GroupHeaderInformasjon As New FullWidthControl(GroupLoggInn, False, FullWidthControl.SnapType.Top)
         Dim GroupHeaderAvtale As New FullWidthControl(GroupAvtale, False, FullWidthControl.SnapType.Top)
         Dim GroupHeaderFilbane As New FullWidthControl(GroupFilbane, False, FullWidthControl.SnapType.Top)
@@ -240,7 +239,6 @@ Public Class ResourceDeployer
             WhenFinishedAction = Action
         End Set
     End Property
-
     Public Property IgnoreDuplicateEntries As Boolean
         Get
             Return IgnoreDup

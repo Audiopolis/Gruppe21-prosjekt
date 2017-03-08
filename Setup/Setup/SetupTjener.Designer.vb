@@ -206,7 +206,7 @@ Partial Class SetupTjener
         'CheckKjør
         '
         Me.CheckKjør.AutoSize = True
-        Me.CheckKjør.Location = New System.Drawing.Point(15, 36)
+        Me.CheckKjør.Location = New System.Drawing.Point(15, 39)
         Me.CheckKjør.Name = "CheckKjør"
         Me.CheckKjør.Size = New System.Drawing.Size(102, 17)
         Me.CheckKjør.TabIndex = 15
