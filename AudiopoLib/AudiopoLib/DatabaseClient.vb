@@ -40,7 +40,6 @@ Public Class DatabaseClient
         End Set
     End Property
     Public Sub New(ByVal Server As String, ByVal Database As String, ByVal UID As String, ByVal Password As String)
-        Beep()
         DBCSB = New MySqlConnectionStringBuilder
         DBCSB.Server = Server
         DBCSB.Database = Database

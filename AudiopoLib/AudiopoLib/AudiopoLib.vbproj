@@ -67,6 +67,10 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoxShadow.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="ColorHelper.vb" />
     <Compile Include="DatabaseClient.vb" />
     <Compile Include="FormLayoutTools.vb" />
     <Compile Include="FullWidthControl.vb">
