@@ -7,7 +7,6 @@ Imports System.Windows.Forms
 
 Public Class LoadingGraphics(Of T As {New, Control})
     Implements IDisposable
-
     Private SC As SynchronizationContext = SynchronizationContext.Current
     Private WithEvents ParentSurface As T
     Private Rect As Rectangle

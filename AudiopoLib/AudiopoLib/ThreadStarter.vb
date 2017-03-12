@@ -137,13 +137,13 @@ Public Class ThreadStarter
             End If
         End If
     End Sub
-    Public Overloads Sub Start(ByVal Parameters() As Object)
-        If Running = False Then
-            StartTime = Date.Now
-            Running = True
-            Dim DynamicInvokeThread As Task = Task.Factory.StartNew(AddressOf DynamicInvokeMethod, Parameters)
-        End If
-    End Sub
+    'Public Overloads Sub Start(ByVal Parameters() As Object)
+    '    If Running = False Then
+    '        StartTime = Date.Now
+    '        Running = True
+    '        Dim DynamicInvokeThread As Task = Task.Factory.StartNew(AddressOf DynamicInvokeMethod, Parameters)
+    '    End If
+    'End Sub
     Private Sub ExecuteNoParams()
         MethodToRun.Invoke
         SC.Post(AddressOf RaiseWorkCompleted, Nothing)
@@ -162,20 +162,20 @@ Public Class ThreadStarter
         SC.Post(AddressOf RaiseWorkCompleted, Ret)
         Return Ret
     End Function
-    Private Sub DynamicInvokeMethod(ByVal Parameters As Object)
-        Try
-            Dim args() As Object = DirectCast(Parameters, Object())
-            If Not GenericProcedure.Method.ReturnType Is Nothing Then
-                Dim Ret As Object = GenericProcedure.DynamicInvoke(Parameters)
-                SC.Post(AddressOf RaiseWorkCompleted, Ret)
-            Else
-                GenericProcedure.DynamicInvoke(Parameters)
-                SC.Post(AddressOf RaiseWorkCompleted, Nothing)
-            End If
-        Catch ex As Exception
-            Throw ex
-        End Try
-    End Sub
+    'Private Sub DynamicInvokeMethod(ByVal Parameters As Object)
+    '    Try
+    '        Dim args() As Object = DirectCast(Parameters, Object())
+    '        If Not GenericProcedure.Method.ReturnType Is Nothing Then
+    '            Dim Ret As Object = GenericProcedure.DynamicInvoke(Parameters)
+    '            SC.Post(AddressOf RaiseWorkCompleted, Ret)
+    '        Else
+    '            GenericProcedure.DynamicInvoke(Parameters)
+    '            SC.Post(AddressOf RaiseWorkCompleted, Nothing)
+    '        End If
+    '    Catch ex As Exception
+    '        Throw ex
+    '    End Try
+    'End Sub
 #Region "IDisposable Support"
     Private disposedValue As Boolean ' To detect redundant calls
 
