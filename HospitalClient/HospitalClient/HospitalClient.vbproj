@@ -4,31 +4,35 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AE8C2017-51B6-4562-B977-28098DC22173}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>AudiopoLib</RootNamespace>
-    <AssemblyName>AudiopoLib</AssemblyName>
+    <ProjectGuid>{EC853AB4-CEFC-4EF9-AAAB-7CC262FEA2D6}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>HospitalClient.My.MyApplication</StartupObject>
+    <RootNamespace>HospitalClient</RootNamespace>
+    <AssemblyName>HospitalClient</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <MyType>Windows</MyType>
+    <MyType>WindowsForms</MyType>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>AudiopoLib.xml</DocumentationFile>
+    <DocumentationFile>HospitalClient.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <DefineDebug>false</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>AudiopoLib.xml</DocumentationFile>
+    <DocumentationFile>HospitalClient.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
@@ -44,9 +48,13 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MySql.Data, Version=6.9.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
+    <Reference Include="AudiopoLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Latest DLL\AudiopoLib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -61,29 +69,23 @@
     <Import Include="System.Collections" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
     <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
     <Import Include="System.Linq" />
     <Import Include="System.Xml.Linq" />
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BoxShadow.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="ColorHelper.vb" />
     <Compile Include="CredentialsManager.vb" />
-    <Compile Include="DatabaseClient.vb" />
-    <Compile Include="EncryptedReadWrite.vb" />
-    <Compile Include="FormLayoutTools.vb" />
-    <Compile Include="FullWidthControl.vb">
-      <SubType>Component</SubType>
+    <Compile Include="EncryptedReadWriteTest.vb" />
+    <Compile Include="UnlockScreen.vb">
+      <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ListMenu.vb" />
-    <Compile Include="LoadingGraphics.vb" />
-    <Compile Include="MenuManager.vb" />
-    <Compile Include="MySqlAdminLogin.vb" />
-    <Compile Include="MySqlUserLogin.vb" />
-    <Compile Include="Notification.vb" />
+    <Compile Include="UnlockScreen.Designer.vb">
+      <DependentUpon>UnlockScreen.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -99,13 +101,11 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="NotificationManager.vb" />
-    <Compile Include="ProgressReporter.vb" />
-    <Compile Include="ProgressResolution.vb" />
-    <Compile Include="SqlTimedDisplayer.vb" />
-    <Compile Include="ThreadStarter.vb" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="UnlockScreen.resx">
+      <DependentUpon>UnlockScreen.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
@@ -123,6 +123,7 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
