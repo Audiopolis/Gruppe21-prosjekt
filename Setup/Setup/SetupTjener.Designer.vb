@@ -36,19 +36,20 @@ Partial Class SetupTjener
         Me.Label1 = New System.Windows.Forms.Label()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
-        Me.PicLoadingSurface = New System.Windows.Forms.PictureBox()
-        Me.GroupFerdig = New System.Windows.Forms.GroupBox()
-        Me.CheckKjør = New System.Windows.Forms.CheckBox()
         Me.GroupFilbane = New System.Windows.Forms.GroupBox()
         Me.cmdBlaGjennom = New System.Windows.Forms.Button()
         Me.txtFilbane = New System.Windows.Forms.TextBox()
         Me.Label7 = New System.Windows.Forms.Label()
+        Me.PicLoadingSurface = New System.Windows.Forms.PictureBox()
+        Me.GroupFerdig = New System.Windows.Forms.GroupBox()
+        Me.CheckKjør = New System.Windows.Forms.CheckBox()
         Me.RichTextBox1 = New System.Windows.Forms.RichTextBox()
         Me.GroupAvtale = New System.Windows.Forms.GroupBox()
+        Me.PanelBack = New System.Windows.Forms.Panel()
         Me.GroupLoggInn.SuspendLayout()
+        Me.GroupFilbane.SuspendLayout()
         CType(Me.PicLoadingSurface, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupFerdig.SuspendLayout()
-        Me.GroupFilbane.SuspendLayout()
         Me.GroupAvtale.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -183,42 +184,12 @@ Partial Class SetupTjener
         Me.Label2.TabIndex = 3
         Me.Label2.Text = "Passord"
         '
-        'PicLoadingSurface
-        '
-        Me.PicLoadingSurface.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
-        Me.PicLoadingSurface.Location = New System.Drawing.Point(510, 168)
-        Me.PicLoadingSurface.Name = "PicLoadingSurface"
-        Me.PicLoadingSurface.Size = New System.Drawing.Size(32, 32)
-        Me.PicLoadingSurface.TabIndex = 12
-        Me.PicLoadingSurface.TabStop = False
-        Me.PicLoadingSurface.Visible = False
-        '
-        'GroupFerdig
-        '
-        Me.GroupFerdig.Controls.Add(Me.CheckKjør)
-        Me.GroupFerdig.Location = New System.Drawing.Point(12, 186)
-        Me.GroupFerdig.Name = "GroupFerdig"
-        Me.GroupFerdig.Size = New System.Drawing.Size(200, 100)
-        Me.GroupFerdig.TabIndex = 14
-        Me.GroupFerdig.TabStop = False
-        Me.GroupFerdig.Text = "Installasjon"
-        '
-        'CheckKjør
-        '
-        Me.CheckKjør.AutoSize = True
-        Me.CheckKjør.Location = New System.Drawing.Point(15, 39)
-        Me.CheckKjør.Name = "CheckKjør"
-        Me.CheckKjør.Size = New System.Drawing.Size(102, 17)
-        Me.CheckKjør.TabIndex = 15
-        Me.CheckKjør.Text = "Kjør programmet"
-        Me.CheckKjør.UseVisualStyleBackColor = True
-        '
         'GroupFilbane
         '
         Me.GroupFilbane.Controls.Add(Me.cmdBlaGjennom)
         Me.GroupFilbane.Controls.Add(Me.txtFilbane)
         Me.GroupFilbane.Controls.Add(Me.Label7)
-        Me.GroupFilbane.Location = New System.Drawing.Point(12, 13)
+        Me.GroupFilbane.Location = New System.Drawing.Point(27, 70)
         Me.GroupFilbane.Name = "GroupFilbane"
         Me.GroupFilbane.Size = New System.Drawing.Size(300, 110)
         Me.GroupFilbane.TabIndex = 15
@@ -250,6 +221,36 @@ Partial Class SetupTjener
         Me.Label7.TabIndex = 0
         Me.Label7.Text = "Velg område"
         '
+        'PicLoadingSurface
+        '
+        Me.PicLoadingSurface.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
+        Me.PicLoadingSurface.Location = New System.Drawing.Point(510, 168)
+        Me.PicLoadingSurface.Name = "PicLoadingSurface"
+        Me.PicLoadingSurface.Size = New System.Drawing.Size(32, 32)
+        Me.PicLoadingSurface.TabIndex = 12
+        Me.PicLoadingSurface.TabStop = False
+        Me.PicLoadingSurface.Visible = False
+        '
+        'GroupFerdig
+        '
+        Me.GroupFerdig.Controls.Add(Me.CheckKjør)
+        Me.GroupFerdig.Location = New System.Drawing.Point(12, 186)
+        Me.GroupFerdig.Name = "GroupFerdig"
+        Me.GroupFerdig.Size = New System.Drawing.Size(200, 100)
+        Me.GroupFerdig.TabIndex = 14
+        Me.GroupFerdig.TabStop = False
+        Me.GroupFerdig.Text = "Installasjon"
+        '
+        'CheckKjør
+        '
+        Me.CheckKjør.AutoSize = True
+        Me.CheckKjør.Location = New System.Drawing.Point(15, 38)
+        Me.CheckKjør.Name = "CheckKjør"
+        Me.CheckKjør.Size = New System.Drawing.Size(102, 17)
+        Me.CheckKjør.TabIndex = 15
+        Me.CheckKjør.Text = "Kjør programmet"
+        Me.CheckKjør.UseVisualStyleBackColor = True
+        '
         'RichTextBox1
         '
         Me.RichTextBox1.BackColor = System.Drawing.Color.White
@@ -272,14 +273,22 @@ Partial Class SetupTjener
         Me.GroupAvtale.TabStop = False
         Me.GroupAvtale.Text = "License agreement"
         '
+        'PanelBack
+        '
+        Me.PanelBack.Location = New System.Drawing.Point(12, 42)
+        Me.PanelBack.Name = "PanelBack"
+        Me.PanelBack.Size = New System.Drawing.Size(139, 34)
+        Me.PanelBack.TabIndex = 18
+        '
         'SetupTjener
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.White
         Me.ClientSize = New System.Drawing.Size(721, 569)
-        Me.Controls.Add(Me.GroupAvtale)
+        Me.Controls.Add(Me.PanelBack)
         Me.Controls.Add(Me.GroupFilbane)
+        Me.Controls.Add(Me.GroupAvtale)
         Me.Controls.Add(Me.GroupFerdig)
         Me.Controls.Add(Me.PicLoadingSurface)
         Me.Controls.Add(Me.GroupLoggInn)
@@ -287,11 +296,11 @@ Partial Class SetupTjener
         Me.Text = "Setup 1/1"
         Me.GroupLoggInn.ResumeLayout(False)
         Me.GroupLoggInn.PerformLayout()
+        Me.GroupFilbane.ResumeLayout(False)
+        Me.GroupFilbane.PerformLayout()
         CType(Me.PicLoadingSurface, System.ComponentModel.ISupportInitialize).EndInit()
         Me.GroupFerdig.ResumeLayout(False)
         Me.GroupFerdig.PerformLayout()
-        Me.GroupFilbane.ResumeLayout(False)
-        Me.GroupFilbane.PerformLayout()
         Me.GroupAvtale.ResumeLayout(False)
         Me.ResumeLayout(False)
 
@@ -320,4 +329,5 @@ Partial Class SetupTjener
     Friend WithEvents Label7 As Label
     Friend WithEvents RichTextBox1 As RichTextBox
     Friend WithEvents GroupAvtale As GroupBox
+    Friend WithEvents PanelBack As Panel
 End Class

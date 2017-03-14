@@ -12,15 +12,16 @@ Public Class ThreadStarter
     Private MethodToRunIn As Action(Of Object)
     Private FuncToRunOut As Func(Of Object)
     Private FuncToRunInOut As Func(Of Object, Object)
-    Private GenericProcedure As [Delegate]
     Private MethodType As Integer
     Private StartTime As Date
     Private EndTime As Date
     Private Running As Boolean
     Private ThreadID As Object = Nothing
-    Private DisposeWhenFinished As Boolean
+    Private DisposeWhenFinished As Boolean = True
     Private IsBG As Boolean = True
     Private SubWhenFinished As Action(Of Object, ThreadStarterEventArgs)
+    Private NoParamMethodTask, ParamMethodTask As Task
+    Private NoParamFuncThread, ParamFuncThread As Task(Of Object)
 #End Region
 #Region "Events"
     Public Event WorkCompleted(Result As Object, e As ThreadStarterEventArgs)
@@ -91,6 +92,9 @@ Public Class ThreadStarter
             SubWhenFinished.Invoke(Result, New ThreadStarterEventArgs(ThreadID, StartTime, EndTime))
         End If
         RaiseEvent WorkCompleted(Result, New ThreadStarterEventArgs(ThreadID, StartTime, EndTime))
+        If DisposeWhenFinished Then
+            Dispose()
+        End If
     End Sub
     Public Overloads Sub Start(Optional Parameters As Object = Nothing)
         If Running = False Then
@@ -102,13 +106,13 @@ Public Class ThreadStarter
                         Running = False
                         Throw New Exception("Cannot start this thread before it has been assigned a method to run (use the New constructor).")
                     Case 1
-                        Dim NoParamMethodTask As Task = Task.Factory.StartNew(AddressOf ExecuteNoParams)
+                        NoParamMethodTask = Task.Factory.StartNew(AddressOf ExecuteNoParams)
                     Case 2
-                        Dim ParamMethodTask As Task = Task.Factory.StartNew(AddressOf Execute, Parameters)
+                        ParamMethodTask = Task.Factory.StartNew(AddressOf Execute, Parameters)
                     Case 3
-                        Dim NoParamFuncThread As Task(Of Object) = Task.Factory.StartNew(AddressOf ExecuteFunction)
+                        NoParamFuncThread = Task.Factory.StartNew(AddressOf ExecuteFunction)
                     Case 4
-                        Dim ParamFuncThread As Task(Of Object) = Task.Factory.StartNew(AddressOf ExecuteFunction, Parameters)
+                        ParamFuncThread = Task.Factory.StartNew(AddressOf ExecuteFunction, Parameters)
                 End Select
             Else
                 Select Case MethodType
@@ -137,13 +141,6 @@ Public Class ThreadStarter
             End If
         End If
     End Sub
-    'Public Overloads Sub Start(ByVal Parameters() As Object)
-    '    If Running = False Then
-    '        StartTime = Date.Now
-    '        Running = True
-    '        Dim DynamicInvokeThread As Task = Task.Factory.StartNew(AddressOf DynamicInvokeMethod, Parameters)
-    '    End If
-    'End Sub
     Private Sub ExecuteNoParams()
         MethodToRun.Invoke
         SC.Post(AddressOf RaiseWorkCompleted, Nothing)
@@ -162,20 +159,6 @@ Public Class ThreadStarter
         SC.Post(AddressOf RaiseWorkCompleted, Ret)
         Return Ret
     End Function
-    'Private Sub DynamicInvokeMethod(ByVal Parameters As Object)
-    '    Try
-    '        Dim args() As Object = DirectCast(Parameters, Object())
-    '        If Not GenericProcedure.Method.ReturnType Is Nothing Then
-    '            Dim Ret As Object = GenericProcedure.DynamicInvoke(Parameters)
-    '            SC.Post(AddressOf RaiseWorkCompleted, Ret)
-    '        Else
-    '            GenericProcedure.DynamicInvoke(Parameters)
-    '            SC.Post(AddressOf RaiseWorkCompleted, Nothing)
-    '        End If
-    '    Catch ex As Exception
-    '        Throw ex
-    '    End Try
-    'End Sub
 #Region "IDisposable Support"
     Private disposedValue As Boolean ' To detect redundant calls
 
@@ -184,6 +167,10 @@ Public Class ThreadStarter
         If Not disposedValue Then
             If disposing Then
                 ' TODO: dispose managed state (managed objects).
+                NoParamMethodTask.Dispose()
+                ParamMethodTask.Dispose()
+                NoParamFuncThread.Dispose()
+                ParamFuncThread.Dispose()
             End If
             ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
             ' TODO: set large fields to null.

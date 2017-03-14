@@ -11,7 +11,7 @@ Public Class SetupTjener
     Dim LoginHelper As DatabaseSetup
     Dim LoadingGraphics As LoadingGraphics(Of PictureBox)
     Dim WithEvents LayoutTool As FormLayoutTools
-    Dim WithEvents FWButton, FerdigKnapp, GodtaKnapp, OKOmrådeKnapp As FullWidthControl
+    Dim WithEvents FWButton, FerdigKnapp, GodtaKnapp, OKOmrådeKnapp, TilbakeKnapp As FullWidthControl
     Dim NotifManager As NotificationManager
     Dim Heh As ResourceDeployer
     Dim Filbane As String = SpecialDirectories.MyDocuments & "\Blodbank\"
@@ -27,6 +27,7 @@ Public Class SetupTjener
         GroupAvtale.Hide()
         LayoutTool.CenterOnForm(GroupFilbane)
         GroupFilbane.Show()
+        TilbakeKnapp.Show()
     End Sub
     Private Sub OKOmrådeKnapp_Click() Handles OKOmrådeKnapp.Click
         Dim ErrorOccurred As Boolean = False
@@ -67,6 +68,7 @@ Public Class SetupTjener
             NotifManager.Display("The service is ready to be used.", New NotificationAppearance(Color.LimeGreen, Color.White,,,,, 0))
             GroupLoggInn.Hide()
             GroupFerdig.Show()
+            TilbakeKnapp.Hide()
             LayoutTool.Refresh()
         Else
             MsgBox("Error occurred in FinishUp")
@@ -127,6 +129,8 @@ Public Class SetupTjener
         FerdigKnapp = New FullWidthControl(GroupFerdig, True, FullWidthControl.SnapType.Bottom)
         OKOmrådeKnapp = New FullWidthControl(GroupFilbane, True, FullWidthControl.SnapType.Bottom)
         GodtaKnapp = New FullWidthControl(GroupAvtale, True, FullWidthControl.SnapType.Bottom)
+        TilbakeKnapp = New FullWidthControl(PanelBack, True)
+        TilbakeKnapp.Hide()
         FWButton.Text = "Sjekk"
         FerdigKnapp.Text = "Ferdig"
         OKOmrådeKnapp.Text = "Videre"
@@ -217,6 +221,23 @@ Public Class SetupTjener
             ElseIf GroupFerdig.Visible Then
                 LayoutTool.CenterOnForm(GroupFerdig)
             End If
+            If PanelBack.Visible Then
+                LayoutTool.CenterSurfaceH(PanelBack, Me)
+            End If
+        End If
+    End Sub
+    Private Sub GoBack() Handles TilbakeKnapp.Click
+        MsgBox("GOING BACK")
+        If GroupFilbane.Visible = True Then
+            GroupFilbane.Hide()
+            LayoutTool.CenterOnForm(GroupAvtale)
+            TilbakeKnapp.Hide()
+            GroupAvtale.Show()
+        ElseIf GroupLoggInn.Visible = True Then
+            GroupLoggInn.Hide()
+            LayoutTool.CenterOnForm(GroupFilbane)
+            GroupFilbane.Show()
+            TilbakeKnapp.Show()
         End If
     End Sub
 End Class
