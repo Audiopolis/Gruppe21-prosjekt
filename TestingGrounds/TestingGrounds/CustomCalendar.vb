@@ -329,6 +329,7 @@ Public NotInheritable Class CustomCalendar
     Private MHeader As MonthHeader
     Private Const MaxSquares As Integer = 42
     Private M As Integer = DateTime.Now.Month
+    ' Private SquareList As New List(Of CalendarDay)(36)
     Private SquareArr(42) As CalendarDay
     Private LocationPoint As New Point()
     Private RHeight, CWidth, varSpacingX, varSpacingY As Integer

@@ -71,9 +71,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ColorHelper.vb" />
-    <Compile Include="CredentialsManager.vb" />
     <Compile Include="DatabaseClient.vb" />
-    <Compile Include="EncryptedReadWrite.vb" />
     <Compile Include="FormLayoutTools.vb" />
     <Compile Include="FullWidthControl.vb">
       <SubType>Component</SubType>

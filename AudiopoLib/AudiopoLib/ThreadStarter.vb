@@ -73,6 +73,11 @@ Public Class ThreadStarter
         MethodType = 4
         ThreadID = ID
     End Sub
+    Public Sub New(Procedure As [Delegate], Optional ID As Object = 0)
+        GenericProcedure = Procedure
+        MethodType = 5
+        ThreadID = ID
+    End Sub
     Public Function RunTime() As TimeSpan
         If Running = True Then
             Return Date.Now.Subtract(StartTime)
@@ -162,24 +167,19 @@ Public Class ThreadStarter
         If Not disposedValue Then
             If disposing Then
                 ' TODO: dispose managed state (managed objects).
-                If NoParamMethodTask IsNot Nothing Then
-                    NoParamMethodTask.Dispose()
-                End If
-                If ParamMethodTask IsNot Nothing Then
-                    ParamMethodTask.Dispose()
-                End If
-                If NoParamFuncThread IsNot Nothing Then
-                    NoParamFuncThread.Dispose()
-                End If
-                If ParamFuncThread IsNot Nothing Then
-                    ParamFuncThread.Dispose()
-                End If
+                NoParamMethodTask.Dispose()
+                ParamMethodTask.Dispose()
+                NoParamFuncThread.Dispose()
+                ParamFuncThread.Dispose()
             End If
+            ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
+            ' TODO: set large fields to null.
             MethodToRun = Nothing
             MethodToRunIn = Nothing
             FuncToRunOut = Nothing
             FuncToRunInOut = Nothing
             SubWhenFinished = Nothing
+            GenericProcedure = Nothing
 
             ThreadID = Nothing
             StartTime = Nothing
