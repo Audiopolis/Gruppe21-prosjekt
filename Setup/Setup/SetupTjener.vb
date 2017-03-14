@@ -18,7 +18,7 @@ Public Class SetupTjener
     Private Sub FerdigKnapp_Click() Handles FerdigKnapp.Click
         Me.Hide()
         If CheckKjør.Checked Then
-            Shell(Filbane & "\Auditory.mp3")
+            'Shell(Filbane & "\Auditory.mp3")
         End If
         FreeResources()
         End

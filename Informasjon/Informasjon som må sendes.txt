@@ -1,0 +1,10 @@
+--- Informasjon som må sendes av blodgiver én gang -----
+	- Fornavn + mellom
+	- Etternavn
+	- Har du fått informasjon om blodgiving?
+--------------------------------------------------------
+
+--- Informasjon som må sendes av blodgiver hver gang ---
+	- Føler du deg frisk?
+	- Osv
+--------------------------------------------------------
