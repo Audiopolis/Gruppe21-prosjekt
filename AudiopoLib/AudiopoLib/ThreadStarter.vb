@@ -166,14 +166,19 @@ Public Class ThreadStarter
     Protected Overridable Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
             If disposing Then
-                ' TODO: dispose managed state (managed objects).
-                NoParamMethodTask.Dispose()
-                ParamMethodTask.Dispose()
-                NoParamFuncThread.Dispose()
-                ParamFuncThread.Dispose()
+                If NoParamMethodTask IsNot Nothing Then
+                    NoParamMethodTask.Dispose()
+                End If
+                If ParamMethodTask IsNot Nothing Then
+                    ParamMethodTask.Dispose()
+                End If
+                If NoParamFuncThread IsNot Nothing Then
+                    NoParamFuncThread.Dispose()
+                End If
+                If ParamFuncThread IsNot Nothing Then
+                    ParamFuncThread.Dispose()
+                End If
             End If
-            ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-            ' TODO: set large fields to null.
             MethodToRun = Nothing
             MethodToRunIn = Nothing
             FuncToRunOut = Nothing
@@ -190,10 +195,7 @@ Public Class ThreadStarter
         disposedValue = True
     End Sub
     Public Sub Dispose() Implements IDisposable.Dispose
-        ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
         Dispose(True)
-        ' TODO: uncomment the following line if Finalize() is overridden above.
-        ' GC.SuppressFinalize(Me)
     End Sub
 #End Region
 End Class
