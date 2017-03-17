@@ -44,9 +44,25 @@ Public NotInheritable Class ColorHelper
     Public Shared Function Mix(FirstColor As Color, SecondColor As Color, Optional Ratio As Double = 0.5) As Color
         Dim RGB(2) As Integer
         Dim RatioSecond As Double = 1 - Ratio
-        RGB(0) = CInt((FirstColor.R * Ratio + SecondColor.R * RatioSecond) / 2)
-        RGB(1) = CInt((FirstColor.G * Ratio + SecondColor.G * RatioSecond) / 2)
-        RGB(2) = CInt((FirstColor.B * Ratio + SecondColor.B * RatioSecond) / 2)
+        If Double.IsNaN(Ratio) Then
+            Ratio = 0
+        ElseIf Double.IsInfinity(Ratio) Then
+            Ratio = 1
+        End If
+        If Not Ratio = 0 AndAlso Not Ratio = 1 Then
+            RGB(0) = CInt((FirstColor.R * Ratio + SecondColor.R * RatioSecond) / 2)
+            RGB(1) = CInt((FirstColor.G * Ratio + SecondColor.G * RatioSecond) / 2)
+            RGB(2) = CInt((FirstColor.B * Ratio + SecondColor.B * RatioSecond) / 2)
+        ElseIf Ratio = 0 Then
+            RGB(0) = SecondColor.R
+            RGB(1) = SecondColor.G
+            RGB(2) = SecondColor.B
+        Else
+            RGB(0) = FirstColor.R
+            RGB(1) = FirstColor.G
+            RGB(2) = FirstColor.B
+        End If
+
         For i As Integer = 0 To 2
             If RGB(i) > 255 Then
                 RGB(i) = 255
