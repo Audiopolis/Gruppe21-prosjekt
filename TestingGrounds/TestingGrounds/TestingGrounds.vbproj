@@ -77,6 +77,9 @@
     </Compile>
     <Compile Include="ColorHelper.vb" />
     <Compile Include="CustomCalendar.vb" />
+    <Compile Include="FlatForm.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Form1.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -98,6 +101,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Questionnaire.vb">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="ThreadStarterLight.vb" />
   </ItemGroup>
