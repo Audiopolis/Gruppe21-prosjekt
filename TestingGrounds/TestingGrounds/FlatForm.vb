@@ -5,20 +5,19 @@ Imports System.Drawing.Drawing2D
 
 Public Class FormField
     Inherits Control
-
     Private labHeader As Label
     Private varValue As Object = Nothing
     Private varSecondaryValue As Object = Nothing
     Private varSpacingBottom As Integer = 10
     Private varDrawGradient As Boolean = True
+    Protected Friend varFieldType As FormElementType
     Protected Friend Event ValueChanged(Sender As FormField, ByVal Value As Object)
     Protected Friend Event SecondaryValueChanged(Sender As FormField, ByVal Value As Object)
     Protected Event HeaderVisibleChanged(ByVal Visible As Boolean)
     Protected Friend varIsInputType As Boolean = True
     Private varTopColor As Color
-    'Protected Friend LastColor As Color = BackColor
     Private varBottomColor As Color
-
+    Protected MeType As FormElementType
     Protected Friend GradBrush As LinearGradientBrush
     Public ReadOnly Property IsInputType As Boolean
         Get
@@ -60,6 +59,16 @@ Public Class FormField
             Invalidate()
         End Set
     End Property
+    ' TODO: Override in all derived classes for which pressing enter og space should have an effect.
+    Protected Overrides Sub OnKeyDown(e As KeyEventArgs)
+        MyBase.OnKeyDown(e)
+        If e.KeyCode = Keys.Space OrElse e.KeyCode = Keys.Enter Then
+            OnUserClick()
+        End If
+    End Sub
+    Protected Overridable Sub OnUserClick()
+
+    End Sub
     Protected Overridable Sub OnValueChanged(ByVal Value As Object)
         RaiseEvent ValueChanged(Me, Value)
     End Sub
@@ -74,8 +83,24 @@ Public Class FormField
         End If
         MyBase.OnPaint(e)
     End Sub
-    Public Sub New(ByVal FieldSpacing As Integer)
+    Protected Overrides Sub OnGotFocus(e As EventArgs)
+        MyBase.OnGotFocus(e)
+        If Not MeType = FormElementType.TextField Then
+            BackColor = ColorHelper.Multiply(BackColor, 0.4)
+            DrawGradient = False
+        End If
+    End Sub
+    Protected Overrides Sub OnLostFocus(e As EventArgs)
+        MyBase.OnLostFocus(e)
+        If Not MeType = FormElementType.TextField Then
+            BackColor = ColorHelper.Multiply(BackColor, 2.5)
+            DrawGradient = True
+        End If
+    End Sub
+    Public Sub New(ByVal FieldSpacing As Integer, ByVal FieldType As FormElementType)
+        varFieldType = FieldType
         varSpacingBottom = FieldSpacing
+        SetStyle(ControlStyles.Selectable, True)
         labHeader = New Label
         Controls.Add(labHeader)
         With labHeader
@@ -209,10 +234,27 @@ End Class
 Public Class HeaderValuePair
     Public Header As String = "Not set"
     Public Value As Object = False
-    Public Sub New(ByVal HeaderString As String, ByVal ValueObject As Object)
+    Public Type As FormElementType
+    Public Sub New(ByVal HeaderString As String, ByVal ValueObject As Object, ByVal ElementType As FormElementType)
         Header = HeaderString
         Value = ValueObject
+        Type = ElementType
     End Sub
+End Class
+Public Class FlatFormResult
+    Private ResultArr()() As HeaderValuePair
+    Protected Friend Sub New(Result As HeaderValuePair()())
+        ResultArr = Result
+    End Sub
+    Public Function Header(ByVal Row As Integer, ByVal Field As Integer) As String
+        Return ResultArr(Row)(Field).Header
+    End Function
+    Public Function Value(ByVal Row As Integer, ByVal Field As Integer) As Object
+        Return ResultArr(Row)(Field).Value
+    End Function
+    Public Function FieldType(ByVal Row As Integer, ByVal Field As Integer) As FormElementType
+        Return ResultArr(Row)(Field).Type
+    End Function
 End Class
 Public Class FlatForm
 #Region "FlatForm"
@@ -220,7 +262,7 @@ Public Class FlatForm
     Private varFieldSpacing As Integer
     Private RadioContextList As List(Of RadioButtonContext)
     Private RowList As List(Of FormRow)
-    Public ReadOnly Property Result() As HeaderValuePair()()
+    Public ReadOnly Property Result() As FlatFormResult
         Get
             Dim iLast As Integer = RowList.Count - 1
             Dim RetArr(iLast)() As HeaderValuePair
@@ -230,11 +272,11 @@ Public Class FlatForm
                 Dim PairArr(nLast) As HeaderValuePair
                 For n As Integer = 0 To nLast
                     Dim Field As FormField = ThisRow.Fields(n)
-                    PairArr(n) = New HeaderValuePair(Field.Header.Text, Field.Value)
+                    PairArr(n) = New HeaderValuePair(Field.Header.Text, Field.Value, Field.varFieldType)
                 Next
                 RetArr(i) = PairArr
             Next
-            Return RetArr
+            Return New FlatFormResult(RetArr)
         End Get
     End Property
     Public ReadOnly Property FieldCount As Integer
@@ -258,19 +300,38 @@ Public Class FlatForm
             Return RowList(Row).Fields(Index)
         End Get
     End Property
-    Public Sub New(ByVal Width As Integer, ByVal FieldSpacing As Integer)
+    Public Sub New(ByVal Width As Integer, ByVal Height As Integer, ByVal FieldSpacing As Integer)
         RowList = New List(Of FormRow)
         RadioContextList = New List(Of RadioButtonContext)
         RadioContextList.Add(New RadioButtonContext)
-
         varFieldSpacing = FieldSpacing
         With Me
+            .SuspendLayout()
             .Width = Width
             .Height = 300
+            .ResumeLayout()
         End With
     End Sub
-    Public Sub HeightToContent()
-        Height = RowList(RowList.Count - 1).Bottom
+    'Public Sub HeightToContent()
+    '    Height = RowList(RowList.Count - 1).Bottom
+    'End Sub
+    Protected Overrides Sub OnResize(e As EventArgs)
+        MyBase.OnResize(e)
+        If RowList.Count > 0 Then
+            Dim Testheight As Integer = RowList(RowList.Count - 1).Bottom - varFieldSpacing
+            If Height <> Testheight Then
+                Height = Testheight
+            End If
+        End If
+    End Sub
+    Protected Overrides Sub OnVisibleChanged(e As EventArgs)
+        MyBase.OnVisibleChanged(e)
+        If RowList.Count > 0 Then
+            Dim Testheight As Integer = RowList(RowList.Count - 1).Bottom - varFieldSpacing
+            If Height <> Testheight Then
+                Height = Testheight
+            End If
+        End If
     End Sub
     Public Sub MergeWithAbove(ByVal Row As Integer, ByVal FieldIndex As Integer, Optional ByVal UpperFieldIndexOffset As Integer = 0, Optional ByVal RepositionLowerChildren As Boolean = False)
         Dim Upper As FormField = RowList(Row - 1).Fields(FieldIndex + UpperFieldIndexOffset)
@@ -416,25 +477,6 @@ Public Class FlatForm
         Inherits Control
         Private varFieldSpacing As Integer
         Private FieldList As List(Of FormField)
-        'Private ColorFirst As Color = Color.Transparent
-        'Private ColorSecond As Color = Color.Black
-        'Private GradBrush As LinearGradientBrush
-        'Private WithEvents GradSurface As Control
-        'Protected Overrides Sub OnSizeChanged(e As EventArgs)
-        '    'With GradSurface
-        '    '    .SuspendLayout()
-        '    '    .Height = Height
-        '    '    .Width = Width
-        '    '    .ResumeLayout()
-        '    'End With
-        '    MyBase.OnSizeChanged(e)
-        'End Sub
-        'Private Sub OnGradSurfacePaint(Sender As Object, e As PaintEventArgs) Handles GradSurface.Paint
-        '    MyBase.OnPaint(e)
-        '    'e.Graphics.FillRectangle(GradBrush, GradRect)
-        '    e.Graphics.FillRectangle(Brushes.Red, GradSurface.DisplayRectangle)
-
-        'End Sub
         Public ReadOnly Property Fields As List(Of FormField)
             Get
                 Return FieldList
@@ -454,6 +496,7 @@ Public Class FlatForm
         End Sub
         Public Sub New(ByVal FieldSpacing As Integer)
             FieldList = New List(Of FormField)
+            SetStyle(ControlStyles.Selectable, False)
             'GradSurface = New Control
             SuspendLayout()
             'With GradSurface
@@ -520,13 +563,32 @@ Public Class FlatForm
             MyBase.Dispose(disposing)
         End Sub
     End Class
-
     Private Class FormCheckBox
         Inherits FormField
         Private WithEvents TextLab As Label
         Private WithEvents Check As PictureBox
+        Private FocusedBrush As New SolidBrush(Color.Gray)
         Private varChecked As Boolean
         Private CheckBrush As New SolidBrush(Color.Black)
+        Private Property Checked As Boolean
+            Get
+                Return varChecked
+            End Get
+            Set(value As Boolean)
+                varChecked = value
+                If Check IsNot Nothing Then
+                    Check.Invalidate()
+                End If
+            End Set
+        End Property
+        Protected Overrides Sub OnUserClick()
+            MyBase.OnUserClick()
+            If varChecked Then
+                Checked = False
+            Else
+                Checked = True
+            End If
+        End Sub
         Private Sub OnHeaderVisibleChanged() Handles Me.HeaderVisibleChanged
             With TextLab
                 .SuspendLayout()
@@ -546,9 +608,6 @@ Public Class FlatForm
                 e.Graphics.DrawString(ChrW(&H2713), SystemFonts.MessageBoxFont, CheckBrush, New Point(0, 0))
             End If
         End Sub
-        'Public Overrides Sub SwitchHeader()
-        '    MyBase.SwitchHeader()
-        'End Sub
         Protected Overrides Sub OnValueChanged(Value As Object)
             MyBase.OnValueChanged(Value)
             Try
@@ -574,7 +633,9 @@ Public Class FlatForm
             OnValueChanged(varChecked)
         End Sub
         Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing)
+            MyBase.New(FieldSpacing, FormElementType.CheckBox)
+            SetStyle(ControlStyles.Selectable, True)
+            MeType = FormElementType.CheckBox
             Check = New PictureBox
             TextLab = New Label
             Hide()
@@ -642,7 +703,8 @@ Public Class FlatForm
         Inherits FormField
         Private TextLab As New Label
         Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing)
+            MyBase.New(FieldSpacing, FormElementType.Button)
+            MeType = FormElementType.Button
         End Sub
         Protected Overrides Sub OnSecondaryValueChanged(Value As Object)
             MyBase.OnSecondaryValueChanged(Value)
@@ -657,68 +719,6 @@ Public Class FlatForm
 
     Private Class FormTextField
         Inherits FormField
-        'Private Class GradientTextField
-        '    Inherits TextBox
-        '    Private varTopColor As Color
-        '    Private varBottomColor As Color
-        '    Private GradRect As Rectangle
-        '    Private GradBrush As LinearGradientBrush
-        '    Public Sub New()
-        '        SetStyle(ControlStyles.UserPaint, True)
-        '        Hide()
-        '        GradBrush = New LinearGradientBrush(New Point(0, 0), New Point(0, Bottom), Color.Red, Color.Red)
-        '        GradRect = New Rectangle(New Point(0, 0), New Size(0, 0))
-        '    End Sub
-        '    'Protected Friend Sub RefreshGradient()
-        '    '    Dim ParentField As FormField = DirectCast(Parent, FormField)
-        '    '    Dim ParentUpper As Color = ParentField.TopColor
-        '    '    Dim ParentLower As Color = ParentField.BottomColor
-        '    '    Dim ParentHeight As Integer = ParentField.Height
-        '    '    Dim RatioUpper As Double = Top / ParentHeight
-        '    '    Dim RatioLower As Double = Bottom / ParentHeight
-
-        '    '    varTopColor = Color.FromArgb(50, Color.FromArgb(255, ColorHelper.Mix(ParentField.BackColor, ParentField.TopColor, RatioUpper)))
-        '    '    varBottomColor = Color.FromArgb(50, Color.FromArgb(255, ColorHelper.Mix(ParentField.BackColor, ParentField.TopColor, RatioLower)))
-        '    '    If GradBrush IsNot Nothing Then
-        '    '        GradBrush.Dispose()
-        '    '    End If
-        '    '    GradBrush = New LinearGradientBrush(New Point(0, 0), New Point(0, Height), varTopColor, varBottomColor)
-        '    '    GradRect = New Rectangle(New Point(0, 0), New Size(Width, Height))
-        '    '    Invalidate()
-        '    'End Sub
-        '    'Protected Overrides Sub OnPaint(ByVal e As PaintEventArgs)
-        '    '    'Dim g As Graphics = e.Graphics
-        '    '    'g.Clear(Parent.BackColor)
-        '    '    'Draw(g)
-        '    '    e.Graphics.FillRectangle(GradBrush, GradRect)
-        '    '    e.Graphics.DrawString(Text, Font, Brushes.White, New Point(0, 0))
-        '    '    'MyBase.OnPaint(e)
-        '    'End Sub
-
-        '    'Protected Sub Draw(ByVal g As Graphics)
-        '    '    DrawBackground(g)
-        '    '    DrawText(g)
-        '    'End Sub
-
-        '    'Protected Sub DrawBackground(ByVal g As Graphics)
-        '    '    TextBoxRenderer.DrawTextBox(g, DisplayRectangle, VisualStyles.TextBoxState.Normal)
-        '    'End Sub
-
-        '    'Protected Sub DrawTextboxState(ByVal g As Graphics, ByVal ia As ImageAttributes)
-        '    '    g.FillRectangle(GradBrush, 0, 0, Width, Height)
-        '    'End Sub
-
-        '    'Protected Sub DrawText(ByVal g As Graphics)
-        '    '    Dim layoutrect As New RectangleF(0, 0, Me.Width, Me.Height)
-        '    '    Dim fmt As New StringFormat
-        '    '    fmt.Alignment = StringAlignment.Near
-        '    '    fmt.LineAlignment = StringAlignment.Near
-
-        '    '    Dim textBrush As New SolidBrush(ForeColor)
-        '    '    g.DrawString(Text, Font, textBrush, layoutrect, fmt)
-        '    '    textBrush.Dispose()
-        '    'End Sub
-        'End Class
         Private PaddingLeft As Integer = 10
         Private TextField As TextBox
         Private Sub Me_BackColorChanged(Sender As Object, e As EventArgs) Handles Me.BackColorChanged
@@ -727,8 +727,10 @@ Public Class FlatForm
             End If
             Debug.Print(Me.BackColor.B & " vs " & TextField.BackColor.B)
         End Sub
+
         Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing)
+            MyBase.New(FieldSpacing, FormElementType.TextField)
+            MeType = FormElementType.TextField
             TextField = New TextBox
             With Me
                 .Hide()
@@ -781,7 +783,8 @@ Public Class FlatForm
         Inherits FormField
         Private WithEvents TextLab As Label
         Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing)
+            MyBase.New(FieldSpacing, FormElementType.Label)
+            MeType = FormElementType.Label
             varIsInputType = False
             TextLab = New Label
             Hide()
@@ -844,7 +847,8 @@ Public Class FlatForm
     Private Class FormDropDown
         Inherits FormField
         Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing)
+            MyBase.New(FieldSpacing, FormElementType.DropDown)
+            MeType = FormElementType.DropDown
         End Sub
         Protected Overrides Sub Dispose(disposing As Boolean)
             MyBase.Dispose(disposing)
@@ -861,13 +865,30 @@ Public Class FlatForm
         Private HoverBrush As New SolidBrush(Color.LightGray)
         Private Hovering As Boolean
         Private varIndex As Integer
+        Private ReadOnly Property Checked As Boolean
+            Get
+                Return varChecked
+            End Get
+        End Property
+        Private Sub Check()
+            varChecked = True
+            CheckSurface.Invalidate()
+            OnValueChanged(varChecked)
+        End Sub
         Public ReadOnly Property RadioIndex As Integer
             Get
                 Return varIndex
             End Get
         End Property
+        Protected Overrides Sub OnUserClick()
+            MyBase.OnUserClick()
+            If Not varChecked Then
+                Check()
+            End If
+        End Sub
         Public Sub New(ByVal RadioContextIndex As Integer, ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing)
+            MyBase.New(FieldSpacing, FormElementType.Radio)
+            MeType = FormElementType.Radio
             CheckSurface = New PictureBox
             TextLab = New Label
             Hide()
@@ -935,7 +956,7 @@ Public Class FlatForm
                 .ResumeLayout()
             End With
             With CheckSurface
-                .Top = CInt((Height / 2) - (.Top / 2)) + TextLab.Top - 2
+                .Top = CInt(Math.Round(((Height / 2) - (.Top / 2)) + TextLab.Top - 2, 0, MidpointRounding.AwayFromZero))
             End With
         End Sub
         Protected Overrides Sub OnVisibleChanged(e As EventArgs)
@@ -946,8 +967,11 @@ Public Class FlatForm
                 .Width = Width
                 .ResumeLayout()
             End With
+            'With CheckSurface
+            '    .Top = CInt((Height / 2) - (.Top / 2)) + TextLab.Top - 2
+            'End With
             With CheckSurface
-                .Top = CInt((Height / 2) - (.Top / 2)) + TextLab.Top - 2
+                .Top = CInt(Math.Round(((Height / 2) - (.Top / 2)) + TextLab.Top - 2, 0, MidpointRounding.AwayFromZero))
             End With
         End Sub
         Protected Overrides Sub OnValueChanged(Value As Object)
