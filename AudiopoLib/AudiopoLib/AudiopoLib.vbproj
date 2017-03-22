@@ -71,14 +71,24 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ColorHelper.vb" />
+    <Compile Include="CredentialsManager.vb" />
+    <Compile Include="CustomCalendar.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DatabaseClient.vb" />
+    <Compile Include="EncryptedReadWrite.vb" />
+    <Compile Include="FlatForm.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FormLayoutTools.vb" />
     <Compile Include="FullWidthControl.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ListMenu.vb" />
     <Compile Include="LoadingGraphics.vb" />
-    <Compile Include="MenuManager.vb" />
+    <Compile Include="MenuManager.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MySqlAdminLogin.vb" />
     <Compile Include="MySqlUserLogin.vb" />
     <Compile Include="Notification.vb" />
@@ -100,8 +110,12 @@
     <Compile Include="NotificationManager.vb" />
     <Compile Include="ProgressReporter.vb" />
     <Compile Include="ProgressResolution.vb" />
+    <Compile Include="Questionnaire.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="SqlTimedDisplayer.vb" />
     <Compile Include="ThreadStarter.vb" />
+    <Compile Include="ThreadStarterLight.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

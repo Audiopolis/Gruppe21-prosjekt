@@ -5,7 +5,7 @@ Option Infer Off
 Imports System.Windows.Forms
 
 Public Class MenuManager(Of T As {New, Control})
-
+    Inherits Control
     ' Local variables
     Private MenuList As List(Of ListMenu(Of T))
     Private CurrentlyToggled As ListMenu(Of T)
@@ -16,7 +16,7 @@ Public Class MenuManager(Of T As {New, Control})
     ' Events
     Public Event ToggledChanged(SenderMenu As Object, Toggled As Boolean)
     Public Event SelectionChanged(SenderMenu As Object, SenderItem As Object, Selected As Boolean)
-    Public Event EnabledChanged(SenderMenu As Object, SenderItem As Object, Enabled As Boolean)
+    Public Shadows Event EnabledChanged(SenderMenu As Object, SenderItem As Object, Enabled As Boolean)
 
     ' Properties
     Public ReadOnly Property Count As Integer
@@ -65,7 +65,7 @@ Public Class MenuManager(Of T As {New, Control})
     ''' <returns>The ListMenu associated with the specified key.</returns>
     Public Overloads ReadOnly Property MenuAtIndex(ByVal Index As Integer) As ListMenu(Of T)
         Get
-            Return NameDictionary.Values.ElementAt(Index)
+            Return MenuList(Index)
         End Get
     End Property
 
@@ -83,10 +83,10 @@ Public Class MenuManager(Of T As {New, Control})
         ToggledID = 0
     End Sub
 
-    Public Sub CreateMenu(ByRef ParentContainer As Control, ByVal Amount As Integer, Optional ByVal Width As Integer = 100, Optional ByVal Height As Integer = 40, Optional ByVal Left As Integer = 10, Optional ByVal Top As Integer = 10, Optional ByVal Spacing As Integer = 10)
-        Dim LM As New ListMenu(Of T)(ParentContainer, Me)
+    Public Sub CreateMenu(ByVal Amount As Integer, Optional ByVal Width As Integer = 100, Optional ByVal Height As Integer = 40, Optional ByVal Left As Integer = 10, Optional ByVal Top As Integer = 10, Optional ByVal Spacing As Integer = 10)
+        Dim LM As New ListMenu(Of T)(Me, Me)
         LM.CreateMenu(Amount, Spacing, Width, Height, Left, Top)
-        Me.AddMenu(LM)
+        AddMenu(LM)
     End Sub
 
     Private Sub LM_SelectionChanged(SenderMenu As Object, SenderItem As Object, Selected As Boolean)

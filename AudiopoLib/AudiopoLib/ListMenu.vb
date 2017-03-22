@@ -56,7 +56,7 @@ Public Class ListMenu(Of T As {New, Control})
     Private SelectionTimer As CooldownTimer
     Private ItemList As List(Of T)
     Private ParentContainer As Control
-    Private SelectedListIndex As Integer
+    Private SelectedListIndex As Integer = -1
     Private LoopSelectionSetting As Boolean = True
     Private IsToggled As Boolean = True
     Private ParentManager As MenuManager(Of T) = Nothing
@@ -97,11 +97,18 @@ Public Class ListMenu(Of T As {New, Control})
             Return SelectedListIndex
         End Get
         Set(value As Integer)
-            If SelectionTimer.Cool = True AndAlso PropertiesList(value).Enabled = True Then
-                SelectionTimer.Switch()
+            If value >= 0 Then
+                If SelectionTimer.Cool = True AndAlso PropertiesList(value).Enabled = True Then
+                    SelectionTimer.Switch()
+                    If SelectedListIndex >= 0 Then
+                        RaiseEvent SelectionChanged(Me, ItemList(SelectedListIndex), False)
+                    End If
+                    SelectedListIndex = value
+                    RaiseEvent SelectionChanged(Me, ItemList(SelectedListIndex), True)
+                End If
+            Else
                 RaiseEvent SelectionChanged(Me, ItemList(SelectedListIndex), False)
-                SelectedListIndex = value
-                RaiseEvent SelectionChanged(Me, ItemList(SelectedListIndex), True)
+                SelectedListIndex = -1
             End If
         End Set
     End Property
@@ -154,9 +161,6 @@ Public Class ListMenu(Of T As {New, Control})
                 ItemLabel.TextAlign = ContentAlignment.MiddleCenter
             End If
             ItemList.Add(Item)
-            If ParentContainer Is Nothing Then
-                MsgBox("Ingenting")
-            End If
             ParentContainer.Controls.Add(Item)
             Dim ItemProperties As New ItemProperties
             PropertiesList.Add(ItemProperties)

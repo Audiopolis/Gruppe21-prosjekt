@@ -24,6 +24,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DocumentationFile>Gruppe21-Prosjekt-Alpha.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,8 +49,9 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AudiopoLib">
-      <HintPath>..\Latest DLL\AudiopoLib.dll</HintPath>
+    <Reference Include="AudiopoLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\AudiopoLib\AudiopoLib\bin\Debug\AudiopoLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -76,6 +78,17 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlodgiverDashboard.Designer.vb">
+      <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
+    </Compile>
+    <Compile Include="BlodgiverDashboard.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GlobalControl.vb" />
+    <Compile Include="Globals.vb" />
+    <Compile Include="GridMenu.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="LoggInn_Admin.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -98,8 +111,36 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Skjema.Designer.vb">
+      <DependentUpon>Skjema.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Skjema.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Splash.Designer.vb">
+      <DependentUpon>Splash.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Splash.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TestCalendar.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="TestFlatForm.vb" />
+    <Compile Include="TimeInformasjon.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Timeoversikt.Designer.vb">
+      <DependentUpon>Timeoversikt.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Timeoversikt.vb">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="BlodgiverDashboard.resx">
+      <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="LoggInn_Admin.resx">
       <DependentUpon>LoggInn_Admin.vb</DependentUpon>
     </EmbeddedResource>
@@ -108,6 +149,15 @@
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Skjema.resx">
+      <DependentUpon>Skjema.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Splash.resx">
+      <DependentUpon>Splash.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Timeoversikt.resx">
+      <DependentUpon>Timeoversikt.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +171,9 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Logo_Blodbank.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

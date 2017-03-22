@@ -73,11 +73,6 @@ Public Class ThreadStarter
         MethodType = 4
         ThreadID = ID
     End Sub
-    Public Sub New(Procedure As [Delegate], Optional ID As Object = 0)
-        GenericProcedure = Procedure
-        MethodType = 5
-        ThreadID = ID
-    End Sub
     Public Function RunTime() As TimeSpan
         If Running = True Then
             Return Date.Now.Subtract(StartTime)
@@ -184,7 +179,6 @@ Public Class ThreadStarter
             FuncToRunOut = Nothing
             FuncToRunInOut = Nothing
             SubWhenFinished = Nothing
-            GenericProcedure = Nothing
 
             ThreadID = Nothing
             StartTime = Nothing
