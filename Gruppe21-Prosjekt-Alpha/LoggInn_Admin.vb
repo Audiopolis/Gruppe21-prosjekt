@@ -7,47 +7,105 @@ Imports System.Security.Cryptography
 Imports AudiopoLib
 
 Public Class LoggInn_Admin
-    Dim LoginHelper As MySqlAdminLogin
+    Dim WithEvents UserLogin As MySqlUserLogin
     Dim LoadingGraphics As LoadingGraphics(Of PictureBox)
     Dim WithEvents LayoutTool As FormLayoutTools
     Dim WithEvents FWButton As FullWidthControl
     Dim NotifManager As NotificationManager
-    Private Sub WhenFinished(ByVal Valid As Boolean)
-        MsgBox(Valid.ToString)
+    Private IsLoaded As Boolean
+    Public Sub New()
+        ' This call is required by the designer.
+        InitializeComponent()
+        MyBase.OnLoad(New EventArgs)
+        ' Add any initialization after the InitializeComponent() call.
+    End Sub
+    Private Sub RefreshLayout() Handles LayoutTool.Refreshed
+        LayoutTool.CenterOnForm(GroupLoggInn)
+        LayoutTool.CenterSurface(PicLoadingSurface, GroupLoggInn, 0, 10)
+    End Sub
+    Protected Overrides Sub OnSizeChanged(e As EventArgs)
+        MyBase.OnSizeChanged(e)
+        If LayoutTool IsNot Nothing Then
+            LayoutTool.CenterOnForm(GroupLoggInn)
+            LayoutTool.CenterSurface(PicLoadingSurface, GroupLoggInn, 0, 10)
+        End If
+    End Sub
+    Private Sub LoginValid()
+        LoadingGraphics.StopSpin()
+        Hide()
+        For Each C As Control In GroupLoggInn.Controls
+            If Not C.GetType = GetType(FullWidthControl) Then
+                C.Show()
+            End If
+        Next
+        FWButton.Show()
+        FWButton.Enabled = True
+        Testdashbord.Show()
+        txtBrukernavn.Clear()
+        txtPassord.Clear()
+    End Sub
+    Private Sub LoginInvalid()
+        LoadingGraphics.StopSpin()
+        SuspendLayout()
+        For Each C As Control In GroupLoggInn.Controls
+            If Not C.GetType = GetType(FullWidthControl) Then
+                C.Show()
+            End If
+        Next
+        FWButton.Show()
+        FWButton.Enabled = True
+        ResumeLayout()
+        txtBrukernavn.Clear()
+        txtPassord.Clear()
+        txtBrukernavn.Focus()
+        LayoutTool.SlideToHeight(40)
+        NotifManager.Display("Brukernavnet eller passordet er feil", NotificationPreset.RedAlert)
+    End Sub
+    Protected Overrides Sub OnClosed(e As EventArgs)
+        MyBase.OnClosed(e)
+        End
     End Sub
     Private Sub LoggInn_Admin_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        LoadingGraphics = New LoadingGraphics(Of PictureBox)(PicLoadingSurface)
-        LayoutTool = New FormLayoutTools(Me)
-        LoginHelper = New MySqlAdminLogin("mysql.stud.iie.ntnu.no", "magnbakk")
-        NotifManager = New NotificationManager(Me)
-        NotifManager.AssignedLayoutManager = LayoutTool
-        With LoadingGraphics
-            .Stroke = 2
-            .Pen.Color = Color.LimeGreen
-        End With
-        With LoginHelper
-            .WhenFinished = AddressOf WhenFinished
-        End With
-        With LayoutTool
-            .IncludeFormTitle = True
-            .CenterOnForm(GroupLoggInn)
-            .CenterSurface(PicLoadingSurface, GroupLoggInn)
-        End With
-        FWButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom)
-        Dim GroupHeader As New FullWidthControl(GroupLoggInn, False, FullWidthControl.SnapType.Top)
-        With GroupHeader
-            .Height = 20
-            .BackColor = Color.FromArgb(230, 230, 230)
-            .ForeColor = Color.FromArgb(100, 100, 100)
-            .TextAlign = ContentAlignment.MiddleLeft
-            .Padding = New Padding(5, 0, 0, 0)
-            .Text = "Logg inn"
-        End With
-        Dim Test1 As New CredentialsManager
-        Test1.TestEncoding("Hei lol", "kek")
-        Test1.Decode("kek")
+        If Not IsLoaded Then
+            SuspendLayout()
+            LoadingGraphics = New LoadingGraphics(Of PictureBox)(PicLoadingSurface)
+            LayoutTool = New FormLayoutTools(Me)
+            ' TEMPORARY; TODO: Switch to secure class
+            UserLogin = New MySqlUserLogin("mysql.stud.iie.ntnu.no", "g_oops_21", "g_oops_21", "NWRhPBUk")
+            UserLogin.IfValid = AddressOf LoginValid
+            UserLogin.IfInvalid = AddressOf LoginInvalid
+            NotifManager = New NotificationManager(Me)
+            NotifManager.AssignedLayoutManager = LayoutTool
+            With LoadingGraphics
+                .Stroke = 2
+                .Pen.Color = Color.LimeGreen
+            End With
+            With LayoutTool
+                .IncludeFormTitle = True
+                .CenterOnForm(GroupLoggInn)
+                .CenterSurface(PicLoadingSurface, GroupLoggInn,, 10)
+            End With
+            FWButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom)
+            FWButton.Text = "Logg inn"
+            FWButton.TabIndex = 3
+            Dim GroupHeader As New FullWidthControl(GroupLoggInn, False, FullWidthControl.SnapType.Top)
+            With GroupHeader
+                .Height = 20
+                .BackColor = Color.FromArgb(230, 230, 230)
+                .ForeColor = Color.FromArgb(100, 100, 100)
+                .TextAlign = ContentAlignment.MiddleLeft
+                .Padding = New Padding(5, 0, 0, 0)
+                .Text = "Logg inn"
+            End With
+            ResumeLayout()
+            IsLoaded = True
+        End If
+        'Dim Test1 As New CredentialsManager
+        'Test1.TestEncoding("Hei lol", "kek")
+        'Test1.Decode("kek")
     End Sub
     Private Sub FWButton_Click(sender As Object, e As EventArgs) Handles FWButton.Click
+        SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls
             If Not C.GetType = GetType(FullWidthControl) Then
                 C.Hide()
@@ -55,12 +113,10 @@ Public Class LoggInn_Admin
         Next
         FWButton.Hide()
         FWButton.Enabled = False
-        LoginHelper.LoginAsync(txtBrukernavn.Text, txtPassord.Text)
-        LoadingGraphics.Spin(30, 10)
         LayoutTool.Refresh()
-        txtBrukernavn.Clear()
-        txtPassord.Clear()
-        txtBrukernavn.Focus()
+        UserLogin.LoginAsync(txtBrukernavn.Text, txtPassord.Text, "DonorKonti", "bruker_ID", "passord")
+        ResumeLayout()
+        LoadingGraphics.Spin(30, 10)
     End Sub
 End Class
 

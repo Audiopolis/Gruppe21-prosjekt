@@ -1,16 +1,39 @@
-﻿Option Strict On
-Option Explicit On
-Option Infer Off
+﻿Imports System.ComponentModel
+Imports AudiopoLib
 
-Public Class Form1
-    Dim WithEvents Cal As CustomCalendar
-    Dim TestForm1, TestForm2 As FlatForm
-    Dim TestQuestionnaire As Questionnaire
-    Private Sub Setup_Tjener_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'Cal = New CustomCalendar(Me, 14, 14, 80, 80, 14, 14)
-        InitializeForms()
+Public Class Skjema
+    Dim Spørreskjema As Questionnaire
+    Dim LayoutTool As FormLayoutTools
+    Dim boolLoaded As Boolean = False
+    Private Sub Skjema_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        If Not boolLoaded Then
+            LayoutTool = New FormLayoutTools(Me)
+            ByggSkjema()
+            LayoutTool.CenterSurfaceH(Spørreskjema, Me)
+            boolLoaded = True
+        End If
     End Sub
-    Private Sub InitializeForms()
+    Protected Overrides Sub OnClosing(e As CancelEventArgs)
+        Hide()
+        If Testdashbord IsNot Nothing Then
+            Testdashbord.Show()
+            e.Cancel = True
+        End If
+        MyBase.OnClosing(e)
+    End Sub
+    Protected Overrides Sub OnSizeChanged(e As EventArgs)
+        MyBase.OnSizeChanged(e)
+        If boolLoaded Then
+            LayoutTool.CenterSurfaceH(Spørreskjema, Me)
+        End If
+    End Sub
+    Public Sub New()
+        ' This call is required by the designer.
+        InitializeComponent()
+        MyBase.OnLoad(New EventArgs)
+        ' Add any initialization after the InitializeComponent() call.
+    End Sub
+    Private Sub ByggSkjema()
         Dim TestForm1 As New FlatForm(400, 300, 10)
         With TestForm1
             .SuspendLayout()
@@ -70,46 +93,14 @@ Public Class Form1
             '.HeightToContent()
         End With
 
-        TestQuestionnaire = New Questionnaire(Me)
-        With TestQuestionnaire
+        Spørreskjema = New Questionnaire(Me)
+        With Spørreskjema
             .Width = 500
-            .Height = 550
+            .Height = 500
             .Top = 0
             .Add(TestForm1)
             .Add(TestForm2)
             .Display()
         End With
-    End Sub
-    Private Sub CalMouseEnter(Sender As CustomCalendar.CalendarDay) Handles Cal.MouseEnter
-        Select Case Sender.Area
-            Case CustomCalendar.CalendarArea.CurrentMonth
-                Sender.BackColor = ColorHelper.Add(Sender.BackColor, 50)
-        End Select
-        Debug.Print(Sender.Day.ToShortDateString)
-    End Sub
-    Private Sub CalMouseLeave(Sender As CustomCalendar.CalendarDay) Handles Cal.MouseLeave
-        Select Case Sender.Area
-            Case CustomCalendar.CalendarArea.CurrentMonth
-                Sender.BackColor = ColorHelper.Add(Sender.BackColor, -50)
-        End Select
-    End Sub
-    Private Sub CalClick(Sender As CustomCalendar.CalendarDay) Handles Cal.Click
-        Select Case Sender.Area
-            Case CustomCalendar.CalendarArea.CurrentMonth
-                Sender.BackColor = Color.Aqua
-        End Select
-        Dim Shad As New BoxShadow(Sender, Color.FromArgb(0, 50, 60))
-    End Sub
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        'Cal.Dispose()
-        TestForm1.Dispose()
-    End Sub
-    Private Sub Me_Resize() Handles MyBase.Resize
-        If TestQuestionnaire IsNot Nothing Then
-            With TestQuestionnaire
-                .Left = CInt((Me.ClientRectangle.Width / 2) - (.Width / 2))
-                .Top = CInt((Me.ClientRectangle.Height / 2) - (.Height / 2))
-            End With
-        End If
     End Sub
 End Class
