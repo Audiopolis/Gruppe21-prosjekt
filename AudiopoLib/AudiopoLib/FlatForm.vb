@@ -1,7 +1,9 @@
 ﻿Option Strict On
 Option Explicit On
 Option Infer Off
+Imports System.Drawing
 Imports System.Drawing.Drawing2D
+Imports System.Windows.Forms
 
 Public Class FormField
     Inherits Control
