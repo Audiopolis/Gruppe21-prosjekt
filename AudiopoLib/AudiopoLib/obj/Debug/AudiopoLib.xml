@@ -22,6 +22,20 @@ AudiopoLib
   resource lookups using this strongly typed resource class.
 </summary>
 </member>
+<member name="M:AudiopoLib.CustomCalendar.WeekHeader.GetLabel(System.Int32)">
+ <summary>
+ Gets the header label displaying the name of the specified day of the week.
+ </summary>
+ <param name="DayOfTheWeek">Zero-based index of the day of the week (Monday = 0)</param>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.AutoGenerateColor(AudiopoLib.CustomCalendar.CalendarElement,System.Drawing.Color)">
+ <summary>
+ 
+ </summary>
+ <param name="Element"></param>
+ <param name="DefaultColor"></param>
+ <returns>Color on hover, color on disabled, color on mouse down, color on </returns>
+</member>
 <member name="P:AudiopoLib.MenuManager`1.MenuAtIndex(System.String)">
  <summary>
  Returns the ListMenu associated with the specified key (string) in the MenuManager's dictionary.

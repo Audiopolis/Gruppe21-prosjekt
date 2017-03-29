@@ -1,9 +1,10 @@
 ﻿Option Strict On
 Option Explicit On
 Option Infer Off
-
+Imports System.Drawing
 Imports System.Threading
 Imports System.Timers
+Imports System.Windows.Forms
 
 Public Class FormNavigationButton
     Inherits Control
