@@ -5,24 +5,9 @@ Option Infer Off
 Public Class MySqlUserLogin
     Private WithEvents DBC As DatabaseClient
     Private IfValidAction As Action
-    Private InIfValidAction As Action(Of Object)
-    Private IfInvalidAction As Action
-    Private InIfInvalidAction As Action(Of Object)
-    Private DataToPassValid As Object = Nothing
-    Private DataToPassInvalid As Object = Nothing
-    Private PassDataValid As Boolean = False
-    Private PassDataInvalid As Boolean = False
-    Private ReportMultipleMatches As Boolean = False
+    Private InIfInvalidAction As Action(Of Boolean)
     Private ExecuteIfMultipleMatches As Boolean = True
     Public Event MultipleFound()
-    Public Property ReportMultiple As Boolean
-        Get
-            Return ReportMultipleMatches
-        End Get
-        Set(value As Boolean)
-            ReportMultipleMatches = value
-        End Set
-    End Property
     Public Property ExecuteIfMultiple As Boolean
         Get
             Return ExecuteIfMultipleMatches
@@ -48,62 +33,32 @@ Public Class MySqlUserLogin
         DBC.SQLQuery = Query
         DBC.Execute(Parameters, Values, True)
     End Sub
-    Private Sub Fin(ByVal Exists As Boolean, ByVal RowCount As Integer, Tag As Integer) Handles DBC.ExistsCheckCompleted
+    Private Sub Fin(ByVal Exists As Boolean, ByVal RowCount As Integer, Tag As Integer, ByVal ErrorOccurred As Boolean) Handles DBC.ExistsCheckCompleted
         If Exists Then
-            If PassDataValid Then
-                If ReportMultiple = True AndAlso RowCount > 1 Then
-                    RaiseEvent MultipleFound()
-                    If ExecuteIfMultiple = True Then
-                        InIfValidAction.Invoke(DataToPassValid)
-                    End If
-                Else
-                    If InIfValidAction IsNot Nothing Then
-                        InIfValidAction.Invoke(DataToPassValid)
-                    End If
-                End If
-            Else
+            If RowCount = 1 OrElse ExecuteIfMultipleMatches Then
                 If IfValidAction IsNot Nothing Then
                     IfValidAction.Invoke
                 End If
+            Else
+                RaiseEvent MultipleFound()
             End If
         Else
-            If PassDataInvalid Then
-                If InIfInvalidAction IsNot Nothing Then
-                    InIfInvalidAction.Invoke(DataToPassInvalid)
-                End If
-            Else
-                If IfInvalidAction IsNot Nothing Then
-                    IfInvalidAction.Invoke
-                End If
+            If InIfInvalidAction IsNot Nothing Then
+                InIfInvalidAction.Invoke(ErrorOccurred)
             End If
         End If
     End Sub
     Public Overloads WriteOnly Property IfValid As Action
         Set(Action As Action)
             IfValidAction = Action
-            PassDataValid = False
-            DataToPassValid = Nothing
         End Set
     End Property
-    Public Overloads WriteOnly Property IfValid(ByVal ObjectToPass As Object) As Action(Of Object)
-        Set(Action As Action(Of Object))
-            InIfValidAction = Action
-            DataToPassValid = ObjectToPass
-            PassDataValid = True
-        End Set
-    End Property
-    Public Overloads WriteOnly Property IfInvalid As Action
-        Set(Action As Action)
-            IfInvalidAction = Action
-            PassDataInvalid = False
-            DataToPassInvalid = Nothing
-        End Set
-    End Property
-    Public Overloads WriteOnly Property IfInvalid(ByVal ObjectToPass As Object) As Action(Of Object)
-        Set(Action As Action(Of Object))
+    ''' <summary>
+    ''' Address of a method that accepts a boolean value indicating whether or not an error occurred.
+    ''' </summary>
+    Public Overloads WriteOnly Property IfInvalid As Action(Of Boolean)
+        Set(Action As Action(Of Boolean))
             InIfInvalidAction = Action
-            DataToPassInvalid = ObjectToPass
-            PassDataInvalid = True
         End Set
     End Property
 End Class

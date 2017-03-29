@@ -1,8 +1,8 @@
 ﻿Option Strict On
 Option Explicit On
 Option Infer Off
-Imports MySql.Data.MySqlClient
 
+Imports MySql.Data.MySqlClient
 Public Class DatabaseClient
     Implements IDisposable
     Private ServerString As String
@@ -13,9 +13,9 @@ Public Class DatabaseClient
     Private SQLq As String = ""
     Private Tag As Integer = 0
     Private HandledThread As ThreadStarter
-    Public Event ListLoaded(DT As DataTable, ByVal ClientTag As Integer, ByVal Tag As Integer)
+    Public Event ListLoaded(Sender As Object, e As DatabaseListEventArgs)
     Public Event ExecutionFailed(ByVal ClientTag As Integer)
-    Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer)
+    Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer, ByVal ErrorOccurred As Boolean)
     Public Event ValidationCompleted(ByVal Success As Boolean)
     Private DBCSB As MySqlConnectionStringBuilder
     Public Property UID As String
@@ -55,20 +55,22 @@ Public Class DatabaseClient
         Dim CS As String = DirectCast(Data, String)
         Dim DBConnection As New MySqlConnection(CS)
         Dim Valid As Boolean = False
-        Try
-            DBConnection.Open()
-            If DBConnection.State = ConnectionState.Open Then
-                Valid = True
-            Else
+        With DBConnection
+            Try
+                .Open()
+                If .State = ConnectionState.Open Then
+                    Valid = True
+                Else
+                    Valid = False
+                End If
+            Catch
                 Valid = False
-            End If
-        Catch
-            Valid = False
-        Finally
-            DBConnection.Close()
-            DBConnection.Dispose()
-        End Try
-        Return Valid
+            Finally
+                .Close()
+                .Dispose()
+            End Try
+            Return Valid
+        End With
     End Function
     Private Sub ValidateFinished(Result As Object, e As ThreadStarterEventArgs)
         Dim Valid As Boolean = DirectCast(Result, Boolean)
@@ -103,79 +105,106 @@ Public Class DatabaseClient
                 End If
                 HandledThread.Start(DBParams)
             End If
-        Catch ex As Exception
-            MsgBox(ex.Message)
+        Catch
+            RaiseEvent ExecutionFailed(Me.Tag)
         End Try
     End Sub
     Private Sub ExistCheck(Result As Object, e As ThreadStarterEventArgs)
         Dim ResultArr() As Object = DirectCast(Result, Object())
-        RaiseEvent ExistsCheckCompleted(DirectCast(ResultArr(0), Boolean), DirectCast(ResultArr(1), Integer), DirectCast(ResultArr(2), Integer))
+        RaiseEvent ExistsCheckCompleted(DirectCast(ResultArr(0), Boolean), DirectCast(ResultArr(1), Integer), DirectCast(ResultArr(2), Integer), DirectCast(ResultArr(3), Boolean))
     End Sub
     ' FIKS
     Private Function ExecuteParamQuery(Params As Object) As Object
         Dim ParamInstance As ParameterizedQuery = DirectCast(Params, ParameterizedQuery)
         Dim DBConnection As New MySqlConnection(ParamInstance.ConnectionString)
-        Dim Ret As New DataTable
+        Dim ErrorOccurred As Boolean
+        Dim Ret(1) As Object
+        Dim RetTable As New DataTable
         Try
             DBConnection.Open()
             Dim SQLcmd As New MySqlCommand(ParamInstance.Query, DBConnection)
-            For i As Integer = 0 To ParamInstance.Count - 1
-                SQLcmd.Parameters.AddWithValue(ParamInstance.Pair(i)(0), ParamInstance.Pair(i)(1))
-            Next
+            Dim iLast As Integer = ParamInstance.Count - 1
+            With SQLcmd.Parameters
+                For i As Integer = 0 To iLast
+                    .AddWithValue(ParamInstance.Pair(i)(0), ParamInstance.Pair(i)(1))
+                Next
+            End With
             Dim SqlDA As New MySqlDataAdapter(SQLcmd)
-            SqlDA.Fill(Ret)
-            SqlDA.Dispose()
+            With SqlDA
+                .Fill(RetTable)
+                .Dispose()
+            End With
+
             SQLcmd.Dispose()
-        Catch ex As Exception
-            Ret = Nothing
-            MsgBox(ex.Message)
+        Catch
+            ErrorOccurred = True
         Finally
-            DBConnection.Close()
-            DBConnection.Dispose()
+            With DBConnection
+                .Close()
+                .Dispose()
+            End With
         End Try
-        If ParamInstance.CheckIfExists = False Then
-            Return Ret.Copy
+        If Not ParamInstance.CheckIfExists Then
+            Ret(0) = RetTable
+            Ret(1) = ErrorOccurred
+            Return Ret
         Else
-            Dim Result(2) As Object
-            If Ret IsNot Nothing AndAlso Ret.Rows.Count > 0 Then
-                Result(0) = True
-                Result(1) = Ret.Rows.Count
-            Else
-                Result(0) = False
-                Result(1) = 0
-            End If
-            Result(2) = ParamInstance.Tag
+            Dim Result(3) As Object
+            Dim RetCount As Integer
+            With RetTable
+                RetCount = .Rows.Count
+                If RetCount > 0 Then
+                    Result(0) = True
+                Else
+                    Result(0) = False
+                End If
+                Result(1) = RetCount
+                Result(2) = ParamInstance.Tag
+                Result(3) = ErrorOccurred
+                .Dispose()
+            End With
             Return Result
         End If
     End Function
     Private Function ExecuteQuery(Params As Object) As Object
         Dim QueryInstance As RegularQuery = DirectCast(Params, RegularQuery)
         Dim DBConnection As New MySqlConnection(QueryInstance.ConnectionString)
-        Dim Ret As New DataTable
+        Dim Ret(1) As Object
+        Dim RetTable As New DataTable
+        Dim ErrorOccurred As Boolean = False
         Try
             DBConnection.Open()
             Dim SQLcmd As New MySqlCommand(QueryInstance.Query, DBConnection)
             Dim SqlDA As New MySqlDataAdapter
-            SqlDA.SelectCommand = SQLcmd
-            SqlDA.Fill(Ret)
-            SQLcmd.Dispose()
-            SqlDA.Dispose()
-        Catch ex As Exception
-            MsgBox(ex.Message)
+            With SqlDA
+                .SelectCommand = SQLcmd
+                .Fill(RetTable)
+                SQLcmd.Dispose()
+                .Dispose()
+            End With
+        Catch
+            ErrorOccurred = True
         Finally
-            DBConnection.Close()
+            With DBConnection
+                .Close()
+                .Dispose()
+            End With
         End Try
-        Return Ret.Copy
+        Ret(0) = RetTable
+        Ret(1) = ErrorOccurred
+        Return Ret
     End Function
     Public ReadOnly Property Connection As MySqlConnectionStringBuilder
         Get
             Return DBCSB
         End Get
     End Property
-    Sub GetListFinished(State As Object, e As ThreadStarterEventArgs)
-        Dim DT As DataTable = DirectCast(State, DataTable)
+    Private Sub GetListFinished(State As Object, e As ThreadStarterEventArgs)
+        Dim RetArr() As Object = DirectCast(State, Object())
+        Dim DT As DataTable = DirectCast(RetArr(0), DataTable)
+        Dim ErrorOccurred As Boolean = DirectCast(RetArr(1), Boolean)
         If DT IsNot Nothing Then
-            RaiseEvent ListLoaded(DT, Me.Tag, DirectCast(e.ID, Integer))
+            RaiseEvent ListLoaded(Me, New DatabaseListEventArgs(DT, ErrorOccurred))
         Else
             RaiseEvent ExecutionFailed(Me.Tag)
         End If

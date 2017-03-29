@@ -13,8 +13,7 @@ Public Class ThreadStarter
     Private FuncToRunOut As Func(Of Object)
     Private FuncToRunInOut As Func(Of Object, Object)
     Private MethodType As Integer
-    Private StartTime As Date
-    Private EndTime As Date
+    Private StartTime, EndTime As Date
     Private Running As Boolean
     Private ThreadID As Object = Nothing
     Private DisposeWhenFinished As Boolean = True
@@ -116,22 +115,30 @@ Public Class ThreadStarter
                         Throw New Exception("Cannot start this thread before it has been assigned a method to run (use the New constructor).")
                     Case 1
                         Dim NoParamMethodTask As New Thread(AddressOf ExecuteNoParams)
-                        NoParamMethodTask.IsBackground = False
-                        NoParamMethodTask.Start()
+                        With NoParamMethodTask
+                            .IsBackground = False
+                            .Start()
+                        End With
                     Case 2
-                        Dim ParamMethodTask As New Thread(AddressOf Execute)
-                        ParamMethodTask.IsBackground = False
-                        ParamMethodTask.Start(Parameters)
+                            Dim ParamMethodTask As New Thread(AddressOf Execute)
+                        With ParamMethodTask
+                            .IsBackground = False
+                            .Start(Parameters)
+                        End With
                     Case 3
                         Dim test As ThreadStart = AddressOf ExecuteFunction
                         Dim NoParamFuncThread As New Thread(test)
-                        NoParamFuncThread.IsBackground = False
-                        NoParamFuncThread.Start()
+                        With NoParamFuncThread
+                            .IsBackground = False
+                            .Start()
+                        End With
                     Case 4
                         Dim test As ParameterizedThreadStart = AddressOf ExecuteFunction
                         Dim ParamFuncThread As New Thread(test)
-                        ParamFuncThread.IsBackground = False
-                        ParamFuncThread.Start(Parameters)
+                        With ParamFuncThread
+                            .IsBackground = False
+                            .Start(Parameters)
+                        End With
                 End Select
             End If
         End If

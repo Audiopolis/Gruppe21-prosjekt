@@ -76,6 +76,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DatabaseClient.vb" />
+    <Compile Include="DatabaseListEventArgs.vb" />
     <Compile Include="EncryptedReadWrite.vb" />
     <Compile Include="FlatForm.vb">
       <SubType>Component</SubType>

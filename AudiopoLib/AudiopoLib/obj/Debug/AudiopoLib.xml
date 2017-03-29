@@ -50,6 +50,11 @@ AudiopoLib
  <param name="Index">The index of the ListMenu in the dictionary.</param>
  <returns>The ListMenu associated with the specified key.</returns>
 </member>
+<member name="P:AudiopoLib.MySqlUserLogin.IfInvalid">
+ <summary>
+ Address of a method that accepts a boolean value indicating whether or not an error occurred.
+ </summary>
+</member>
 <member name="M:AudiopoLib.Notification.#ctor(System.Windows.Forms.Control,AudiopoLib.NotificationAppearance,System.String,System.Double,System.Action{AudiopoLib.Notification},AudiopoLib.FloatX,AudiopoLib.FloatY,System.Int32,AudiopoLib.NotificationBackgroundTransition,AudiopoLib.NotificationTextTransition)">
  <summary>
  Creates a new notification to be displayed. In most cases, this should be automatically done by a NotificationManager.

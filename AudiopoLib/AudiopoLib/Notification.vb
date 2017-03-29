@@ -117,10 +117,12 @@ Public Class Notification
         TextAlign = Appearance.TextAlign
         MinWidth = Appearance.MinimumWidth
         Height = Appearance.DefaultHeight
-        OffX = Appearance.OffsetX
-        OffY = Appearance.OffsetY
+        With Appearance
+            OffX = .OffsetX
+            OffY = .OffsetY
+        End With
         Image = Appearance.BackgroundImage
-        ImageAlign = Appearance.ImageAlign
+            ImageAlign = Appearance.ImageAlign
         SMargin = Appearance.MarginSides
     End Sub
     Public Sub Display()
@@ -284,9 +286,11 @@ Public Class Notification
         If TextIn Then
             If ColorCompleted(0) AndAlso ColorCompleted(1) AndAlso ColorCompleted(2) Then
                 FinalRGB = BackColor
-                NewR = ForeColor.R
-                NewG = ForeColor.G
-                NewB = ForeColor.B
+                With ForeColor
+                    NewR = .R
+                    NewG = .G
+                    NewB = .B
+                End With
                 If DurationTimer IsNot Nothing Then
                     DurationTimer.Start()
                 End If
