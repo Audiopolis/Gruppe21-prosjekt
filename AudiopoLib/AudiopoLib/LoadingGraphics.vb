@@ -20,6 +20,7 @@ Public Class LoadingGraphics(Of T As {New, Control})
             Return CirclePen
         End Get
         Set(Pen As Pen)
+            CirclePen.Dispose()
             CirclePen = Pen
         End Set
     End Property

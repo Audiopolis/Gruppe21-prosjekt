@@ -113,6 +113,9 @@ Public Class LoggInn_Admin
         'Test1.TestEncoding("Hei lol", "kek")
         'Test1.Decode("kek")
     End Sub
+
+
+
     Private Sub FWButton_Click(sender As Object, e As EventArgs) Handles FWButton.Click
         SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls

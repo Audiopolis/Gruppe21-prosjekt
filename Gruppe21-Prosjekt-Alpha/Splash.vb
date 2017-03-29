@@ -17,6 +17,10 @@ Public NotInheritable Class Splash
     Private Sub InitializeStuff(State As Object)
         DelayTimer.Dispose()
         MainWindow = New Main
+
+        BlodgiverApning = New LoginBlodgiver
+        BlodgiverApning.Show()
+
         'Testoversikt = New Timeoversikt
         'Testdashbord = New BlodgiverDashboard
         'Testlogginn = New LoggInn_Admin
@@ -59,4 +63,6 @@ Public NotInheritable Class Splash
         Copyright.Text = ("This application is subject to international copyright laws. " & Chr(169) & " 2017 Magnus Bakke, Andreas Ore Larssen, Ahsan Azim, Eskil Uhlving Larsen; AudiopoLib " & Chr(169) & " 2017 Magnus Bakke")
         DelayTimer.Start()
     End Sub
+
+
 End Class
