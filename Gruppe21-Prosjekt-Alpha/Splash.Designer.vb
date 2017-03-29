@@ -40,7 +40,7 @@ Partial Class Splash
         Me.ApplicationTitle.Name = "ApplicationTitle"
         Me.ApplicationTitle.Size = New System.Drawing.Size(272, 34)
         Me.ApplicationTitle.TabIndex = 1
-        Me.ApplicationTitle.Text = "HemoSphere"
+        Me.ApplicationTitle.Text = "HemoGlobe"
         Me.ApplicationTitle.TextAlign = System.Drawing.ContentAlignment.TopCenter
         '
         'Version
@@ -53,7 +53,7 @@ Partial Class Splash
         Me.Version.Name = "Version"
         Me.Version.Size = New System.Drawing.Size(272, 18)
         Me.Version.TabIndex = 2
-        Me.Version.Text = "Version"
+        Me.Version.Text = "Version 0.5"
         Me.Version.TextAlign = System.Drawing.ContentAlignment.TopCenter
         '
         'Label1
@@ -62,7 +62,7 @@ Partial Class Splash
         Me.Label1.BackColor = System.Drawing.Color.Transparent
         Me.Label1.Font = New System.Drawing.Font("Microsoft YaHei UI Light", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.ForeColor = System.Drawing.Color.FromArgb(CType(CType(64, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.Label1.Location = New System.Drawing.Point(-9, 234)
+        Me.Label1.Location = New System.Drawing.Point(-9, 282)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(282, 19)
         Me.Label1.TabIndex = 3
@@ -87,7 +87,7 @@ Partial Class Splash
         Me.Panel1.BackgroundImage = Global.Gruppe21_Prosjekt_Alpha.My.Resources.Resources.Logo_Blodbank
         Me.Panel1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom
         Me.Panel1.Controls.Add(Me.Label1)
-        Me.Panel1.Location = New System.Drawing.Point(11, 67)
+        Me.Panel1.Location = New System.Drawing.Point(11, 53)
         Me.Panel1.Name = "Panel1"
         Me.Panel1.Size = New System.Drawing.Size(265, 301)
         Me.Panel1.TabIndex = 5

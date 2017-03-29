@@ -3,10 +3,11 @@ Imports System.Drawing.Drawing2D
 Imports System.Timers
 Imports System.Threading
 Imports AudiopoLib
+Imports System.ComponentModel
 Public NotInheritable Class Splash
     Dim GB As LinearGradientBrush
     Private SC As SynchronizationContext = SynchronizationContext.Current
-    Private WithEvents DelayTimer As New Timers.Timer(5000)
+    Private WithEvents DelayTimer As New Timers.Timer(1000)
     'TODO: This form can easily be set as the splash screen for the application by going to the "Application" tab
     '  of the Project Designer ("Properties" under the "Project" menu).
     Protected Overrides Sub OnPaintBackground(e As PaintEventArgs)
@@ -15,13 +16,23 @@ Public NotInheritable Class Splash
     End Sub
     Private Sub InitializeStuff(State As Object)
         DelayTimer.Dispose()
-        Testoversikt = New Timeoversikt
-        Testdashbord = New BlodgiverDashboard
-        Testlogginn = New LoggInn_Admin
-        Testspørreskjema = New Skjema
+        MainWindow = New Main
+        'Testoversikt = New Timeoversikt
+        'Testdashbord = New BlodgiverDashboard
+        'Testlogginn = New LoggInn_Admin
+        'Testspørreskjema = New Skjema
+
+        MainWindow.Show()
+
+        'Testlogginn.Show()
+
         Hide()
-        Testlogginn.Show()
+        GB.Dispose()
+        Close()
+        Dispose()
+        'Testlogginn.Show()
     End Sub
+
     Private Sub DelayTimer_Elapsed(Sender As Object, e As ElapsedEventArgs) Handles DelayTimer.Elapsed
         SC.Post(AddressOf InitializeStuff, Nothing)
     End Sub
@@ -29,7 +40,7 @@ Public NotInheritable Class Splash
         GB = New LinearGradientBrush(ClientRectangle, Color.FromArgb(120, Color.LightYellow), Color.FromArgb(0, Color.LightYellow), LinearGradientMode.Vertical)
         DelayTimer.AutoReset = False
         'Set up the dialog text at runtime according to the application's assembly information.  
-
+        Timeoversikt.Show()
         'TODO: Customize the application's assembly information in the "Application" pane of the project 
         '  properties dialog (under the "Project" menu).
 
@@ -45,7 +56,6 @@ Public NotInheritable Class Splash
 
         Version.Text = String.Format(Version.Text, My.Application.Info.Version.Major, My.Application.Info.Version.Minor)
         Copyright.TextAlign = ContentAlignment.MiddleCenter
-        'Copyright info
         Copyright.Text = ("This application is subject to international copyright laws. " & Chr(169) & " 2017 Magnus Bakke, Andreas Ore Larssen, Ahsan Azim, Eskil Uhlving Larsen; AudiopoLib " & Chr(169) & " 2017 Magnus Bakke")
         DelayTimer.Start()
     End Sub
