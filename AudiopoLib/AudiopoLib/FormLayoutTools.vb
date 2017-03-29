@@ -11,15 +11,14 @@ Public Class FormLayoutTools
     Private SC As SynchronizationContext = SynchronizationContext.Current
     Private Reserved As Integer
     Private ReservedGoal As Integer
-    Private ParentForm As Form
+    Private ParentForm As Control
     Private IncludeTitle As Boolean = False
     Private ReservedTimer As Timers.Timer
     Public Event Refreshed()
-    Public Sub New(ByRef TargetForm As Form)
+    Public Sub New(ByRef TargetParent As Control)
         ReservedTimer = New Timers.Timer(1000 / 60)
-        ParentForm = TargetForm
+        ParentForm = TargetParent
         AddHandler ReservedTimer.Elapsed, AddressOf SlideReservation
-        'AddHandler ParentForm.Resize, AddressOf onFormResize
     End Sub
     Public Property IncludeFormTitle As Boolean
         Get
@@ -49,8 +48,12 @@ Public Class FormLayoutTools
         End If
     End Sub
     Private Function GetTitleHeight() As Integer
-        Dim BorderWidth As Integer = CInt((ParentForm.Width - ParentForm.ClientSize.Width) / 2)
-        Dim TitlebarHeight As Integer = ParentForm.Height - ParentForm.ClientSize.Height - 2 * BorderWidth
+        Dim TitlebarHeight As Integer
+        Dim BorderWidth As Integer
+        With ParentForm
+            BorderWidth = (.Width - .ClientSize.Width) \ 2
+            TitlebarHeight = .Height - .ClientSize.Height - 2 * BorderWidth
+        End With
         Return TitlebarHeight
     End Function
     Private Sub SlideReservation(sender As Object, e As Timers.ElapsedEventArgs)
@@ -94,52 +97,76 @@ Public Class FormLayoutTools
         Else
             AlignWithX = AlignWith.Left
         End If
-        Target.Left = AlignWithX + CInt((AlignWith.Width / 2) - (Target.Width / 2)) + OffsetX
+        With Target
+            .Left = AlignWithX + AlignWith.Width \ 2 - .Width \ 2 + OffsetX
+        End With
     End Sub
     Public Overloads Sub CenterSurfaceH(Target As Control, AlignWith As Rectangle, Optional ByVal OffsetX As Integer = 0)
-        Target.Left = AlignWith.Left + CInt((AlignWith.Width / 2) - (Target.Width / 2)) + OffsetX
+        With Target
+            .Left = AlignWith.Left + AlignWith.Width \ 2 - .Width \ 2 + OffsetX
+        End With
     End Sub
     Public Overloads Sub CenterSurfaceV(Target As Control, AlignWith As Control, Optional ByVal OffsetY As Integer = 0)
+        Dim SW As New Stopwatch
+        SW.Start()
         Dim AlignWithY As Integer
         If Target.Parent Is AlignWith Then
             AlignWithY = 0
         Else
             AlignWithY = AlignWith.Top
         End If
-        Target.Top = AlignWithY + CInt((AlignWith.Height / 2) - (Target.Height / 2)) + OffsetY
+        SW.Stop()
+        Debug.Print("Time to check if parent = alignwith: " & SW.ElapsedTicks)
+        SW.Restart()
+        With Target
+            .Top = AlignWithY + AlignWith.Height \ 2 - .Height \ 2 + OffsetY
+        End With
+        SW.Stop()
+            Debug.Print("Time to set Target top: " & SW.ElapsedTicks)
     End Sub
     Public Overloads Sub CenterSurfaceV(Target As Control, AlignWith As Rectangle, Optional ByVal OffsetY As Integer = 0)
-        Target.Top = AlignWith.Top + CInt((AlignWith.Height / 2) - (Target.Height / 2)) + OffsetY
+        With Target
+            .Top = AlignWith.Top + AlignWith.Height \ 2 - .Height \ 2 + OffsetY
+        End With
     End Sub
     Public Overloads Sub CenterSurface(Target As Control, AlignWith As Control, Optional ByVal OffsetX As Integer = 0, Optional ByVal OffsetY As Integer = 0)
         CenterSurfaceH(Target, AlignWith, OffsetX)
         CenterSurfaceV(Target, AlignWith, OffsetY)
     End Sub
     Public Overloads Sub CenterSurface(Target As Control, AlignWith As Rectangle, Optional ByVal OffsetX As Integer = 0, Optional ByVal OffsetY As Integer = 0)
-        CenterSurfaceH(Target, AlignWith, OffsetX)
-        CenterSurfaceV(Target, AlignWith, OffsetY)
+        'CenterSurfaceH(Target, AlignWith, OffsetX)
+        'CenterSurfaceV(Target, AlignWith, OffsetY)
+        With Target
+            .Top = AlignWith.Top + AlignWith.Height \ 2 - .Height \ 2 + OffsetY
+            .Left = AlignWith.Left + AlignWith.Width \ 2 - .Width \ 2 + OffsetX
+        End With
+
     End Sub
     Public Sub CenterOnForm(Target As Control, Optional ByVal OffsetX As Integer = 0, Optional ByVal OffsetY As Integer = 0)
-        Target.Top = Reserved + CInt((ParentForm.ClientSize.Height - Reserved) / 2 - Target.Height / 2) + OffsetY
-        Target.Left = CInt((ParentForm.ClientRectangle.Width / 2) - (Target.Width / 2)) + OffsetX
+        With Target
+            .Top = Reserved + (ParentForm.ClientSize.Height - Reserved) \ 2 - .Height \ 2 + OffsetY
+            .Left = ParentForm.ClientRectangle.Width \ 2 - .Width \ 2 + OffsetX
+        End With
     End Sub
     Public Sub CopySpacingLeftToRight(LeftmostControl As Control, RightmostControl As Control)
-        ParentForm.ClientSize = New Size(LeftmostControl.Left + RightmostControl.Left + RightmostControl.Width - 1, ParentForm.ClientSize.Height)
+        With ParentForm
+            .ClientSize = New Size(LeftmostControl.Left + RightmostControl.Left + RightmostControl.Width - 1, .ClientSize.Height)
+        End With
     End Sub
-    Public Overloads Sub CopySpacingTopToBottom(TopmostControl As Control, BottomControl As Control, Optional ByVal IncludeBorders As Boolean = True, Optional ByVal OffsetY As Integer = 0)
-        If IncludeBorders = True Then
-            ParentForm.ClientSize = New Size(ParentForm.ClientSize.Width, TopmostControl.Top + BottomControl.Bottom)
-            ParentForm.ClientSize = New Size(ParentForm.ClientSize.Width, ParentForm.Height + OffsetY)
-        Else
-            ParentForm.ClientSize = New Size(ParentForm.ClientSize.Width, TopmostControl.Top + BottomControl.Bottom + OffsetY)
-        End If
-    End Sub
-    Public Overloads Sub CopySpacingTopToBottom(TopmostControl As Control, BottomControl As Control, ContainerControl As Control)
-        ContainerControl.ClientSize = New Size(ContainerControl.ClientSize.Width, TopmostControl.Top + BottomControl.Bottom - 1)
+    'Public Overloads Sub CopySpacingTopToBottom(TopmostControl As Control, BottomControl As Control, Optional ByVal IncludeBorders As Boolean = True, Optional ByVal OffsetY As Integer = 0)
+    '    If IncludeBorders = True Then
+    '        ParentForm.ClientSize = New Size(ParentForm.ClientSize.Width, TopmostControl.Top + BottomControl.Bottom)
+    '        ParentForm.ClientSize = New Size(ParentForm.ClientSize.Width, ParentForm.Height + OffsetY)
+    '    Else
+    '        ParentForm.ClientSize = New Size(ParentForm.ClientSize.Width, TopmostControl.Top + BottomControl.Bottom + OffsetY)
+    '    End If
+    'End Sub
+    Public Sub CopySpacingTopToBottom(TopmostControl As Control, BottomControl As Control, ContainerControl As Control)
+        With ContainerControl
+            .ClientSize = New Size(.ClientSize.Width, TopmostControl.Top + BottomControl.Bottom - 1)
+        End With
     End Sub
 
-    Private Sub onFormResize(sender As Object, e As EventArgs)
-    End Sub
 #Region "IDisposable Support"
     Private disposedValue As Boolean
     Protected Overridable Sub Dispose(disposing As Boolean)
@@ -148,6 +175,7 @@ Public Class FormLayoutTools
             RemoveHandler ReservedTimer.Elapsed, AddressOf SlideReservation
             If disposing Then
                 ReservedTimer.Dispose()
+
             End If
         End If
         disposedValue = True

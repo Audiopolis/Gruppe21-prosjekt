@@ -550,26 +550,22 @@ Public NotInheritable Class CustomCalendar
         End Set
     End Property
     Public Sub SizeToContent()
-        Try
-            Dim CalcHeight As Integer
-            If varAutoShrink Then
-                With SquareArr(41)
-                    If .Visible Then
-                        CalcHeight = .Bottom
-                    Else
-                        CalcHeight = SquareArr(41 - 7).Bottom
-                    End If
-                End With
-            Else
-                CalcHeight = SquareArr(41).Bottom
-            End If
-            With Me
-                .Width = SquareArr(6).Right
-                .Height = CalcHeight
+        Dim CalcHeight As Integer
+        If varAutoShrink Then
+            With SquareArr(41)
+                If .Visible Then
+                    CalcHeight = .Bottom
+                Else
+                    CalcHeight = SquareArr(41 - 7).Bottom
+                End If
             End With
-        Catch ex As Exception
-            MsgBox(ex.Message)
-        End Try
+        Else
+            CalcHeight = SquareArr(41).Bottom
+        End If
+        With Me
+            .Width = SquareArr(6).Right
+            .Height = CalcHeight
+        End With
     End Sub
     Private Sub OnArrowClicked(Arrow As MonthHeader.MonthArrow)
         Select Case Arrow

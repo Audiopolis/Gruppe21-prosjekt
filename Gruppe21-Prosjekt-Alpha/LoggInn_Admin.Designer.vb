@@ -49,7 +49,7 @@ Partial Class LoggInn_Admin
         Me.GroupLoggInn.Controls.Add(Me.Label2)
         Me.GroupLoggInn.Location = New System.Drawing.Point(13, 71)
         Me.GroupLoggInn.Name = "GroupLoggInn"
-        Me.GroupLoggInn.Size = New System.Drawing.Size(230, 121)
+        Me.GroupLoggInn.Size = New System.Drawing.Size(230, 151)
         Me.GroupLoggInn.TabIndex = 10
         Me.GroupLoggInn.TabStop = False
         Me.GroupLoggInn.Text = "Logg inn"

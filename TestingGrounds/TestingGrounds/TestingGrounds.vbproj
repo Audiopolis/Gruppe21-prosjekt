@@ -105,7 +105,16 @@
     <Compile Include="Questionnaire.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Simulasjon.Designer.vb">
+      <DependentUpon>Simulasjon.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Simulasjon.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="ThreadStarterLight.vb" />
+    <Compile Include="Univers.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
@@ -116,6 +125,9 @@
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Simulasjon.resx">
+      <DependentUpon>Simulasjon.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

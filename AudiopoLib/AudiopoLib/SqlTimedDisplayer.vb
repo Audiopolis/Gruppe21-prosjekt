@@ -29,6 +29,7 @@ Public Class SqlTimedDisplayer
     Private Previous As Integer
     Private FloatX As FloatX
     Private FloatY As FloatY
+    Public Event ConnectionErrorOccurred()
     Public Sub New(ByVal Server As String, ByVal Database As String, ByVal UID As String, ByVal Password As String, ByVal Parent As Control, ByVal Query As String, ByVal Parameter As String, ByVal RandomMin As Integer, ByVal RandomMax As Integer, ByVal Appearance As NotificationAppearance, Optional ByVal Duration As Double = 10, Optional ByVal Delay As Double = 4, Optional ByVal AlignmentX As FloatX = FloatX.Left, Optional ByVal AlignmentY As FloatY = FloatY.Top)
         IsRandom = True
         FloatX = AlignmentX
@@ -87,11 +88,18 @@ Public Class SqlTimedDisplayer
             End If
         End If
     End Sub
-    Private Sub FetchFinished(DT As DataTable, ClientTag As Integer, CommandTag As Integer) Handles DBC.ListLoaded
-        If Not IsFinished Then
-            Dim Result As String = CStr(DT.Rows.Item(0)(0))
-            NotifManager.Display(Result, NotifAppearance, DisplayerDuration, FloatX, FloatY)
-        End If
+    Private Sub FetchFinished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        With e
+            If Not IsFinished Then
+                If Not .ErrorOccurred Then
+                    Dim Result As String = CStr(.Data.Rows.Item(0)(0))
+                    NotifManager.Display(Result, NotifAppearance, DisplayerDuration, FloatX, FloatY)
+                Else
+                    Finish()
+                    RaiseEvent ConnectionErrorOccurred()
+                End If
+            End If
+        End With
     End Sub
     Private Sub DisplayFinished(sender As Notification) Handles NotifManager.NotificationClosed
         If Not IsFinished Then
