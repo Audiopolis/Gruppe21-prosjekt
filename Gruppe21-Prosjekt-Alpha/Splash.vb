@@ -16,7 +16,6 @@ Public NotInheritable Class Splash
     End Sub
     Private Sub InitializeStuff(State As Object)
         DelayTimer.Dispose()
-        MainWindow = New Main
 
         BlodgiverApning = New LoginBlodgiver
         BlodgiverApning.Show()
@@ -25,8 +24,6 @@ Public NotInheritable Class Splash
         'Testdashbord = New BlodgiverDashboard
         'Testlogginn = New LoggInn_Admin
         'Testspørreskjema = New Skjema
-
-        MainWindow.Show()
 
         'Testlogginn.Show()
 
@@ -44,7 +41,6 @@ Public NotInheritable Class Splash
         GB = New LinearGradientBrush(ClientRectangle, Color.FromArgb(120, Color.LightYellow), Color.FromArgb(0, Color.LightYellow), LinearGradientMode.Vertical)
         DelayTimer.AutoReset = False
         'Set up the dialog text at runtime according to the application's assembly information.  
-        Timeoversikt.Show()
         'TODO: Customize the application's assembly information in the "Application" pane of the project 
         '  properties dialog (under the "Project" menu).
 
