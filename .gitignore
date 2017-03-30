@@ -245,3 +245,6 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 *.suo
+*.suo
+*.suo
+Gruppe21-Prosjekt-Alpha/.vs/Gruppe21-Prosjekt-Alpha/v14/.suo
