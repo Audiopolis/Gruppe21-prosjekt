@@ -173,6 +173,9 @@
     <Compile Include="Timeoversikt.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="LoginField.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BlodgiverDashboard.resx">
