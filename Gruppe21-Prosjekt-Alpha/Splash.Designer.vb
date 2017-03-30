@@ -22,26 +22,11 @@ Partial Class Splash
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Me.ApplicationTitle = New System.Windows.Forms.Label()
         Me.Version = New System.Windows.Forms.Label()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.Copyright = New System.Windows.Forms.Label()
         Me.Panel1 = New System.Windows.Forms.Panel()
         Me.Panel1.SuspendLayout()
         Me.SuspendLayout()
-        '
-        'ApplicationTitle
-        '
-        Me.ApplicationTitle.Anchor = System.Windows.Forms.AnchorStyles.None
-        Me.ApplicationTitle.BackColor = System.Drawing.Color.Transparent
-        Me.ApplicationTitle.Font = New System.Drawing.Font("Microsoft YaHei UI Light", 18.3!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.ApplicationTitle.ForeColor = System.Drawing.Color.Maroon
-        Me.ApplicationTitle.Location = New System.Drawing.Point(8, 14)
-        Me.ApplicationTitle.Name = "ApplicationTitle"
-        Me.ApplicationTitle.Size = New System.Drawing.Size(272, 34)
-        Me.ApplicationTitle.TabIndex = 1
-        Me.ApplicationTitle.Text = "HemoGlobe"
-        Me.ApplicationTitle.TextAlign = System.Drawing.ContentAlignment.TopCenter
         '
         'Version
         '
@@ -49,25 +34,13 @@ Partial Class Splash
         Me.Version.BackColor = System.Drawing.Color.Transparent
         Me.Version.Font = New System.Drawing.Font("Microsoft YaHei UI Light", 8.5!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Version.ForeColor = System.Drawing.Color.Gray
-        Me.Version.Location = New System.Drawing.Point(8, 53)
+        Me.Version.Location = New System.Drawing.Point(-10, 309)
+        Me.Version.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Version.Name = "Version"
-        Me.Version.Size = New System.Drawing.Size(272, 18)
+        Me.Version.Size = New System.Drawing.Size(419, 28)
         Me.Version.TabIndex = 2
         Me.Version.Text = "Version 0.5"
         Me.Version.TextAlign = System.Drawing.ContentAlignment.TopCenter
-        '
-        'Label1
-        '
-        Me.Label1.Anchor = System.Windows.Forms.AnchorStyles.None
-        Me.Label1.BackColor = System.Drawing.Color.Transparent
-        Me.Label1.Font = New System.Drawing.Font("Microsoft YaHei UI Light", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.ForeColor = System.Drawing.Color.FromArgb(CType(CType(64, Byte), Integer), CType(CType(0, Byte), Integer), CType(CType(0, Byte), Integer))
-        Me.Label1.Location = New System.Drawing.Point(-9, 282)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(282, 19)
-        Me.Label1.TabIndex = 3
-        Me.Label1.Text = "vennligst vent"
-        Me.Label1.TextAlign = System.Drawing.ContentAlignment.TopCenter
         '
         'Copyright
         '
@@ -75,9 +48,10 @@ Partial Class Splash
         Me.Copyright.BackColor = System.Drawing.Color.Transparent
         Me.Copyright.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Copyright.ForeColor = System.Drawing.Color.FromArgb(CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer), CType(CType(64, Byte), Integer))
-        Me.Copyright.Location = New System.Drawing.Point(8, 364)
+        Me.Copyright.Location = New System.Drawing.Point(12, 560)
+        Me.Copyright.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Copyright.Name = "Copyright"
-        Me.Copyright.Size = New System.Drawing.Size(272, 62)
+        Me.Copyright.Size = New System.Drawing.Size(408, 95)
         Me.Copyright.TabIndex = 4
         Me.Copyright.Text = "Label2"
         '
@@ -86,26 +60,26 @@ Partial Class Splash
         Me.Panel1.BackColor = System.Drawing.Color.Transparent
         Me.Panel1.BackgroundImage = Global.Gruppe21_Prosjekt_Alpha.My.Resources.Resources.Logo_Blodbank
         Me.Panel1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom
-        Me.Panel1.Controls.Add(Me.Label1)
-        Me.Panel1.Location = New System.Drawing.Point(11, 53)
+        Me.Panel1.Controls.Add(Me.Version)
+        Me.Panel1.Location = New System.Drawing.Point(16, 82)
+        Me.Panel1.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(265, 301)
+        Me.Panel1.Size = New System.Drawing.Size(398, 463)
         Me.Panel1.TabIndex = 5
         '
         'Splash
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer), CType(CType(224, Byte), Integer))
         Me.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
-        Me.ClientSize = New System.Drawing.Size(288, 435)
+        Me.ClientSize = New System.Drawing.Size(432, 669)
         Me.ControlBox = False
-        Me.Controls.Add(Me.Copyright)
-        Me.Controls.Add(Me.ApplicationTitle)
-        Me.Controls.Add(Me.Version)
         Me.Controls.Add(Me.Panel1)
+        Me.Controls.Add(Me.Copyright)
         Me.DoubleBuffered = True
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
+        Me.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.MaximizeBox = False
         Me.MinimizeBox = False
         Me.Name = "Splash"
@@ -115,10 +89,7 @@ Partial Class Splash
         Me.ResumeLayout(False)
 
     End Sub
-
-    Friend WithEvents ApplicationTitle As Label
     Friend WithEvents Version As Label
-    Friend WithEvents Label1 As Label
     Friend WithEvents Copyright As Label
     Friend WithEvents Panel1 As Panel
 End Class
