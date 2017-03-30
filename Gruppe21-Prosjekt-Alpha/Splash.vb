@@ -27,7 +27,6 @@ Public NotInheritable Class Splash
         'Testspørreskjema = New Skjema
 
         MainWindow.Show()
-
         'Testlogginn.Show()
 
         Hide()
