@@ -6,7 +6,7 @@ Public Enum HorizontalPaddingSide
     Right
 End Enum
 Public Class LoginField
-    Inherits Control
+    Inherits ContainerControl
     Private ContainerControl As Control
     Private TB As TextBox
     Private varTextAlign As TextBoxAlignment
@@ -22,6 +22,11 @@ Public Class LoginField
             varPaddingSides(Side) = value
             RefreshAll()
         End Set
+    End Property
+    Public ReadOnly Property InnerTextField As TextBox
+        Get
+            Return TB
+        End Get
     End Property
     Public ReadOnly Property Header As AudiopoLib.FullWidthControl
         Get

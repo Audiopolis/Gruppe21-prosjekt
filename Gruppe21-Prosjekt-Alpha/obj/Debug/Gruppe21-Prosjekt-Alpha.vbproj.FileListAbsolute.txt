@@ -46,3 +46,5 @@ C:\Users\Andreas Ore Larssen\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-Prosjek
 C:\Users\Andreas Ore Larssen\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21-Prosjekt-Alpha.pdb
 C:\Users\Andreas Ore Larssen\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.LoginBlodgiver.resources
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.LoginBlodgiver.resources
+C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.TestWindow.resources
+C:\Users\Andreas Ore Larssen\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.blodgiverDashboard2.resources

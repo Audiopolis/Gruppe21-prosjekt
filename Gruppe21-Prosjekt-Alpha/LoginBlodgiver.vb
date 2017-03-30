@@ -9,9 +9,7 @@ Public Class LoginBlodgiver
     Private logo As HemoGlobeLogo
     Private LoginBox As loginForm
     Private Sub LoginBlodgiver_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-
         Size = New Size(1280, 720)
-
         logo = New HemoGlobeLogo
         logo.Parent = Me
         LoginBox = New loginForm
@@ -24,7 +22,6 @@ Public Class LoginBlodgiver
             LayoutHelper.CenterOnForm(LoginBox)
         End If
     End Sub
-
 End Class
 
 Public Class HemoGlobeLogo
@@ -45,121 +42,76 @@ Public Class loginForm
     Dim LoadingGraphics As LoadingGraphics(Of Control)
     Dim WithEvents FWButton, BliMedButton As FullWidthControl
     Dim PicLoadingSurface As Control
-    Dim txtBrukernavn, txtPassord As TextBox
-    Dim GroupHeader As FullWidthControl
-    Dim LabBrukernavn, LabPassord As Label
-    Dim TextBoxContainer(1) As Control
+    Dim loginBrukernavnField As New LoginField
+    Dim loginPassordField As New LoginField
     Dim LayoutHelper As New FormLayoutTools(Me)
-    'Dim LayoutHelper As New FormLayoutTools(Me)
     Dim IsLoaded As Boolean
+    Dim Header As New FullWidthControl(Me)
+
     Public Sub New()
+
+        With Header
+            .BackColor = Color.FromArgb(100, 10, 30)
+            .TextAlign = ContentAlignment.MiddleLeft
+            .ForeColor = Color.FromArgb(255, 255, 255)
+            .Text = "Logg inn"
+            .Font = New Font(.Font.FontFamily, 12)
+        End With
         'GroupLoggInn = New GroupBox
-        TextBoxContainer(0) = New Control
-        TextBoxContainer(1) = New Control
-        With TextBoxContainer(0)
-            .Size = New Size(220, 40)
-            .BackColor = Color.FromArgb(240, 240, 240)
-            .Parent = Me
-        End With
-        With TextBoxContainer(1)
-            .Size = New Size(220, 40)
-            .BackColor = Color.FromArgb(240, 240, 240)
-            .Parent = Me
-        End With
 
-        LabBrukernavn = New Label
-        LabPassord = New Label
-        txtBrukernavn = New TextBox
-        txtPassord = New TextBox
-
-        BackColor = Color.White
-        With Controls
-            .Add(LabBrukernavn)
-            .Add(LabPassord)
-            .Add(txtBrukernavn)
-            .Add(txtPassord)
-        End With
-
-        With txtBrukernavn
-            .TextAlign = HorizontalAlignment.Center
-            .Width = 218
-            .TabIndex = 1
-            .BackColor = Color.White
-            .BringToFront()
-            .Multiline = True
-            .WordWrap = False
-            .Height = 38
-            .Top = 1
-            .Font = New Font(DefaultFont.FontFamily, 20)
-            .BorderStyle = BorderStyle.None
-        End With
-        With txtPassord
-            .BackColor = Color.White
-            .Width = 218
-            .UseSystemPasswordChar = True
-            .TabIndex = 2
-            .Multiline = True
-            .WordWrap = False
-            .Height = 38
-            .Top = 1
-            .BringToFront()
-            .Font = New Font(DefaultFont.FontFamily, 20)
-            .BorderStyle = BorderStyle.None
-        End With
-        With LabBrukernavn
-            .AutoSize = False
-            .Text = "Fødselsnummer"
-            .Top = txtBrukernavn.Top
-            .Left = 5
-            .Width = txtBrukernavn.Left - 15
-            .Height = txtBrukernavn.Height
-            .TextAlign = ContentAlignment.MiddleRight
-        End With
-        With LabPassord
-            .AutoSize = False
-            .Text = "Passord"
-            .Top = txtPassord.Top
-            .Left = 5
-            .Size = LabBrukernavn.Size
-            .TextAlign = ContentAlignment.MiddleRight
-        End With
         ' TEMPORARY; TODO: Switch to secure class
 
         'NotifManager = New NotificationManager(Me)
         'NotifManager.AssignedLayoutManager = LayoutHelper
+        BackColor = Color.White
+        With loginBrukernavnField
+            .Header.Text = "Brukernavn"
+            .Header.Font = New Font(.Font.FontFamily, 11)
+            .Parent = Me
+            .Width = 280
+
+        End With
+        With loginPassordField
+            .Header.Text = "Passord"
+            .Parent = Me
+            .Width = 280
+            .InnerTextField.Multiline = False
+            .InnerTextField.UseSystemPasswordChar = True
+            .Header.Font = New Font(.Font.FontFamily, 11)
+        End With
 
         PicLoadingSurface = New PictureBox
         With PicLoadingSurface
             .Hide()
-            .Size = New Size(32, 32)
+            .Size = New Size(100, 100)
             .Parent = Me
         End With
         LoadingGraphics = New LoadingGraphics(Of Control)(PicLoadingSurface)
         With LoadingGraphics
-            .Stroke = 2
-            .Pen.Color = Color.LimeGreen
+            .Stroke = 6
+            .Pen.Color = Color.FromArgb(230, 50, 80)
         End With
         BliMedButton = New FullWidthControl(Me, True, FullWidthControl.SnapType.Bottom)
         With BliMedButton
             .Text = "Opprett bruker"
+            .Font = New Font(.Font.FontFamily, 12)
             .TabIndex = 4
-            .BackColorSelected = ColorHelper.Multiply(Color.LimeGreen, 0.7)
-            .BackColorNormal = Color.LimeGreen
+            .BackColorNormal = Color.FromArgb(120, 20, 40)
+            .BackColorSelected = ColorHelper.Multiply(.BackColorNormal, 0.7)
+            .Width = 280
+            .Height = 50
         End With
         FWButton = New FullWidthControl(Me, True, FullWidthControl.SnapType.Bottom, -BliMedButton.Height)
         With FWButton
             .Text = "Logg inn"
+            .Font = New Font(.Font.FontFamily, 12)
             .TabIndex = 3
+            .Width = 280
+            .Height = 50
+            .BackColorNormal = Color.FromArgb(230, 50, 80)
+            .BackColorSelected = ColorHelper.Multiply(.BackColorNormal, 0.7)
         End With
-        GroupHeader = New FullWidthControl(Me, False, FullWidthControl.SnapType.Top)
-        With GroupHeader
-            .Height = 20
-            .BackColor = Color.FromArgb(230, 230, 230)
-            .ForeColor = Color.FromArgb(100, 100, 100)
-            .TextAlign = ContentAlignment.MiddleLeft
-            .Padding = New Padding(5, 0, 0, 0)
-            .Text = "Logg inn"
-        End With
+
         UserLogin = New MySqlUserLogin("mysql.stud.iie.ntnu.no", "g_oops_21", "g_oops_21", "NWRhPBUk")
         With UserLogin
             .IfValid = AddressOf LoginValid
@@ -174,12 +126,16 @@ Public Class loginForm
     End Sub
     Protected Overrides Sub OnResize(eventargs As EventArgs)
         MyBase.OnResize(eventargs)
-        If txtPassord IsNot Nothing Then
+        If loginPassordField IsNot Nothing Then
             With LayoutHelper
-                .CenterOnForm(TextBoxContainer(0),, -60)
-                .CenterOnForm(TextBoxContainer(1),, 60)
-                .CenterSurface(txtBrukernavn, TextBoxContainer(0))
-                .CenterSurface(txtPassord, TextBoxContainer(1))
+                .CenterOnForm(loginBrukernavnField,, -105)
+                .CenterOnForm(loginPassordField,, -25)
+                .CenterOnForm(FWButton,, 115)
+                .CenterOnForm(BliMedButton,, 175)
+                .CenterOnForm(PicLoadingSurface)
+            End With
+            With Header
+                .Width = ClientSize.Width
             End With
         End If
     End Sub
@@ -195,16 +151,12 @@ Public Class loginForm
         Hide()
         LoadingGraphics.StopSpin()
         For Each C As Control In Controls
-            'If Not .GetType = GetType(FullWidthControl) Then
             C.Show()
-            'End If
         Next
         FWButton.Enabled = True
         BliMedButton.Enabled = True
-
-        'Testdashbord.Show()
-        txtBrukernavn.Clear()
-        txtPassord.Clear()
+        loginBrukernavnField.Text = ""
+        loginPassordField.Text = ""
     End Sub
     Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean)
         LoadingGraphics.StopSpin()
@@ -218,9 +170,8 @@ Public Class loginForm
         FWButton.Enabled = True
         BliMedButton.Enabled = True
         ResumeLayout()
-        txtBrukernavn.Clear()
-        txtPassord.Clear()
-        txtBrukernavn.Focus()
+        loginBrukernavnField.Text = ""
+        loginPassordField.Text = ""
         'LayoutHelper.SlideToHeight(40)
         'If ErrorOccurred Then
         '    NotifManager.Display("Tilkoblingen mislyktes. Vennligst prøv igjen senere, og verifiser at du har internettilgang.", NotificationPreset.RedAlert)
@@ -233,10 +184,9 @@ Public Class loginForm
         For Each C As Control In Controls
             C.Hide()
         Next
-        GroupHeader.Show()
         FWButton.Enabled = False
         BliMedButton.Enabled = False
-        UserLogin.LoginAsync(txtBrukernavn.Text, txtPassord.Text, "DonorKonti", "bruker_ID", "passord")
+        UserLogin.LoginAsync(loginBrukernavnField.Text, loginPassordField.Text, "DonorKonti", "bruker_ID", "passord")
         LoadingGraphics.Spin(30, 10)
         ResumeLayout()
     End Sub

@@ -105,6 +105,12 @@
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
     </Compile>
     <Compile Include="BlodgiverDashboard.vb" />
+    <Compile Include="blodgiverDashboard2.Designer.vb">
+      <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
+    </Compile>
+    <Compile Include="blodgiverDashboard2.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="GlobalControl.vb" />
     <Compile Include="Globals.vb" />
     <Compile Include="GridMenu.vb">
@@ -181,6 +187,9 @@
     <EmbeddedResource Include="BlodgiverDashboard.resx">
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="blodgiverDashboard2.resx">
+      <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="LoggInn_Admin.resx">
       <DependentUpon>LoggInn_Admin.vb</DependentUpon>
     </EmbeddedResource>
@@ -218,6 +227,7 @@
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
     <None Include="App.config" />
+    <None Include="Resources\OpenSans-Light.ttf" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
@@ -236,6 +246,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Logo_Blodbank.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Full_beholder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Tom_beholder.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
