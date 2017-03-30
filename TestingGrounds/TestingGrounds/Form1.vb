@@ -6,9 +6,8 @@ Public Class Form1
     Dim WithEvents Cal As CustomCalendar
     Dim TestForm1, TestForm2 As FlatForm
     Dim TestQuestionnaire As Questionnaire
-    Dim Uni As New Univers(Me, 10)
+    Dim Uni As New Univers(Me, 10, 1000, 700)
     Private Sub Setup_Tjener_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'Cal = New CustomCalendar(Me, 14, 14, 80, 80, 14, 14)
         InitializeForms()
         cmdAdd.BringToFront()
         Uni.BringToFront()
@@ -127,8 +126,8 @@ Public Class Form1
                 .Top = (ClientRectangle.Height - .Height) \ 2
             End With
         End If
-        'With Uni
-        '    .Size = ClientSize
-        'End With
+        With Uni
+            .Size = ClientSize
+        End With
     End Sub
 End Class
