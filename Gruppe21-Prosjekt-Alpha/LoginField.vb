@@ -23,6 +23,11 @@ Public Class LoginField
             RefreshAll()
         End Set
     End Property
+    Public ReadOnly Property InnerTextField As TextBox
+        Get
+            Return TB
+        End Get
+    End Property
     Public ReadOnly Property Header As AudiopoLib.FullWidthControl
         Get
             Return HeaderControl
