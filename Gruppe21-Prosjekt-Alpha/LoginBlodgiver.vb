@@ -57,13 +57,13 @@ Public Class loginForm
         TextBoxContainer(0) = New Control
         TextBoxContainer(1) = New Control
         With TextBoxContainer(0)
-            .Size = New Size(220, 40)
-            .BackColor = Color.FromArgb(240, 240, 240)
+            .Size = New Size(270, 40)
+            .BackColor = Color.FromArgb(230, 230, 230)
             .Parent = Me
         End With
         With TextBoxContainer(1)
-            .Size = New Size(220, 40)
-            .BackColor = Color.FromArgb(240, 240, 240)
+            .Size = New Size(270, 40)
+            .BackColor = Color.FromArgb(230, 230, 230)
             .Parent = Me
         End With
 
@@ -81,21 +81,21 @@ Public Class loginForm
         End With
 
         With txtBrukernavn
-            .TextAlign = HorizontalAlignment.Center
-            .Width = 218
+            .Width = 268
             .TabIndex = 1
             .BackColor = Color.White
+            .ForeColor = Color.Gray
             .BringToFront()
             .Multiline = True
             .WordWrap = False
             .Height = 38
             .Top = 1
-            .Font = New Font(DefaultFont.FontFamily, 20)
             .BorderStyle = BorderStyle.None
         End With
         With txtPassord
             .BackColor = Color.White
-            .Width = 218
+            .ForeColor = Color.Gray
+            .Width = 268
             .UseSystemPasswordChar = True
             .TabIndex = 2
             .Multiline = True
@@ -109,19 +109,16 @@ Public Class loginForm
         With LabBrukernavn
             .AutoSize = False
             .Text = "Fødselsnummer"
-            .Top = txtBrukernavn.Top
-            .Left = 5
-            .Width = txtBrukernavn.Left - 15
-            .Height = txtBrukernavn.Height
-            .TextAlign = ContentAlignment.MiddleRight
+            .BackColor = Color.FromArgb(240, 240, 240)
+            .Size = txtBrukernavn.Size
+            .TextAlign = ContentAlignment.MiddleLeft
         End With
         With LabPassord
             .AutoSize = False
             .Text = "Passord"
-            .Top = txtPassord.Top
-            .Left = 5
-            .Size = LabBrukernavn.Size
-            .TextAlign = ContentAlignment.MiddleRight
+            .BackColor = Color.FromArgb(240, 240, 240)
+            .Size = txtBrukernavn.Size
+            .TextAlign = ContentAlignment.MiddleLeft
         End With
         ' TEMPORARY; TODO: Switch to secure class
 
@@ -151,7 +148,7 @@ Public Class loginForm
             .Text = "Logg inn"
             .TabIndex = 3
         End With
-        GroupHeader = New FullWidthControl(Me, False, FullWidthControl.SnapType.Top)
+        GroupHeader = New FullWidthControl(TextBoxContainer(0), False, FullWidthControl.SnapType.Top)
         With GroupHeader
             .Height = 20
             .BackColor = Color.FromArgb(230, 230, 230)
@@ -176,10 +173,12 @@ Public Class loginForm
         MyBase.OnResize(eventargs)
         If txtPassord IsNot Nothing Then
             With LayoutHelper
-                .CenterOnForm(TextBoxContainer(0),, -60)
-                .CenterOnForm(TextBoxContainer(1),, 60)
+                .CenterOnForm(TextBoxContainer(0),, -50)
+                .CenterOnForm(TextBoxContainer(1),, 50)
                 .CenterSurface(txtBrukernavn, TextBoxContainer(0))
                 .CenterSurface(txtPassord, TextBoxContainer(1))
+                .CenterSurface(LabBrukernavn, TextBoxContainer(0),, -30)
+                .CenterSurface(LabPassord, TextBoxContainer(1),, -30)
             End With
         End If
     End Sub
