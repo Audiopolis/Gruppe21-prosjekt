@@ -35,9 +35,10 @@ Partial Class LoggInn_Admin
         'PicLoadingSurface
         '
         Me.PicLoadingSurface.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
-        Me.PicLoadingSurface.Location = New System.Drawing.Point(133, 213)
+        Me.PicLoadingSurface.Location = New System.Drawing.Point(200, 328)
+        Me.PicLoadingSurface.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.PicLoadingSurface.Name = "PicLoadingSurface"
-        Me.PicLoadingSurface.Size = New System.Drawing.Size(32, 32)
+        Me.PicLoadingSurface.Size = New System.Drawing.Size(48, 49)
         Me.PicLoadingSurface.TabIndex = 9
         Me.PicLoadingSurface.TabStop = False
         '
@@ -47,54 +48,61 @@ Partial Class LoggInn_Admin
         Me.GroupLoggInn.Controls.Add(Me.Label1)
         Me.GroupLoggInn.Controls.Add(Me.txtPassord)
         Me.GroupLoggInn.Controls.Add(Me.Label2)
-        Me.GroupLoggInn.Location = New System.Drawing.Point(13, 71)
+        Me.GroupLoggInn.Location = New System.Drawing.Point(20, 109)
+        Me.GroupLoggInn.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.GroupLoggInn.Name = "GroupLoggInn"
-        Me.GroupLoggInn.Size = New System.Drawing.Size(230, 121)
+        Me.GroupLoggInn.Padding = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.GroupLoggInn.Size = New System.Drawing.Size(345, 232)
         Me.GroupLoggInn.TabIndex = 10
         Me.GroupLoggInn.TabStop = False
         Me.GroupLoggInn.Text = "Logg inn"
         '
         'txtBrukernavn
         '
-        Me.txtBrukernavn.Location = New System.Drawing.Point(74, 33)
+        Me.txtBrukernavn.Location = New System.Drawing.Point(111, 51)
+        Me.txtBrukernavn.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.txtBrukernavn.Name = "txtBrukernavn"
-        Me.txtBrukernavn.Size = New System.Drawing.Size(145, 20)
+        Me.txtBrukernavn.Size = New System.Drawing.Size(216, 26)
         Me.txtBrukernavn.TabIndex = 1
         '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(6, 36)
+        Me.Label1.Location = New System.Drawing.Point(9, 55)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(62, 13)
+        Me.Label1.Size = New System.Drawing.Size(90, 20)
         Me.Label1.TabIndex = 5
         Me.Label1.Text = "Brukernavn"
         '
         'txtPassord
         '
-        Me.txtPassord.Location = New System.Drawing.Point(74, 59)
+        Me.txtPassord.Location = New System.Drawing.Point(111, 91)
+        Me.txtPassord.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.txtPassord.Name = "txtPassord"
-        Me.txtPassord.Size = New System.Drawing.Size(145, 20)
+        Me.txtPassord.Size = New System.Drawing.Size(216, 26)
         Me.txtPassord.TabIndex = 2
         Me.txtPassord.UseSystemPasswordChar = True
         '
         'Label2
         '
         Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(23, 62)
+        Me.Label2.Location = New System.Drawing.Point(34, 95)
+        Me.Label2.Margin = New System.Windows.Forms.Padding(4, 0, 4, 0)
         Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(45, 13)
+        Me.Label2.Size = New System.Drawing.Size(67, 20)
         Me.Label2.TabIndex = 3
         Me.Label2.Text = "Passord"
         '
         'LoggInn_Admin
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.White
-        Me.ClientSize = New System.Drawing.Size(784, 461)
+        Me.ClientSize = New System.Drawing.Size(1176, 709)
         Me.Controls.Add(Me.GroupLoggInn)
         Me.Controls.Add(Me.PicLoadingSurface)
+        Me.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
         Me.Name = "LoggInn_Admin"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "Logg inn som blodgiver"

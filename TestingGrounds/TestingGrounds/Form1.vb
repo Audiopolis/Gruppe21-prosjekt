@@ -6,10 +6,16 @@ Public Class Form1
     Dim WithEvents Cal As CustomCalendar
     Dim TestForm1, TestForm2 As FlatForm
     Dim TestQuestionnaire As Questionnaire
+    Dim Uni As New Univers(Me, 10, 1000, 700)
     Private Sub Setup_Tjener_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        'Cal = New CustomCalendar(Me, 14, 14, 80, 80, 14, 14)
         InitializeForms()
+        cmdAdd.BringToFront()
+        Uni.BringToFront()
+        Uni.Dock = DockStyle.Fill
+        cmdAdd.BringToFront()
+        Button2.BringToFront()
     End Sub
+
     Private Sub InitializeForms()
         Dim TestForm1 As New FlatForm(400, 300, 10)
         With TestForm1
@@ -104,12 +110,24 @@ Public Class Form1
         'Cal.Dispose()
         TestForm1.Dispose()
     End Sub
+
+    Private Sub cmdAdd_Click(sender As Object, e As EventArgs) Handles cmdAdd.Click
+        Uni.Clear()
+    End Sub
+
+    Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
+        Uni.Air(New Point(ClientSize.Width \ 2, ClientSize.Height \ 2), 20.0, 100)
+    End Sub
+
     Private Sub Me_Resize() Handles MyBase.Resize
         If TestQuestionnaire IsNot Nothing Then
             With TestQuestionnaire
-                .Left = CInt((Me.ClientRectangle.Width / 2) - (.Width / 2))
-                .Top = CInt((Me.ClientRectangle.Height / 2) - (.Height / 2))
+                .Left = (ClientRectangle.Width - .Width) \ 2
+                .Top = (ClientRectangle.Height - .Height) \ 2
             End With
         End If
+        With Uni
+            .Size = ClientSize
+        End With
     End Sub
 End Class

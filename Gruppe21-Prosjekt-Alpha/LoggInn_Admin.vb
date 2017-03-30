@@ -10,7 +10,8 @@ Public Class LoggInn_Admin
     Dim WithEvents UserLogin As MySqlUserLogin
     Dim LoadingGraphics As LoadingGraphics(Of PictureBox)
     Dim WithEvents LayoutTool As FormLayoutTools
-    Dim WithEvents FWButton As FullWidthControl
+    Dim WithEvents FWButton, BliMedButton As FullWidthControl
+
     Dim NotifManager As NotificationManager
     Private IsLoaded As Boolean
     Public Sub New()
@@ -44,7 +45,7 @@ Public Class LoggInn_Admin
         txtBrukernavn.Clear()
         txtPassord.Clear()
     End Sub
-    Private Sub LoginInvalid()
+    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean)
         LoadingGraphics.StopSpin()
         SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls
@@ -85,9 +86,17 @@ Public Class LoggInn_Admin
                 .CenterOnForm(GroupLoggInn)
                 .CenterSurface(PicLoadingSurface, GroupLoggInn,, 10)
             End With
-            FWButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom)
-            FWButton.Text = "Logg inn"
-            FWButton.TabIndex = 3
+            BliMedButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom)
+            With BliMedButton
+                .Text = "Opprett bruker"
+                .TabIndex = 4
+                .BackColor = Color.LimeGreen
+            End With
+            FWButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom, -BliMedButton.Height)
+            With FWButton
+                .Text = "Logg inn"
+                .TabIndex = 3
+            End With
             Dim GroupHeader As New FullWidthControl(GroupLoggInn, False, FullWidthControl.SnapType.Top)
             With GroupHeader
                 .Height = 20
@@ -104,6 +113,9 @@ Public Class LoggInn_Admin
         'Test1.TestEncoding("Hei lol", "kek")
         'Test1.Decode("kek")
     End Sub
+
+
+
     Private Sub FWButton_Click(sender As Object, e As EventArgs) Handles FWButton.Click
         SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls
@@ -122,7 +134,7 @@ End Class
 
 
 
-Public NotInheritable Class EncryptedReadWrite
+Public NotInheritable Class EncryptedReadWriteTest
     Implements IDisposable
 
     Private TripleDes As New TripleDESCryptoServiceProvider
@@ -202,7 +214,7 @@ Public NotInheritable Class EncryptedReadWrite
 #End Region
 End Class
 
-Public Class CredentialsManager
+Public Class CredentialsManagerTest
     Private DefPath As String
     Public Sub New(Optional DefaultPath As String = "Default")
         If Not DefaultPath = "Default" Then

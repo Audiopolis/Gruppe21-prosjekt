@@ -355,11 +355,10 @@ Public NotInheritable Class TestCalendar
     Private RHeight, CWidth, varSpacingX, varSpacingY, varMargins(3) As Integer
     Private ParentContainer As Control
     Private AutoColors As Boolean = True
-    Private varAutoShrink As Boolean
     Private varHideEmptyRows As Boolean = True
+    Private varAutoShrink, DrawShad As Boolean
     Private DictCustomStates As Dictionary(Of Integer, CalendarCustomState)
     Private PrevStyle, CurrStyle, NextStyle As CalendarDayStyle
-    Private DrawShad As Boolean
     Public Shadows Event MouseEnter(Sender As CalendarDay)
     Public Shadows Event MouseLeave(Sender As CalendarDay)
     Public Shadows Event Click(Sender As CalendarDay)
