@@ -105,6 +105,12 @@
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
     </Compile>
     <Compile Include="BlodgiverDashboard.vb" />
+    <Compile Include="blodgiverDashboard2.Designer.vb">
+      <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
+    </Compile>
+    <Compile Include="blodgiverDashboard2.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="GlobalControl.vb" />
     <Compile Include="Globals.vb" />
     <Compile Include="GridMenu.vb">
@@ -180,6 +186,9 @@
   <ItemGroup>
     <EmbeddedResource Include="BlodgiverDashboard.resx">
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="blodgiverDashboard2.resx">
+      <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LoggInn_Admin.resx">
       <DependentUpon>LoggInn_Admin.vb</DependentUpon>
