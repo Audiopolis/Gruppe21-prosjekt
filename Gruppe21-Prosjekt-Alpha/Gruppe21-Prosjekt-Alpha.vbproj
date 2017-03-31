@@ -185,6 +185,9 @@
     <Compile Include="LoginField.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="TopBar.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BlodgiverDashboard.resx">
@@ -255,6 +258,24 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Tom_beholder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HemoLogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EgenerklaeringIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\HjemIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LoggUtIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedigerProfilIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TimeBestillingIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

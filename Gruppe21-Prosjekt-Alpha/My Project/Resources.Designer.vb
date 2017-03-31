@@ -63,6 +63,16 @@ Namespace My.Resources
         '''<summary>
         '''  Looks up a localized resource of type System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property EgenerklaeringIcon() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("EgenerklaeringIcon", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property Full_beholder() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("Full_beholder", resourceCulture)
@@ -73,9 +83,9 @@ Namespace My.Resources
         '''<summary>
         '''  Looks up a localized resource of type System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property HemoGlobe_logo() As System.Drawing.Bitmap
+        Friend ReadOnly Property HemoLogo() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("HemoGlobe_logo", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("HemoLogo", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -83,9 +93,9 @@ Namespace My.Resources
         '''<summary>
         '''  Looks up a localized resource of type System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property HemoGlobe_logo1() As System.Drawing.Bitmap
+        Friend ReadOnly Property HjemIcon() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("HemoGlobe_logo1", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("HjemIcon", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -93,9 +103,9 @@ Namespace My.Resources
         '''<summary>
         '''  Looks up a localized resource of type System.Drawing.Bitmap.
         '''</summary>
-        Friend ReadOnly Property Logo_Blodbank() As System.Drawing.Bitmap
+        Friend ReadOnly Property LoggUtIcon() As System.Drawing.Bitmap
             Get
-                Dim obj As Object = ResourceManager.GetObject("Logo_Blodbank", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("LoggUtIcon", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -107,6 +117,26 @@ Namespace My.Resources
             Get
                 Dim obj As Object = ResourceManager.GetObject("OpenSans_Light", resourceCulture)
                 Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property RedigerProfilIcon() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("RedigerProfilIcon", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property TimeBestillingIcon() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("TimeBestillingIcon", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
         
