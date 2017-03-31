@@ -157,6 +157,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="PaintMessageHelper.vb" />
+    <Compile Include="PersonaliaDisplay.vb" />
     <Compile Include="Skjema.Designer.vb">
       <DependentUpon>Skjema.vb</DependentUpon>
     </Compile>
