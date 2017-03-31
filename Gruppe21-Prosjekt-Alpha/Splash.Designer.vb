@@ -43,7 +43,7 @@ Partial Class Splash
         'Panel1
         '
         Me.Panel1.BackColor = System.Drawing.Color.Transparent
-        Me.Panel1.BackgroundImage = Global.Gruppe21_Prosjekt_Alpha.My.Resources.Resources.loadingLogo
+        Me.Panel1.BackgroundImage = Global.Gruppe21_Prosjekt_Alpha.My.Resources.Resources.LOADING
         Me.Panel1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom
         Me.Panel1.Controls.Add(Me.Version)
         Me.Panel1.Location = New System.Drawing.Point(11, 53)
