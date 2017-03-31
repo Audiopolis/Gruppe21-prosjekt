@@ -46,7 +46,7 @@ Public NotInheritable Class Splash
         '  properties dialog (under the "Project" menu).
 
         'Application title
-
+        blodgiverDashboard2.Show()
         'Format the version information using the text set into the Version control at design time as the
         '  formatting string.  This allows for effective localization if desired.
         '  Build and revision information could be included by using the following code and changing the 
