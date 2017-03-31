@@ -27,8 +27,8 @@ End Class
 Public Class HemoGlobeLogo
     Inherits Control
     Public Sub New()
-        BackgroundImage = My.Resources.HemoLogo
-        Size = New Size(BackgroundImage.Width \ 2, BackgroundImage.Height \ 2)
+        BackgroundImage = My.Resources.Firmalogo2
+        Size = BackgroundImage.Size
         Location = New Point(0, 10)
         BackgroundImageLayout = ImageLayout.Zoom
     End Sub
