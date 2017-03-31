@@ -3,6 +3,8 @@
     Private logo As New HemoGlobeLogo
     Private LogoutButton As TopBarButton
     Private buttonList As New List(Of TopBarButton)
+    Private BorderPen As New Pen(Color.FromArgb(72, 78, 83))
+    Private HighlightPen As New Pen(Color.FromArgb(247, 247, 247))
     Protected Overridable Sub Test()
         MsgBox("Hei")
     End Sub
@@ -51,6 +53,10 @@
             .ForeColor = Color.White
         End With
     End Sub
+    Protected Overrides Sub OnPaint(e As PaintEventArgs)
+        MyBase.OnPaint(e)
+        e.Graphics.DrawLine(BorderPen, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
+    End Sub
 End Class
 Public Class TopBarButton
     Inherits Control
@@ -75,7 +81,7 @@ Public Class TopBarButton
     End Property
     Private Sub SetTextHeight() Handles TBButtonLabel.TextChanged
         Dim TextSize As Size = TextRenderer.MeasureText(Label.Text, Label.Font)
-        TextPoint = New Point(TBButtonLabel.Left, TBButtonLabel.Height \ 2 - TextSize.Height \ 2 - 2)
+        TextPoint = New Point(TBButtonLabel.Left, TBButtonLabel.Height \ 2 - TextSize.Height \ 2 - 3)
         Width = TextSize.Width + Icon.Right + 10
     End Sub
     Protected Friend Sub New(ParentTopBar As TopBar, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False)
