@@ -5,7 +5,9 @@ Public Class blodgiverDashboard2
     Dim Header As New TopBar(Me)
     Dim ScrollList As New Donasjoner(Me)
     Private Sub blodgiverDashboard2_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Header.AddButton(My.Resources.TimeBestillingIcon, "Hello", New Size(135, 35))
+        Header.AddButton(My.Resources.RedigerProfilIcon, "Hello", New Size(135, 36))
+        Header.AddButton(My.Resources.TimeBestillingIcon, "Hello", New Size(135, 36))
+        Header.AddButton(My.Resources.EgenerklaeringIcon, "Hello", New Size(135, 36))
 
         With ScrollList
             .Parent = Me
