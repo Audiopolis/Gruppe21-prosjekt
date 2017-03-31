@@ -51,10 +51,11 @@ Public Class TopBarButton
         End Get
     End Property
     Private Sub SetTextHeight() Handles TBButtonLabel.TextChanged
-        TextPoint = New Point(TBButtonLabel.Left + 10, TBButtonLabel.Height \ 2 - TextRenderer.MeasureText(Label.Text, Label.Font).Height \ 2 - 2)
+        TextPoint = New Point(TBButtonLabel.Left, TBButtonLabel.Height \ 2 - TextRenderer.MeasureText(Label.Text, Label.Font).Height \ 2 - 2)
     End Sub
     Protected Friend Sub New(ParentTopBar As TopBar, BMP As Bitmap, LabTxt As String, Size As Size)
         Hide()
+        DoubleBuffered = True
         BackColor = Color.FromArgb(247, 247, 247)
         ForeColor = Color.FromArgb(30, 30, 30)
         Me.Size = Size
@@ -85,8 +86,20 @@ Public Class TopBarButton
     End Sub
     Protected Overrides Sub OnMouseEnter(e As EventArgs)
         MyBase.OnMouseEnter(e)
-        Height += 3
-        Top -= 2
+        SelectButton(True)
+    End Sub
+    Protected Overrides Sub OnMouseLeave(e As EventArgs)
+        MyBase.OnMouseLeave(e)
+        SelectButton(False)
+    End Sub
+    Protected Friend Sub SelectButton(ByVal DoSelect As Boolean)
+        If DoSelect Then
+            Height += 2
+            Top -= 1
+        Else
+            Height -= 2
+            Top += 1
+        End If
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
@@ -99,7 +112,23 @@ Public Class TopBarButton
 
 
     Protected Friend Class TBButtonIcon
-        Inherits PictureBox
+        Inherits Control
+        Public Shadows Property Parent As TopBarButton
+            Get
+                Return DirectCast(MyBase.Parent, TopBarButton)
+            End Get
+            Set(value As TopBarButton)
+                MyBase.Parent = value
+            End Set
+        End Property
+        Protected Overrides Sub OnMouseEnter(e As EventArgs)
+            MyBase.OnMouseEnter(e)
+            Parent.SelectButton(True)
+        End Sub
+        Protected Overrides Sub OnMouseLeave(e As EventArgs)
+            MyBase.OnMouseLeave(e)
+            Parent.SelectButton(False)
+        End Sub
         Public Sub New(ParentButton As TopBarButton)
             Parent = ParentButton
             With Parent
