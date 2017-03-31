@@ -27,7 +27,7 @@ End Class
 Public Class HemoGlobeLogo
     Inherits Control
     Public Sub New()
-        BackgroundImage = My.Resources.Logo_Blodbank
+        BackgroundImage = My.Resources.HemoLogo
         Dim hoy As Integer = (BackgroundImage.Height \ 2)
         Width = 175
         Height = 54
