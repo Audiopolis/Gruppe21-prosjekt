@@ -6,7 +6,7 @@ Public Class Form1
     Dim WithEvents Cal As CustomCalendar
     Dim TestForm1, TestForm2 As FlatForm
     Dim TestQuestionnaire As Questionnaire
-    Dim Uni As New Univers(Me, 10, 1000, 700)
+    Dim Uni As New Univers(Me, 50, 1000, 700)
     Private Sub Setup_Tjener_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         InitializeForms()
         cmdAdd.BringToFront()
@@ -116,7 +116,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        Uni.Air(New Point(ClientSize.Width \ 2, ClientSize.Height \ 2), 20.0, 100)
+        Uni.Air(New FastPoint(ClientSize.Width \ 2, ClientSize.Height \ 2), 20.0, 100)
     End Sub
 
     Private Sub Me_Resize() Handles MyBase.Resize
