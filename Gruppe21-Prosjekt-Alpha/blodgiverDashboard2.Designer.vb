@@ -26,9 +26,10 @@ Partial Class blodgiverDashboard2
         '
         'blodgiverDashboard2
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1076, 478)
+        Me.ClientSize = New System.Drawing.Size(717, 311)
+        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
         Me.Name = "blodgiverDashboard2"
         Me.Text = "blodgiverDashboard2"
         Me.ResumeLayout(False)
