@@ -18,7 +18,6 @@ Public NotInheritable Class Splash
         DelayTimer.Dispose()
 
         BlodgiverApning = New LoginBlodgiver
-        BlodgiverApning.Show()
 
         'Testoversikt = New Timeoversikt
         'Testdashbord = New BlodgiverDashboard
@@ -29,35 +28,25 @@ Public NotInheritable Class Splash
         'Testlogginn.Show()
 
         Hide()
+        BlodgiverApning.Show()
+
         GB.Dispose()
         Close()
         Dispose()
-        'Testlogginn.Show()
     End Sub
 
     Private Sub DelayTimer_Elapsed(Sender As Object, e As ElapsedEventArgs) Handles DelayTimer.Elapsed
         SC.Post(AddressOf InitializeStuff, Nothing)
     End Sub
     Private Sub Splash_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        Hide()
+        DoubleBuffered = True
         GB = New LinearGradientBrush(ClientRectangle, Color.FromArgb(120, Color.LightYellow), Color.FromArgb(0, Color.LightYellow), LinearGradientMode.Vertical)
         DelayTimer.AutoReset = False
-        'Set up the dialog text at runtime according to the application's assembly information.  
-        'TODO: Customize the application's assembly information in the "Application" pane of the project 
-        '  properties dialog (under the "Project" menu).
-
-        'Application title
-        blodgiverDashboard2.Show()
-        'Format the version information using the text set into the Version control at design time as the
-        '  formatting string.  This allows for effective localization if desired.
-        '  Build and revision information could be included by using the following code and changing the 
-        '  Version control's designtime text to "Version {0}.{1:00}.{2}.{3}" or something similar.  See
-        '  String.Format() in Help for more information.
-        '
-        '    Version.Text = System.String.Format(Version.Text, My.Application.Info.Version.Major, My.Application.Info.Version.Minor, My.Application.Info.Version.Build, My.Application.Info.Version.Revision)
-
         Version.Text = String.Format(Version.Text, My.Application.Info.Version.Major, My.Application.Info.Version.Minor)
         Copyright.TextAlign = ContentAlignment.MiddleCenter
         Copyright.Text = ("This application is subject to international copyright laws. " & Chr(169) & " 2017 Magnus Bakke, Andreas Ore Larssen, Ahsan Azim, Eskil Uhlving Larsen; AudiopoLib " & Chr(169) & " 2017 Magnus Bakke")
+        Show()
         DelayTimer.Start()
     End Sub
 

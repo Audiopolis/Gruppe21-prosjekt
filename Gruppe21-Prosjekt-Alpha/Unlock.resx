@@ -117,44 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="EgenerklaeringIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\EgenerklaeringIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Firmalogo2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Firmalogo2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Full_beholder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Full_beholder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="HemoLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Firmalogo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="HjemIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\HjemIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="loadingLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\loadingLogo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="LoggUtIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\LoggUtIcon2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="OpenSans_Light" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\OpenSans-Light.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="RedigerProfilIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\RedigerProfilIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="TimeBestillingIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\TimeBestillingIcon2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Tom_beholder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Tom_beholder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="LOADING" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\LOADING.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="RedigerProfilIcon___Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\RedigerProfilIcon - Copy.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
 </root>

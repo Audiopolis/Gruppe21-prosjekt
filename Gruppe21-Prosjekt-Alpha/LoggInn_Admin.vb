@@ -72,7 +72,7 @@ Public Class LoggInn_Admin
             LoadingGraphics = New LoadingGraphics(Of PictureBox)(PicLoadingSurface)
             LayoutTool = New FormLayoutTools(Me)
             ' TEMPORARY; TODO: Switch to secure class
-            UserLogin = New MySqlUserLogin("mysql.stud.iie.ntnu.no", "g_oops_21", "g_oops_21", "NWRhPBUk")
+            UserLogin = New MySqlUserLogin(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
             UserLogin.IfValid = AddressOf LoginValid
             UserLogin.IfInvalid = AddressOf LoginInvalid
             NotifManager = New NotificationManager(Me)

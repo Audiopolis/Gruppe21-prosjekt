@@ -8,9 +8,10 @@
     Protected Overridable Sub Test()
         MsgBox("Hei")
     End Sub
-
     Public Sub New(ParentControl As Control)
-        BackColor = Color.FromArgb(110, 120, 127)
+        'BackColor = Color.FromArgb(110, 120, 127)
+        BackColor = Color.FromArgb(125, 125, 120)
+
         Dock = DockStyle.Top
         Parent = ParentControl
         With logo
@@ -48,6 +49,7 @@
     Public Sub AddLogout(Text As String, Size As Size)
         LogoutButton = New TopBarButton(Me, My.Resources.LoggUtIcon, Text, Size, True)
         With LogoutButton
+            .Top = (Height - .Height) \ 2 + 1
             .Left = Width - .Width - .Top
             .BackColor = Color.FromArgb(162, 25, 51)
             .ForeColor = Color.White
@@ -61,14 +63,18 @@ End Class
 Public Class TopBarButton
     Inherits Control
     Private WithEvents TBButtonLabel As New Label
-    Private Icon As TBButtonIcon
+    Private WithEvents Icon As TBButtonIcon
     Private varIsLogout As Boolean = False
     Private TextBrush As New SolidBrush(Color.FromArgb(30, 30, 30))
     Private HighlightBrush As New SolidBrush(Color.FromArgb(200, Color.White))
     Private BorderPen As New Pen(Color.FromArgb(155, 155, 155))
     Private ShadowBrush As New SolidBrush(Color.FromArgb(91, 100, 106))
+    Private LinePen As New Pen(Color.FromArgb(220, 220, 220))
     Private DrawRect, ShadowRect As Rectangle
     Private TextPoint As Point
+    'Private Sub IconPaint(sender As Object, e As PaintEventArgs) Handles Icon.Paint
+
+    'End Sub
     Public ReadOnly Property IsLogout As Boolean
         Get
             Return varIsLogout
@@ -82,31 +88,27 @@ Public Class TopBarButton
     Private Sub SetTextHeight() Handles TBButtonLabel.TextChanged
         Dim TextSize As Size = TextRenderer.MeasureText(Label.Text, Label.Font)
         TextPoint = New Point(TBButtonLabel.Left, TBButtonLabel.Height \ 2 - TextSize.Height \ 2 - 3)
-        Width = TextSize.Width + Icon.Right + 10
+        Width = TextSize.Width + Icon.Right + 20
     End Sub
     Protected Friend Sub New(ParentTopBar As TopBar, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False)
         varIsLogout = IsLogout
         Hide()
         DoubleBuffered = True
         BackColor = Color.FromArgb(247, 247, 247)
-        ForeColor = Color.FromArgb(30, 30, 30)
+        'ForeColor = Color.FromArgb(30, 30, 30)
         Me.Size = Size
-        Icon = New TBButtonIcon(Me)
+        Icon = New TBButtonIcon(Me, BMP)
         Parent = ParentTopBar
         With TBButtonLabel
             .Hide()
             .Parent = Me
             .Height = Height
-            .Left = Icon.Right
+            .Left = Icon.Right + 10
             .Width = Width - .Left
-            .TextAlign = ContentAlignment.MiddleLeft
+            .Text = LabTxt
         End With
-        With Icon
-            .BackgroundImage = BMP
-        End With
-        TBButtonLabel.Text = LabTxt
         If varIsLogout Then
-            HighlightBrush.Dispose()
+            'HighlightBrush.Dispose()
             BorderPen.Color = AudiopoLib.ColorHelper.Multiply(Color.FromArgb(162, 25, 51), 0.4)
             TextBrush.Color = Color.White
         End If
@@ -116,6 +118,8 @@ Public Class TopBarButton
         MyBase.OnPaint(e)
         With e.Graphics
             If Not varIsLogout Then
+                .FillRectangle(HighlightBrush, New Rectangle(Point.Empty, New Size(Width, Height \ 2)))
+                .DrawLine(LinePen, New Point(Icon.Right, 0), New Point(Icon.Right, Icon.Bottom))
                 .DrawString(TBButtonLabel.Text, Label.Font, HighlightBrush, TextPoint)
             End If
             .DrawString(TBButtonLabel.Text, Label.Font, TextBrush, New Point(TextPoint.X - 1, TextPoint.Y + 1))
@@ -133,11 +137,17 @@ Public Class TopBarButton
     End Sub
     Protected Friend Sub SelectButton(ByVal DoSelect As Boolean)
         If DoSelect Then
-            Height += 2
-            Top -= 1
+            'Height += 2
+            'Top -= 1
+            Icon.BackgroundImage.Dispose()
+            Icon.BackgroundImage = My.Resources.RedigerProfilIcon
+            Icon.BackColor = Color.FromArgb(247, 247, 247)
         Else
-            Height -= 2
-            Top += 1
+            'Height -= 2
+            'Top += 1
+            Icon.BackgroundImage.Dispose()
+            Icon.BackgroundImage = My.Resources.RedigerProfilIcon___Copy
+            Icon.BackColor = Color.FromArgb(56, 56, 57)
         End If
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -168,13 +178,16 @@ Public Class TopBarButton
             MyBase.OnMouseLeave(e)
             Parent.SelectButton(False)
         End Sub
-        Public Sub New(ParentButton As TopBarButton)
+        Public Sub New(ParentButton As TopBarButton, BMP As Bitmap)
             Parent = ParentButton
             With Parent
                 Size = New Size(.Height - 2, .Height - 5)
             End With
             Location = New Point(1, 1)
             BackgroundImageLayout = ImageLayout.Center
+            'BackgroundImage = BMP
+            BackgroundImage = My.Resources.RedigerProfilIcon___Copy
+            BackColor = Color.FromArgb(56, 56, 57)
         End Sub
     End Class
 End Class
