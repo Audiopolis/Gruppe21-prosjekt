@@ -101,6 +101,10 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdminCredentials.vb" />
+    <Compile Include="AdminUnlock.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="BlodgiverDashboard.Designer.vb">
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
     </Compile>
@@ -111,6 +115,7 @@
     <Compile Include="blodgiverDashboard2.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="DatabaseCredentials.vb" />
     <Compile Include="FlatList.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -158,6 +163,10 @@
     </Compile>
     <Compile Include="PaintMessageHelper.vb" />
     <Compile Include="PersonaliaDisplay.vb" />
+    <Compile Include="PieChart.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CryptoServiceProvider.vb" />
     <Compile Include="Skjema.Designer.vb">
       <DependentUpon>Skjema.vb</DependentUpon>
     </Compile>
@@ -188,6 +197,12 @@
     </Compile>
     <Compile Include="TopBar.vb">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Unlock.Designer.vb">
+      <DependentUpon>Unlock.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Unlock.vb">
+      <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +235,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Timeoversikt.resx">
       <DependentUpon>Timeoversikt.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Unlock.resx">
+      <DependentUpon>Unlock.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -295,6 +313,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\LOADING.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedigerProfilIcon - Copy.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

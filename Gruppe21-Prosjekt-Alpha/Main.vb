@@ -147,12 +147,14 @@ Public Class FirstTab
             .Padding = New Padding(5, 0, 0, 0)
             .Text = "Logg inn"
         End With
-        UserLogin = New MySqlUserLogin("mysql.stud.iie.ntnu.no", "g_oops_21", "g_oops_21", "NWRhPBUk")
-        With UserLogin
-            .IfValid = AddressOf LoginValid
-            .IfInvalid = AddressOf LoginInvalid
+        With Credentials
+            UserLogin = New MySqlUserLogin(.Server, .Database, .UserID, .Password)
         End With
-        With LayoutHelper
+        With UserLogin
+                .IfValid = AddressOf LoginValid
+                .IfInvalid = AddressOf LoginInvalid
+            End With
+            With LayoutHelper
             .CenterSurface(GroupLoggInn, Me)
             .CenterSurface(PicLoadingSurface, GroupLoggInn, 0, 10)
         End With
@@ -519,7 +521,7 @@ Public Class Personopplysninger
             .Hide()
         End With
     End Sub
-    Private DBC As New DatabaseClient("mysql.stud.iie.ntnu.no", "g_oops_21", "g_oops_21", "NWRhPBUk")
+    Private DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Public Sub Execute(Sender As Object, e As EventArgs)
         Dim Ret As FlatFormResult = Result()
         Dim RetX() As HeaderValuePair = Ret.GetAllSeries
@@ -539,8 +541,8 @@ Public Class Personopplysninger
                 End If
             End If
         Next
-        DBC.SQLQuery = "INSERT INTO `g_oops_21`.`BLODGIVER` (`fødselsnr`, `b_fornavn`, `b_etternavn`, `b_telefon`, `b_epost`, `b_adresse`, `b_postnummer`, `send_epost`, `send_sms`) VALUES ('" & ParamList(0) & "', '" & ParamList(1) & "', '" & ParamList(2) & "', '" & ParamList(3) & "', '" & ParamList(6) & "', '" & ParamList(7) & "', '" & ParamList(8) & "', '" & ParamList(9) & "', '" & ParamList(10) & "', '" & ParamList(11) & "', '" & ParamList(12) & "');"
-        DBC.Execute()
+        DBC.SQLQuery = "INSERT INTO 'g_oops_21'.'BLODGIVER' ('b_fodselsnr', 'b_fornavn', 'b_etternavn', 'b_telefon1', 'b_telefon2', 'b_telefon3', 'b_epost', 'b_adresse', 'b_postnr', 'b_kjonn', 'send_epost', 'send_sms') VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
+        DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@b_adresse", "@b_postnr", "@b_kjonn", "@send_epost", "@send_sms"}, ParamList.ToArray, True)
     End Sub
 
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -598,13 +600,15 @@ Public NotInheritable Class EncryptedReadWrite
 
             ' Use the crypto stream to write the byte array to the stream.
             decStream.Write(encryptedBytes, 0, encryptedBytes.Length)
-            decStream.FlushFinalBlock()
-
+            Try
+                decStream.FlushFinalBlock()
+            Catch
+                decStream.Dispose()
+            End Try
             ' Convert the plaintext stream to a string.
             Return Text.Encoding.Unicode.GetString(ms.ToArray)
-        Catch
-            MsgBox("HEI LOL TEST")
-            Return "Feil"
+            Catch ex As System.Security.Cryptography.CryptographicException
+                Return Nothing
         End Try
     End Function
 
@@ -648,23 +652,25 @@ Public NotInheritable Class CredentialsManager
             File.Create(DefPath & "\test.txt")
         End If
     End Sub
-    Public Sub TestEncoding(ByVal Value As String, ByVal Password As String)
+    Public Sub Encode(ByVal Value As String, ByVal Password As String)
         Dim wrapper As New EncryptedReadWrite(Password)
         Dim cipherText As String = wrapper.EncryptData(Value)
-
         MsgBox("The cipher text is: " & cipherText)
         My.Computer.FileSystem.WriteAllText(DefPath & "\test.txt", cipherText, False)
+        wrapper.Dispose()
     End Sub
-    Public Sub Decode(ByVal Password As String)
+    Public Function Decode(ByVal Password As String) As String
         Dim cipherText As String = My.Computer.FileSystem.ReadAllText(DefPath & "\test.txt")
         Dim wrapper As New EncryptedReadWrite(Password)
 
         ' DecryptData throws if the wrong password is used.
         Try
             Dim plainText As String = wrapper.DecryptData(cipherText)
-            MsgBox("The plain text is: " & plainText)
+            Return plainText
         Catch ex As System.Security.Cryptography.CryptographicException
-            MsgBox("The data could not be decrypted with the password.")
+            Return Nothing
+        Finally
+            wrapper.Dispose()
         End Try
-    End Sub
+    End Function
 End Class
