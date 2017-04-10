@@ -154,7 +154,25 @@
   <data name="LOADING" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LOADING.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="RedigerProfilIcon___Copy" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\RedigerProfilIcon - Copy.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="AvbrytIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\AvbrytIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Doktor2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Doktor2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DoktorPassord" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DoktorPassord.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OKIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OKIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NeiTakkIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NeiTakkIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NesteIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\NesteIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="OpprettKontoInfo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OpprettKontoInfo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

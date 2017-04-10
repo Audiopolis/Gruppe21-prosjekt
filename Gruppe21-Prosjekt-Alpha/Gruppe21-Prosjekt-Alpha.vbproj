@@ -84,7 +84,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +104,9 @@
     <Compile Include="AdminUnlock.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="BlodBeholder.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="BlodgiverDashboard.Designer.vb">
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
     </Compile>
@@ -115,13 +117,22 @@
     <Compile Include="blodgiverDashboard2.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="BorderControl.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DatabaseCredentials.vb" />
     <Compile Include="FlatList.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Footer.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="GlobalControl.vb" />
     <Compile Include="Globals.vb" />
     <Compile Include="GridMenu.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="InfoLabel.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="LoggInn_Admin.vb">
@@ -316,6 +327,30 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\RedigerProfilIcon - Copy.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Doktor1%27.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OKIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AvbrytIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Doktor2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DoktorPassord.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OpprettKontoInfo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NeiTakkIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NesteIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

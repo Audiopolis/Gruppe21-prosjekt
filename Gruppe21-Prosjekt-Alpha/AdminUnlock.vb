@@ -19,6 +19,7 @@ Public Class AdminUnlockWrapper
     Public Event CorrectKey(Sender As Object, ConnectionSucceeded As Boolean)
     Public Sub New(CredPath As String, FileName As String)
         Hide()
+        DoubleBuffered = True
         Size = New Size(250, 120)
         BackColor = Color.Gray
         With InnerContainer
@@ -136,24 +137,28 @@ Public Class AdminUnlockWrapper
         LG.StopSpin()
         LoadingSurface.SendToBack()
         TB.Clear()
-        For Each C As Control In InnerContainer.Controls
-            C.Show()
-        Next
-        TB.Focus()
+        'For Each C As Control In InnerContainer.Controls
+        '    C.Show()
+        'Next
+        'If Valid Then
+        '    TB.Hide()
+        'End If
         RaiseEvent CorrectKey(Me, Valid)
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        HeaderControl.Dispose()
-        Lab.Dispose()
-        TB.Dispose()
-        LoggInn.Dispose()
-        If TSL IsNot Nothing Then
-            TSL.Dispose()
+        If disposing Then
+            HeaderControl.Dispose()
+            Lab.Dispose()
+            TB.Dispose()
+            LoggInn.Dispose()
+            If TSL IsNot Nothing Then
+                TSL.Dispose()
+            End If
+            LG.Dispose()
+            LoadingSurface.Dispose()
+            ValidityChecker.Dispose()
+            InnerContainer.Dispose()
         End If
-        LG.Dispose()
-        LoadingSurface.Dispose()
-        ValidityChecker.Dispose()
-        InnerContainer.Dispose()
         MyBase.Dispose(disposing)
     End Sub
 End Class

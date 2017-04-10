@@ -57,6 +57,7 @@ Public Class LoginForm
     Dim IsLoaded As Boolean
     Dim Header As New FullWidthControl(Me)
     Public Event CheckFinished(Sender As Object, Success As Boolean)
+    Public Event BliMedClicked(Sender As Object, e As EventArgs)
     Public Sub New()
         With Header
             .BackColor = Color.FromArgb(100, 10, 30)
@@ -149,7 +150,7 @@ Public Class LoginForm
         loginPassordField.Text = ""
         RaiseEvent CheckFinished(Me, True)
     End Sub
-    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean)
+    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean, ErrorMessage As String)
         SuspendLayout()
         LoadingGraphics.StopSpin()
         PicLoadingSurface.SendToBack()
@@ -175,18 +176,20 @@ Public Class LoginForm
         ResumeLayout()
     End Sub
     Private Sub BliMedButton_Click(Sender As Object, e As EventArgs) Handles BliMedButton.Click
-
+        RaiseEvent BliMedClicked(BliMedButton, EventArgs.Empty)
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
         'UserLogin.Dispose
-        LoadingGraphics.Dispose()
-        FWButton.Dispose()
-        BliMedButton.Dispose()
-        PicLoadingSurface.Dispose()
-        loginBrukernavnField.Dispose()
-        loginPassordField.Dispose()
-        LayoutHelper.Dispose()
-        Header.Dispose()
+        If disposing Then
+            LoadingGraphics.Dispose()
+            FWButton.Dispose()
+            BliMedButton.Dispose()
+            PicLoadingSurface.Dispose()
+            loginBrukernavnField.Dispose()
+            loginPassordField.Dispose()
+            LayoutHelper.Dispose()
+            Header.Dispose()
+        End If
         MyBase.Dispose(disposing)
     End Sub
 End Class

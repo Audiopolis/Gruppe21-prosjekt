@@ -19,16 +19,21 @@ Public NotInheritable Class Splash
 
         BlodgiverApning = New LoginBlodgiver
 
+
+
+
         'Testoversikt = New Timeoversikt
         'Testdashbord = New BlodgiverDashboard
         'Testlogginn = New LoggInn_Admin
         'Testspørreskjema = New Skjema
 
-
+        blodgiverDashboard2.Show()
         'Testlogginn.Show()
+        MainWindow = New Main
+        MainWindow.Show()
 
         Hide()
-        BlodgiverApning.Show()
+        'BlodgiverApning.Show()
 
         GB.Dispose()
         Close()

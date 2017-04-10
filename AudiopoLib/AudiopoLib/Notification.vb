@@ -413,6 +413,16 @@ Public Enum FloatY
     FillHeight
 End Enum
 Public Class NotificationPreset
+    Public Shared ReadOnly Property OffRedAlert As NotificationAppearance
+        Get
+            Return New NotificationAppearance(Color.FromArgb(185, 6, 40), Color.White, 40, 200, 0, 0, 0)
+        End Get
+    End Property
+    Public Shared ReadOnly Property GreenSuccess As NotificationAppearance
+        Get
+            Return New NotificationAppearance(Color.FromArgb(87, 179, 69), Color.White, 40, 200, 0, 0, 0)
+        End Get
+    End Property
     Public Shared ReadOnly Property RedAlert As NotificationAppearance
         Get
             Return New NotificationAppearance(Color.Red, Color.White, 40, 200, 0, 0, 0)
