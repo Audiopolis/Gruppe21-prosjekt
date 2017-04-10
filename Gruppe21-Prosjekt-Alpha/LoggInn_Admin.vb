@@ -45,7 +45,7 @@ Public Class LoggInn_Admin
         txtBrukernavn.Clear()
         txtPassord.Clear()
     End Sub
-    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean)
+    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean, ErrorMessage As String)
         LoadingGraphics.StopSpin()
         SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls
@@ -113,8 +113,6 @@ Public Class LoggInn_Admin
         'Test1.TestEncoding("Hei lol", "kek")
         'Test1.Decode("kek")
     End Sub
-
-
 
     Private Sub FWButton_Click(sender As Object, e As EventArgs) Handles FWButton.Click
         SuspendLayout()

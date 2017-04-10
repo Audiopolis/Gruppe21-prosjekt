@@ -2,6 +2,7 @@
 Option Explicit On
 Option Infer Off
 Imports System.ComponentModel
+Imports System.Drawing.Drawing2D
 Imports System.IO
 Imports System.Security.Cryptography
 Imports AudiopoLib
@@ -26,16 +27,24 @@ Public Class Main
             KeyPreview = True
             Windows = New MultiTabWindow(Me)
 
-            FirstTabTest = New FirstTab(Windows)
-            SecondTabTest = New SecondTab(Windows)
-            ThirdTabTest = New ThirdTab(Windows)
-            PersonaliaTest = New Personopplysninger(Windows)
+            ' ALPHA
+            FirstTabTest = New FirstTab(Windows) ' Index = 0
+            SecondTabTest = New SecondTab(Windows) ' Index = 1
+            ThirdTabTest = New ThirdTab(Windows) ' Index = 2
+
+            ' MÅ GJØRES FERDIG
+            PersonaliaTest = New Personopplysninger(Windows) ' Index = 3
+
+            ' BETA
+            LoggInnTab = New LoggInn(Windows) ' Index = 4
+
             With Windows
                 .BackColor = Color.White
-                .Index = 0
+                .Index = 4
             End With
-            Width = 800
-            Height = 500
+            WindowState = FormWindowState.Maximized
+            'Width = 800
+            'Height = 500
             IsLoaded = True
         End If
     End Sub
@@ -151,10 +160,10 @@ Public Class FirstTab
             UserLogin = New MySqlUserLogin(.Server, .Database, .UserID, .Password)
         End With
         With UserLogin
-                .IfValid = AddressOf LoginValid
-                .IfInvalid = AddressOf LoginInvalid
-            End With
-            With LayoutHelper
+            .IfValid = AddressOf LoginValid
+            .IfInvalid = AddressOf LoginInvalid
+        End With
+        With LayoutHelper
             .CenterSurface(GroupLoggInn, Me)
             .CenterSurface(PicLoadingSurface, GroupLoggInn, 0, 10)
         End With
@@ -184,7 +193,7 @@ Public Class FirstTab
         txtBrukernavn.Clear()
         txtPassord.Clear()
     End Sub
-    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean)
+    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean, ErrorMessage As String)
         LoadingGraphics.StopSpin()
         SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls
@@ -334,7 +343,7 @@ Public Class ThirdTab
             .AddField(FormElementType.TextField)
             .AddField(FormElementType.Radio, 120, True)
             .AddField(FormElementType.Radio)
-            .AddRadioContext()
+            .AddRadioContext(True)
             .AddField(FormElementType.Radio, 120, True)
             .AddField(FormElementType.Radio)
             .Field(1, 2).Extrude(FieldExtrudeSide.Left, 10)
@@ -399,29 +408,531 @@ End Class
 
 Public Class Personopplysninger
     Inherits Tab
-    Dim Personalia As New FlatForm(400, 300, 0)
-    Dim LayoutTool As New FormLayoutTools(Me)
-    Public ReadOnly Property Result() As FlatFormResult
-        Get
-            Return Personalia.Result
-        End Get
-    End Property
+    Private Personalia As New FlatForm(400, 300, 3, FormFieldStylePresets.PlainWhite)
+    Private PasswordForm As New FlatForm(270, 100, 3, New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.FromArgb(80, 80, 80), Color.White, Color.Black, {True, True, True, True}, 20))
+    Private WithEvents TopBar As New TopBar(Me)
+    Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
+    Private PicDoktor, PicDoktorPassord As New PictureBox
+    Private PicOpprettKontoInfo As New PictureBox
+    Private FormInfo As New Label
+    Private InfoLab As New InfoLabel
+    Private WithEvents SendKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Neste steg", New Size(0, 36))
+    Private AvbrytKnapp As New TopBarButton(FormPanel, My.Resources.AvbrytIcon, "Avbryt", New Size(0, 36), True)
+    Private NeiTakkKnapp As New TopBarButton(FormPanel, My.Resources.NeiTakkIcon, "Nei takk", New Size(0, 36))
+    Private PasswordFormVisible As Boolean = False
+    Private LayoutTool As New FormLayoutTools(Me)
+    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private FirstHeader As New FullWidthControl(FormPanel)
+    Private FormResult() As String
+    Private NotifManager As New NotificationManager(FirstHeader)
+    Private Sub TopBarButtonClick(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
+        Select Case CInt(Sender.Tag)
+            Case 0
+                ResetForm()
+                Parent.Index = 4
+        End Select
+    End Sub
+    Private Sub SendClick() Handles SendKnapp.Click
+        If Not PasswordFormVisible Then
+            If Personalia.Validate Then
+                Dim Result() As HeaderValuePair = Personalia.Result
+                Dim DataArr(11) As String
+                For i As Integer = 0 To 4
+                    DataArr(i) = Result(i).Value.ToString
+                Next
+                If DirectCast(Result(5).Value, Boolean) Then
+                    DataArr(5) = "1"
+                Else
+                    DataArr(5) = "0"
+                End If
+                For i As Integer = 7 To 10
+                    DataArr(i - 1) = Result(i).Value.ToString
+                Next
+                If DirectCast(Result(11).Value, Boolean) Then
+                    DataArr(10) = "1"
+                Else
+                    DataArr(10) = "0"
+                End If
+                If DirectCast(Result(12).Value, Boolean) Then
+                    DataArr(11) = "1"
+                Else
+                    DataArr(11) = "0"
+                End If
+                FormResult = DataArr
+
+                ' TODO: Validate form
+                Dim IsValid As Boolean = True
+
+                If IsValid Then
+                    Personalia.Hide()
+                    PicDoktor.Hide()
+                    FormInfo.Hide()
+                    SendKnapp.Hide()
+                    NeiTakkKnapp.Hide()
+                    With AvbrytKnapp
+                        .Hide()
+                        .Left = FormInfo.Left
+                    End With
+                    With SendKnapp
+                        .IconImage = My.Resources.OKIcon
+                        With .Label
+                            .Text = "Opprett bruker"
+                        End With
+                        '.BackColor = Color.FromArgb(0, 102, 148)
+                        '.BackColor = Color.FromArgb(184, 237, 178)
+                        '.ForeColor = Color.White
+                        '.ForeColor = ColorHelper.Multiply(.BackColor, 0.1)
+                        .Left = Personalia.Right - .Width
+                        With .Label
+                            .Font = New Font(.Font, FontStyle.Bold)
+                            .UseCompatibleTextRendering = True
+                            .Text = .Text
+                        End With
+                    End With
+                    With NeiTakkKnapp
+                        .Top = SendKnapp.Top
+                        .Left = SendKnapp.Left - .Width - 10
+                        .Show()
+                    End With
+                    AvbrytKnapp.Show()
+                    SendKnapp.Show()
+                    PicOpprettKontoInfo.Show()
+                    PicDoktorPassord.Show()
+                    PasswordForm.Field(0, 0).Value = FormResult(0)
+                    PasswordForm.Show()
+                    PasswordFormVisible = True
+                End If
+            Else
+                NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fyllt inn riktig.", NotificationPreset.OffRedAlert)
+            End If
+        ElseIf PasswordForm.Validate Then
+            DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_adresse", "@b_postnr", "@b_kjonn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@send_epost", "@send_sms"}, FormResult)
+        End If
+    End Sub
+    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        If e.ErrorOccurred Then
+            NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fyllt inn riktig.", NotificationPreset.OffRedAlert)
+        Else
+            NotifManager.Display("Du er nå registrert i vårt system.", NotificationPreset.GreenSuccess)
+        End If
+    End Sub
+    Private Sub DBC_Failed() Handles DBC.ExecutionFailed
+        NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fyllt inn riktig.", NotificationPreset.OffRedAlert)
+    End Sub
+    Public Shadows Sub Show()
+        FormPanel.Hide()
+        MyBase.Show()
+    End Sub
+    Private Sub Me_VisibleChanged() Handles Me.VisibleChanged
+        If Visible Then
+            FormPanel.Show()
+        End If
+    End Sub
     Public Sub New(Window As MultiTabWindow)
         MyBase.New(Window)
+        DoubleBuffered = True
+        SuspendLayout()
+        BackColor = Color.FromArgb(240, 240, 240)
+        With FormPanel
+            .Hide()
+            .Parent = Me
+            .Top = TopBar.Bottom + 20
+            .Left = 30
+            .Width = 817
+            .Height = 480
+            .BackColor = Color.FromArgb(225, 225, 225)
+        End With
+        With FirstHeader
+            .Width = 817
+            .Height = 40
+            .Text = "Registrering"
+            .BackColor = Color.FromArgb(183, 187, 191)
+            .ForeColor = Color.White
+        End With
+#Region "Form"
         With Personalia
-            .AddField(FormElementType.Label)
-            .Last.Value = "Vennligst fyll ut følgende informasjon. Du vil bli bedt om å bekrefte opplysningene ved ny timeforespørsel, og med signatur ved oppmøte."
-            .LastRow.Height = 60
             .NewRowHeight = 50
+            .AddField(FormElementType.TextField, 180)
+            With .Last
+                .Header.Text = "Fødselsnummer* (11 siffer)"
+                .Required = True
+                .MinLength = 11
+                .MaxLength = 11
+            End With
+            .AddField(FormElementType.TextField, 107)
+            With .Last
+                .Header.Text = "Fornavn*"
+                .Required = True
+                .MaxLength = 30
+            End With
+            .AddField(FormElementType.TextField)
+            With .Last
+                .Header.Text = "Etternavn*"
+                .Required = True
+                .MaxLength = 30
+            End With
+            .AddField(FormElementType.TextField, 290)
+            With .Last
+                .Header.Text = "Privatadresse*"
+                .Required = True
+                .MaxLength = 100
+            End With
+            .AddField(FormElementType.TextField)
+            With .Last
+                .Header.Text = "Postnummer*"
+                .Required = True
+                .Numeric = True
+                .MinLength = 4
+                .MaxLength = 4
+            End With
+            .NewRowHeight = 50
+            .AddField(FormElementType.Radio, 200)
+            With .Last
+                .Value = True
+                .Header.Text = "Kjønn*"
+                .SecondaryValue = "Jeg er mann"
+                .DrawBorder(FormField.ElementSide.Right) = False
+            End With
+            .AddField(FormElementType.Radio)
+            With .Last
+                .SecondaryValue = "Jeg er kvinne"
+                .DrawBorder(FormField.ElementSide.Left) = False
+                .DrawDashedSepararators(FormField.ElementSide.Left) = True
+                .Extrude(FieldExtrudeSide.Left, 3)
+                .DrawDotsOnHeader = False
+            End With
+            .AddField(FormElementType.TextField, 133)
+            With .Last
+                .Header.Text = "Telefon privat*"
+                .Required = True
+                .MaxLength = 15
+            End With
+            .AddField(FormElementType.TextField, 133)
+            With .Last
+                .Header.Text = "Telefon mobil"
+            End With
+            .AddField(FormElementType.TextField)
+            With .Last
+                .Header.Text = "Telefon arbeid"
+            End With
+            .AddField(FormElementType.TextField)
+            With .Last
+                .Header.Text = "Epost-adresse*"
+                .Required = True
+                .MinLength = 5
+                .MaxLength = 100
+            End With
+            .AddField(FormElementType.CheckBox)
+            .NewRowHeight = 40
+            With .Last
+                .Value = True
+                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via epost"
+                .DrawBorder(FormField.ElementSide.Bottom) = False
+            End With
+            .AddField(FormElementType.CheckBox)
+            With .Last
+                .Value = True
+                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via SMS"
+                .DrawBorder(FormField.ElementSide.Top) = False
+                .DrawDashedSepararators(FormField.ElementSide.Top) = True
+                .SwitchHeader(False)
+            End With
+            .MergeWithAbove(6, 0, 0, True)
+            .Parent = FormPanel
+            .Display()
+            .Location = New Point(20, 60)
+        End With
+#End Region
+#Region "Password Form"
+        With PasswordForm
+            .AddField(FormElementType.Label)
+            With .Last
+                .Header.Text = "Bruker-ID"
+                .Value = "Fødselsnummer"
+            End With
+            .AddField(FormElementType.TextField)
+            Dim FieldHeight As Integer
+            With .Last
+                .Header.Text = "Velg et passord"
+                .DrawBorder(FormField.ElementSide.Bottom) = False
+                .Required = True
+                .MinLength = 6
+                .MaxLength = 50
+                AddHandler .ValueChanged, AddressOf PasswordChanged
+                AddHandler .ValidChanged, AddressOf PasswordValidChanged
+                FieldHeight = .Height - .Header.Bottom
+            End With
+            With DirectCast(.Last, FlatForm.FormTextField)
+                .PlaceHolder = "Velg et passord"
+                .TextField.UseSystemPasswordChar = True
+            End With
+            .AddField(FormElementType.TextField)
+            .MergeWithAbove(2, 0)
+            With .Last
+                AddHandler .ValidChanged, AddressOf PasswordValidChanged
+                .DrawBorder(FormField.ElementSide.Top) = False
+                .DrawDashedSepararators(FormField.ElementSide.Top) = True
+                .SwitchHeader(False)
+                .Height = FieldHeight
+                .Required = True
+                .RequireSpecificValue("")
+            End With
+            With DirectCast(.Last, FlatForm.FormTextField)
+                .PlaceHolder = "Gjenta passordet"
+                .TextField.UseSystemPasswordChar = True
+            End With
+            .Parent = FormPanel
+            .Display()
+        End With
+#End Region
+        'Dim NB As New Button
+        'With NB
+        '    .Hide()
+        '    .Size = New Size(100, 100)
+        '    .Location = Point.Empty
+        '    .Parent = Me
+        '    .Enabled = False
+        'End With
 
+        With TopBar
+            .AddButton(My.Resources.HjemIcon, "Hjem", New Size(135, 36))
+            'AddHandler .Click, AddressOf 
+        End With
+        With SendKnapp
+            .Top = Personalia.Bottom + 10
+            .Left = Personalia.Right - .Width
+        End With
+        With NeiTakkKnapp
+            .Hide()
+        End With
+        With AvbrytKnapp
+            .BackColor = Color.FromArgb(162, 25, 51)
+            .ForeColor = Color.White
+            .Top = SendKnapp.Top
+            .Left = SendKnapp.Left - .Width - 10
+            AddHandler .Click, AddressOf AvbrytKnapp_Klikk
+        End With
+        With PicDoktor
+            .BackgroundImage = My.Resources.Doktor2
+            .Size = .BackgroundImage.Size
+            .Parent = FormPanel
+            .Top = Personalia.Bottom - .Height
+            .Left = Personalia.Right + 20
+        End With
+        With PicDoktorPassord
+            .BackgroundImage = My.Resources.DoktorPassord
+            .Size = .BackgroundImage.Size
+            .Parent = FormPanel
+            .Location = PicDoktor.Location
+        End With
+        With PasswordForm
+            .Left = PicDoktorPassord.Left \ 2 - .Width \ 2
+            .Top = PicDoktorPassord.Bottom - 210 \ 2 - .Height \ 2
+        End With
+        With FormInfo
+            .Parent = FormPanel
+            .Top = Personalia.Bottom + 10
+            .Left = Personalia.Left
+            .AutoSize = False
+            .Height = SendKnapp.Height
+            .Width = AvbrytKnapp.Left - .Left
+            .TextAlign = ContentAlignment.MiddleLeft
+            .ForeColor = Color.FromArgb(80, 80, 80)
+            .Text = "* markerer obligatoriske felt"
+        End With
+        With InfoLab
+            .Parent = FormPanel
+            .Top = PicDoktor.Bottom + 10
+            .Left = PicDoktor.Left
+            .Width = PicDoktor.Width
+            .Height = SendKnapp.Height
+            .Text = "Ved å registrere deg, samtykker du i at denne informasjonen blir lagret i våre systemer. Du kan når som helst slette disse opplysningene."
+        End With
+        With PicOpprettKontoInfo
+            .Parent = FormPanel
+            .Top = TopBar.Bottom
+            .Left = 20
+            .BackgroundImage = My.Resources.OpprettKontoInfo
+            .BackgroundImageLayout = ImageLayout.Center
+            .Height = .BackgroundImage.Height
+            .Width = .BackgroundImage.Width
+            .Hide()
+            '.MakeDashed(Color.Red)
+        End With
+
+        DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
+        FormPanel.Show()
+        ResumeLayout()
+    End Sub
+    Private Sub PasswordChanged(Sender As FormField, Value As Object)
+        PasswordForm.Field(2, 0).RequireSpecificValue(PasswordForm.Field(1, 0).Value.ToString)
+    End Sub
+    Private Sub PasswordValidChanged(Sender As FormField)
+        With PasswordForm
+            .Field(1, 0).IsValid = Sender.IsValid
+            .Field(2, 0).IsValid = Sender.IsValid
+        End With
+    End Sub
+    Private Sub AvbrytKnapp_Klikk(Sender As Object, e As EventArgs)
+        ResetForm()
+        Parent.Index = 4
+    End Sub
+    Private Sub ResetForm()
+        FormPanel.Hide()
+        With PasswordForm
+            .ClearAll(True)
+            .Hide()
+        End With
+        With SendKnapp
+            .BackColor = NeiTakkKnapp.BackColor
+            .Label.Font = New Font(.Font, FontStyle.Regular)
+            .Text = "Videre"
+            .Top = Personalia.Bottom + 10
+            .Left = Personalia.Right - .Width
+        End With
+        With NeiTakkKnapp
+            .Hide()
+        End With
+        With AvbrytKnapp
+            .Top = SendKnapp.Top
+            .Left = SendKnapp.Left - .Width - 10
+        End With
+        PicDoktor.Show()
+        PicDoktorPassord.Hide()
+        PasswordForm.Hide()
+        FormInfo.Show()
+        PicOpprettKontoInfo.Hide()
+        FormResult = Nothing
+        With Personalia
+            .ClearAll()
+            .Show()
+            .Field(2, 0).Value = True
+            .Field(5, 0).Value = True
+            .Field(6, 0).Value = True
+        End With
+        PasswordFormVisible = False
+    End Sub
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        RemoveHandler PasswordForm.Field(1, 0).ValueChanged, AddressOf PasswordChanged
+        RemoveHandler PasswordForm.Field(1, 0).ValidChanged, AddressOf PasswordValidChanged
+        RemoveHandler PasswordForm.Field(2, 0).ValidChanged, AddressOf PasswordValidChanged
+        MyBase.Dispose(disposing)
+    End Sub
+    Protected Overrides Sub OnResize(e As EventArgs)
+        SuspendLayout()
+        MyBase.OnResize(e)
+        ' TODO: Remove LayoutTool
+        If LayoutTool IsNot Nothing Then
+            With FormPanel
+                .Top = TopBar.Bottom + 20
+                .Left = Width \ 2 - .Width \ 2
+                .Top = TopBar.Bottom + (Height - TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2
+            End With
+        End If
+        ResumeLayout(True)
+    End Sub
+End Class
+
+Public Class OppdaterInfo
+    Inherits Tab
+    Private Personalia As New FlatForm(400, 300, 3, FormFieldStylePresets.PlainWhite)
+    Private PasswordForm As New FlatForm(200, 100, 3, FormFieldStylePresets.PlainWhite)
+    Private TopBar As New TopBar(Me)
+    Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
+    Private PicDoktor, PicDoktorPassord As New PictureBox
+    Private FormInfo As New Label
+    Private InfoLab As New InfoLabel
+    Private WithEvents SendKnapp As New TopBarButton(FormPanel, My.Resources.OKIcon, "Meld meg inn", New Size(135, 36))
+    Private AvbrytKnapp As New TopBarButton(FormPanel, My.Resources.AvbrytIcon, "Avbryt", New Size(135, 36), True)
+
+    Private LayoutTool As New FormLayoutTools(Me)
+    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private FirstHeader As New FullWidthControl(FormPanel)
+
+    Private NotifManager As New NotificationManager(FirstHeader)
+
+    Private Sub SendClick() Handles SendKnapp.Click
+        Dim Result() As HeaderValuePair = Personalia.Result
+        Dim DataArr(11) As String
+        For i As Integer = 0 To 4
+            DataArr(i) = Result(i).Value.ToString
+        Next
+        If DirectCast(Result(5).Value, Boolean) Then
+            DataArr(5) = "1"
+        Else
+            DataArr(5) = "0"
+        End If
+        For i As Integer = 7 To 10
+            DataArr(i - 1) = Result(i).Value.ToString
+        Next
+        If DirectCast(Result(11).Value, Boolean) Then
+            DataArr(10) = "1"
+        Else
+            DataArr(10) = "0"
+        End If
+        If DirectCast(Result(12).Value, Boolean) Then
+            DataArr(11) = "1"
+        Else
+            DataArr(11) = "0"
+        End If
+        DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
+        DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_adresse", "@b_postnr", "@b_kjonn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@send_epost", "@send_sms"}, DataArr)
+    End Sub
+    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        If e.ErrorOccurred Then
+            NotifManager.Display("Noe gikk galt! Vennligst se over skjemaet og forsikre deg om at alle obligatoriske felt er fylt ut.", NotificationPreset.OffRedAlert)
+        Else
+            Personalia.Hide()
+            PasswordForm.Show()
+            PicDoktor.Hide()
+            PicDoktorPassord.Show()
+            NotifManager.Display("Du er nå registrert i vårt system!", NotificationPreset.GreenSuccess)
+        End If
+    End Sub
+    Private Sub DBC_Failed() Handles DBC.ExecutionFailed
+        NotifManager.Display("Noe gikk galt! Vennligst se over skjemaet og forsikre deg om at alle obligatoriske felt er fylt ut.", NotificationPreset.OffRedAlert)
+    End Sub
+    Public Shadows Sub Show()
+        FormPanel.Hide()
+        MyBase.Show()
+    End Sub
+    Private Sub Me_VisibleChanged() Handles Me.VisibleChanged
+        If Visible Then
+            FormPanel.Show()
+        End If
+    End Sub
+    Public Sub New(Window As MultiTabWindow)
+        MyBase.New(Window)
+        DoubleBuffered = True
+        SuspendLayout()
+        BackColor = Color.FromArgb(240, 240, 240)
+        With FormPanel
+            .Hide()
+            .Parent = Me
+            .Top = TopBar.Bottom + 20
+            .Left = 30
+            .Width = 817
+            .Height = 480
+            .BackColor = Color.FromArgb(225, 225, 225)
+        End With
+        With FirstHeader
+            .Width = 817
+            .Height = 40
+            .Text = "Registrering"
+            .BackColor = Color.FromArgb(183, 187, 191)
+            .ForeColor = Color.White
+        End With
+#Region "Form"
+        With Personalia
+            .NewRowHeight = 50
             .AddField(FormElementType.TextField, 180)
             .Last.Header.Text = "Fødselsnummer (11 siffer)"
-            .AddField(FormElementType.TextField, 110)
+            .AddField(FormElementType.TextField, 107)
             .Last.Header.Text = "Fornavn"
-            .Last.DrawDashedSepararators(FormField.ElementSide.Left) = True
             .AddField(FormElementType.TextField)
             .Last.Header.Text = "Etternavn"
-            .Last.DrawDashedSepararators(FormField.ElementSide.Left) = True
             .AddField(FormElementType.TextField, 290)
             With .Last
                 .Header.Text = "Privatadresse"
@@ -429,15 +940,24 @@ Public Class Personopplysninger
             .AddField(FormElementType.TextField)
             With .Last
                 .Header.Text = "Postnummer"
-                .DrawDashedSepararators(FormField.ElementSide.Left) = True
-            End With
-            .NewRowHeight = 30
-            .AddField(FormElementType.Label)
-            With .Last
-                .Value = "Fyll ut minst en"
-                .SwitchHeader(False)
             End With
             .NewRowHeight = 50
+            .AddField(FormElementType.Radio, 200)
+            With .Last
+                .Value = True
+                .Header.Text = "Kjønn"
+                .SecondaryValue = "Jeg er mann"
+                .DrawBorder(FormField.ElementSide.Right) = False
+            End With
+            .AddField(FormElementType.Radio)
+            With .Last
+                .Value = True
+                .SecondaryValue = "Jeg er kvinne"
+                .DrawBorder(FormField.ElementSide.Left) = False
+                .DrawDashedSepararators(FormField.ElementSide.Left) = True
+                .Extrude(FieldExtrudeSide.Left, 3)
+                .DrawDotsOnHeader = False
+            End With
             .AddField(FormElementType.TextField, 133)
             With .Last
                 .Header.Text = "Telefon privat"
@@ -445,72 +965,47 @@ Public Class Personopplysninger
             .AddField(FormElementType.TextField, 133)
             With .Last
                 .Header.Text = "Telefon mobil"
-                .DrawDashedSepararators(FormField.ElementSide.Left) = True
             End With
             .AddField(FormElementType.TextField)
             With .Last
                 .Header.Text = "Telefon arbeid"
-                .DrawDashedSepararators(FormField.ElementSide.Left) = True
             End With
             .AddField(FormElementType.TextField)
-            Dim BG As Color = .Last.BackColor
             With .Last
                 .Header.Text = "Epost-adresse"
             End With
-            .AddField(FormElementType.Label, 240)
+            .AddField(FormElementType.CheckBox)
+            .NewRowHeight = 40
             With .Last
+                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via epost"
+                .DrawBorder(FormField.ElementSide.Bottom) = False
+            End With
+            .AddField(FormElementType.CheckBox)
+            With .Last
+                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via SMS"
+                .DrawBorder(FormField.ElementSide.Top) = False
                 .DrawDashedSepararators(FormField.ElementSide.Top) = True
                 .SwitchHeader(False)
-                .BackColor = BG
-                .DrawGradient = False
-                .Value = "Tillater du at blodbanken sender innkalling, påminnelser og informasjon via epost?"
             End With
-            .AddField(FormElementType.Radio, 80)
+            .MergeWithAbove(6, 0, 0, True)
+            .Parent = FormPanel
+            .Display()
+            .Location = New Point(20, 60)
+        End With
+#End Region
+        With PasswordForm
+            .AddField(FormElementType.Label)
             With .Last
-                .BackColor = BG
-                .SwitchHeader(False)
-                .DrawGradient = False
-                .DrawDashedSepararators(FormField.ElementSide.Left) = True
-                .DrawDashedSepararators(FormField.ElementSide.Top) = True
-                .SecondaryValue = "Ja"
+                .Header.Text = "Bruker-ID"
+                .Value = "Fødselsnummer"
             End With
-            .AddField(FormElementType.Radio)
+            .AddField(FormElementType.TextField)
             With .Last
-                .BackColor = BG
-                .SwitchHeader(False)
-                .DrawGradient = False
-                .DrawDashedSepararators(FormField.ElementSide.Top) = True
-                .SecondaryValue = "Nei"
+                .Header.Text = "Velg et passord"
             End With
-            .AddField(FormElementType.Label, 240)
-            With .Last
-                .DrawDashedSepararators(FormField.ElementSide.Top) = True
-                .SwitchHeader(False)
-                .BackColor = BG
-                .DrawGradient = False
-                .Value = "Tillater du at blodbanken sender innkalling, påminnelser og informasjon via SMS?"
-            End With
-            .AddField(FormElementType.Radio, 80)
-            With .Last
-                .BackColor = BG
-                .SwitchHeader(False)
-                .DrawGradient = False
-                .DrawDashedSepararators(FormField.ElementSide.Left) = True
-                .DrawDashedSepararators(FormField.ElementSide.Top) = True
-                .SecondaryValue = "Ja"
-            End With
-            .AddField(FormElementType.Radio)
-            With .Last
-                .BackColor = BG
-                .SwitchHeader(False)
-                .DrawGradient = False
-                .DrawDashedSepararators(FormField.ElementSide.Top) = True
-                .SecondaryValue = "Nei"
-            End With
-            .Parent = Me
+            .Parent = FormPanel
             .Display()
         End With
-        LayoutTool.CenterSurface(Personalia, Me)
         Dim NB As New Button
         With NB
             .Size = New Size(100, 100)
@@ -520,157 +1015,203 @@ Public Class Personopplysninger
             .Enabled = False
             .Hide()
         End With
+        With TopBar
+            .AddButton(My.Resources.TimeBestillingIcon, "Bestill ny time", New Size(135, 36))
+            .AddButton(My.Resources.EgenerklaeringIcon, "Registrer egenerklæring", New Size(135, 36))
+            .AddButton(My.Resources.RedigerProfilIcon, "Rediger profil", New Size(135, 36))
+            .AddLogout("Logg ut", New Size(135, 36))
+        End With
+        With SendKnapp
+            .Top = Personalia.Bottom + 10
+            .Left = Personalia.Right - .Width
+        End With
+        With AvbrytKnapp
+            .BackColor = Color.FromArgb(162, 25, 51)
+            .ForeColor = Color.White
+            .Top = SendKnapp.Top
+            .Left = SendKnapp.Left - .Width - 10
+        End With
+        With PicDoktor
+            .BackgroundImage = My.Resources.Doktor2
+            .Size = .BackgroundImage.Size
+            .Parent = FormPanel
+            .Top = Personalia.Bottom - .Height
+            .Left = Personalia.Right + 20
+        End With
+        With PicDoktorPassord
+            .BackgroundImage = My.Resources.DoktorPassord
+            .Size = .BackgroundImage.Size
+            .Parent = FormPanel
+            .Location = PicDoktor.Location
+        End With
+        With PasswordForm
+            .Location = New Point(PicDoktorPassord.Left \ 2 - .Width \ 2)
+            .Top = PicDoktorPassord.Bottom - 210
+        End With
+        With FormInfo
+            .Parent = FormPanel
+            .Top = Personalia.Bottom + 10
+            .Left = Personalia.Left
+            .AutoSize = False
+            .Height = SendKnapp.Height
+            .Width = AvbrytKnapp.Left - .Left
+            .TextAlign = ContentAlignment.MiddleLeft
+            .ForeColor = Color.FromArgb(80, 80, 80)
+            .Text = "* markerer obligatoriske felt"
+        End With
+        With InfoLab
+            .Parent = FormPanel
+            .Top = PicDoktor.Bottom + 10
+            .Left = PicDoktor.Left
+            .Width = PicDoktor.Width
+            .Height = SendKnapp.Height
+            .Text = "Trenger du mer informasjon?" & vbNewLine & "Besøk www.GiBlod.no"
+        End With
+        FormPanel.Show()
+        ResumeLayout()
     End Sub
-    Private DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
-    Public Sub Execute(Sender As Object, e As EventArgs)
-        Dim Ret As FlatFormResult = Result()
-        Dim RetX() As HeaderValuePair = Ret.GetAllSeries
-        Dim ParamList As New List(Of String)
-        Dim RadioCounter As Integer = 0
-        For i As Integer = 0 To RetX.Count - 1
-            If RetX(i).Type = FormElementType.TextField Then
-                ParamList.Add(RetX(i).Value.ToString)
-            ElseIf RetX(i).Type = FormElementType.Radio Then
-                RadioCounter += 1
-                If RadioCounter = 1 OrElse RadioCounter = 3 Then
-                    If DirectCast(RetX(i).Value, Boolean) = True Then
-                        ParamList.Add("1")
-                    Else
-                        ParamList.Add("0")
-                    End If
-                End If
-            End If
-        Next
-        DBC.SQLQuery = "INSERT INTO 'g_oops_21'.'BLODGIVER' ('b_fodselsnr', 'b_fornavn', 'b_etternavn', 'b_telefon1', 'b_telefon2', 'b_telefon3', 'b_epost', 'b_adresse', 'b_postnr', 'b_kjonn', 'send_epost', 'send_sms') VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
-        DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@b_adresse", "@b_postnr", "@b_kjonn", "@send_epost", "@send_sms"}, ParamList.ToArray, True)
+    Protected Overrides Sub OnResize(e As EventArgs)
+        SuspendLayout()
+        MyBase.OnResize(e)
+        ' TODO: Remove LayoutTool as it is not used
+        If LayoutTool IsNot Nothing Then
+            With FormPanel
+                .Top = TopBar.Bottom + 20
+                .Left = Width \ 2 - .Width \ 2
+                .Top = TopBar.Bottom + (Height - TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2
+            End With
+        End If
+        ResumeLayout(True)
     End Sub
+End Class
 
+'Public NotInheritable Class EncryptedReadWrite
+'    Implements IDisposable
+'    Private TripleDes As New TripleDESCryptoServiceProvider
+'    Private Function TruncateHash(ByVal key As String, ByVal length As Integer) As Byte()
+'        Dim sha1 As New SHA1CryptoServiceProvider
+'        Dim keyBytes() As Byte = System.Text.Encoding.Unicode.GetBytes(key)
+'        Dim hash() As Byte = sha1.ComputeHash(keyBytes)
+'        ReDim Preserve hash(length - 1)
+'        Return hash
+'    End Function
+'    Sub New(ByVal key As String)
+'        TripleDes.Key = TruncateHash(key, TripleDes.KeySize \ 8)
+'        TripleDes.IV = TruncateHash("", TripleDes.BlockSize \ 8)
+'    End Sub
+'    Public Function EncryptData(ByVal plaintext As String) As String
+'        Dim plaintextBytes() As Byte = Text.Encoding.Unicode.GetBytes(plaintext)
+'        Dim ms As New IO.MemoryStream
+'        Dim encStream As New CryptoStream(ms, TripleDes.CreateEncryptor(), CryptoStreamMode.Write)
+'        encStream.Write(plaintextBytes, 0, plaintextBytes.Length)
+'        encStream.FlushFinalBlock()
+'        Return Convert.ToBase64String(ms.ToArray)
+'    End Function
+'    Public Function DecryptData(ByVal encryptedtext As String) As String
+'        Try
+'            Dim encryptedBytes() As Byte = Convert.FromBase64String(encryptedtext)
+'            Dim ms As New IO.MemoryStream
+'            Dim decStream As New CryptoStream(ms, TripleDes.CreateDecryptor(), CryptoStreamMode.Write)
+'            decStream.Write(encryptedBytes, 0, encryptedBytes.Length)
+'            Try
+'                decStream.FlushFinalBlock()
+'            Catch
+'                decStream.Dispose()
+'            End Try
+'            Return Text.Encoding.Unicode.GetString(ms.ToArray)
+'        Catch ex As System.Security.Cryptography.CryptographicException
+'                Return Nothing
+'        End Try
+'    End Function
+'#Region "IDisposable Support"
+'    Private disposedValue As Boolean
+'    Protected Sub Dispose(disposing As Boolean)
+'        If Not disposedValue Then
+'            If disposing Then
+'                TripleDes.Dispose()
+'            End If
+'        End If
+'        disposedValue = True
+'    End Sub
+'    Public Sub Dispose() Implements IDisposable.Dispose
+'        Dispose(True)
+'    End Sub
+'#End Region
+'End Class
+
+'Public NotInheritable Class CredentialsManager
+'    Private DefPath As String
+'    Public Sub New(Optional DefaultPath As String = "Default")
+'        If Not DefaultPath = "Default" Then
+'            DefPath = DefaultPath
+'        Else
+'            DefPath = Application.StartupPath & "\test\"
+'        End If
+
+'        If (Not System.IO.Directory.Exists(DefPath)) Then
+'            System.IO.Directory.CreateDirectory(DefPath)
+'        End If
+'        If Not File.Exists(DefPath & "\test.txt") Then
+'            File.Create(DefPath & "\test.txt")
+'        End If
+'    End Sub
+'    Public Sub Encode(ByVal Value As String, ByVal Password As String)
+'        Dim wrapper As New EncryptedReadWrite(Password)
+'        Dim cipherText As String = wrapper.EncryptData(Value)
+'        MsgBox("The cipher text is: " & cipherText)
+'        My.Computer.FileSystem.WriteAllText(DefPath & "\test.txt", cipherText, False)
+'        wrapper.Dispose()
+'    End Sub
+'    Public Function Decode(ByVal Password As String) As String
+'        Dim cipherText As String = My.Computer.FileSystem.ReadAllText(DefPath & "\test.txt")
+'        Dim wrapper As New EncryptedReadWrite(Password)
+
+'        ' DecryptData throws if the wrong password is used.
+'        Try
+'            Dim plainText As String = wrapper.DecryptData(cipherText)
+'            Return plainText
+'        Catch ex As System.Security.Cryptography.CryptographicException
+'            Return Nothing
+'        Finally
+'            wrapper.Dispose()
+'        End Try
+'    End Function
+'End Class
+
+Public Class LoggInn
+    Inherits Tab
+    Private LayoutHelper As New FormLayoutTools(Me)
+    Private NotifManager As New NotificationManager(Me)
+    Private logo As HemoGlobeLogo
+    Private WithEvents LoginBox As LoginForm
+    Public Sub New(ParentWindow As MultiTabWindow)
+        MyBase.New(ParentWindow)
+        BackColor = Color.FromArgb(240, 238, 235)
+        Size = New Size(1280, 720)
+        logo = New HemoGlobeLogo
+        logo.Parent = Me
+        LoginBox = New LoginForm
+        LoginBox.Parent = Me
+        LayoutHelper.CenterOnForm(LoginBox)
+    End Sub
+    'Protected Overrides Sub OnClosed(e As EventArgs)
+    '    MyBase.OnClosed(e)
+    '    End
+    'End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
-        If LayoutTool IsNot Nothing Then
-            LayoutTool.CenterSurface(Personalia, Me)
+        If LoginBox IsNot Nothing Then
+            LayoutHelper.CenterOnForm(LoginBox)
         End If
     End Sub
-End Class
-
-
-Public NotInheritable Class EncryptedReadWrite
-    Implements IDisposable
-
-    Private TripleDes As New TripleDESCryptoServiceProvider
-    Private Function TruncateHash(ByVal key As String, ByVal length As Integer) As Byte()
-        Dim sha1 As New SHA1CryptoServiceProvider
-        Dim keyBytes() As Byte = System.Text.Encoding.Unicode.GetBytes(key)
-        'Dim hashList As New List(Of Byte)(sha1.ComputeHash(keyBytes))
-        Dim hash() As Byte = sha1.ComputeHash(keyBytes)
-
-        ' Truncate or pad the hash. ?????
-        ReDim Preserve hash(length - 1)
-        Return hash
-    End Function
-    Sub New(ByVal key As String)
-        TripleDes.Key = TruncateHash(key, TripleDes.KeySize \ 8)
-        TripleDes.IV = TruncateHash("", TripleDes.BlockSize \ 8)
-    End Sub
-    Public Function EncryptData(ByVal plaintext As String) As String
-        ' Convert the plaintext string to a byte array.
-        Dim plaintextBytes() As Byte = Text.Encoding.Unicode.GetBytes(plaintext)
-
-        ' Create the stream.
-        Dim ms As New IO.MemoryStream
-        ' Create the encoder to write to the stream.
-        Dim encStream As New CryptoStream(ms, TripleDes.CreateEncryptor(), CryptoStreamMode.Write)
-
-        ' Use the crypto stream to write the byte array to the stream.
-        encStream.Write(plaintextBytes, 0, plaintextBytes.Length)
-        encStream.FlushFinalBlock()
-
-        ' Convert the encrypted stream to a printable string.
-        Return Convert.ToBase64String(ms.ToArray)
-    End Function
-    Public Function DecryptData(ByVal encryptedtext As String) As String
-        Try
-            ' Convert the encrypted text string to a byte array.
-            Dim encryptedBytes() As Byte = Convert.FromBase64String(encryptedtext)
-
-            ' Create the stream.
-            Dim ms As New IO.MemoryStream
-            ' Create the decoder to write to the stream.
-            Dim decStream As New CryptoStream(ms, TripleDes.CreateDecryptor(), CryptoStreamMode.Write)
-
-            ' Use the crypto stream to write the byte array to the stream.
-            decStream.Write(encryptedBytes, 0, encryptedBytes.Length)
-            Try
-                decStream.FlushFinalBlock()
-            Catch
-                decStream.Dispose()
-            End Try
-            ' Convert the plaintext stream to a string.
-            Return Text.Encoding.Unicode.GetString(ms.ToArray)
-            Catch ex As System.Security.Cryptography.CryptographicException
-                Return Nothing
-        End Try
-    End Function
-
-#Region "IDisposable Support"
-    Private disposedValue As Boolean ' To detect redundant calls
-
-    ' IDisposable
-    Protected Sub Dispose(disposing As Boolean)
-        If Not disposedValue Then
-            If disposing Then
-                TripleDes.Dispose()
-            End If
-
-            ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
-            ' TODO: set large fields to null.
-        End If
-        disposedValue = True
-    End Sub
-    Public Sub Dispose() Implements IDisposable.Dispose
-        ' Do not change this code.  Put cleanup code in Dispose(disposing As Boolean) above.
-        Dispose(True)
-        ' TODO: uncomment the following line if Finalize() is overridden above.
-        ' GC.SuppressFinalize(Me)
-    End Sub
-#End Region
-End Class
-
-Public NotInheritable Class CredentialsManager
-    Private DefPath As String
-    Public Sub New(Optional DefaultPath As String = "Default")
-        If Not DefaultPath = "Default" Then
-            DefPath = DefaultPath
+    Private Sub LoginFinished(Sender As Object, Success As Boolean) Handles LoginBox.CheckFinished
+        If Success Then
+            MsgBox("Success")
         Else
-            DefPath = Application.StartupPath & "\test\"
-        End If
-
-        If (Not System.IO.Directory.Exists(DefPath)) Then
-            System.IO.Directory.CreateDirectory(DefPath)
-        End If
-        If Not File.Exists(DefPath & "\test.txt") Then
-            File.Create(DefPath & "\test.txt")
+            NotifManager.Display("Fødselsnummeret eller passordet er feil.", NotificationPreset.RedAlert)
         End If
     End Sub
-    Public Sub Encode(ByVal Value As String, ByVal Password As String)
-        Dim wrapper As New EncryptedReadWrite(Password)
-        Dim cipherText As String = wrapper.EncryptData(Value)
-        MsgBox("The cipher text is: " & cipherText)
-        My.Computer.FileSystem.WriteAllText(DefPath & "\test.txt", cipherText, False)
-        wrapper.Dispose()
+    Private Sub BliMedClicked(Sender As Object, e As EventArgs) Handles LoginBox.BliMedClicked
+        Parent.Index = 3
     End Sub
-    Public Function Decode(ByVal Password As String) As String
-        Dim cipherText As String = My.Computer.FileSystem.ReadAllText(DefPath & "\test.txt")
-        Dim wrapper As New EncryptedReadWrite(Password)
-
-        ' DecryptData throws if the wrong password is used.
-        Try
-            Dim plainText As String = wrapper.DecryptData(cipherText)
-            Return plainText
-        Catch ex As System.Security.Cryptography.CryptographicException
-            Return Nothing
-        Finally
-            wrapper.Dispose()
-        End Try
-    End Function
 End Class

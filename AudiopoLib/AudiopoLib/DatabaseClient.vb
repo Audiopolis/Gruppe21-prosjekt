@@ -15,7 +15,7 @@ Public Class DatabaseClient
     Private HandledThread As ThreadStarter
     Public Event ListLoaded(Sender As Object, e As DatabaseListEventArgs)
     Public Event ExecutionFailed(ByVal ClientTag As Integer)
-    Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer, ByVal ErrorOccurred As Boolean)
+    Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer, ByVal ErrorOccurred As Boolean, ErrorMessage As String)
     Public Event ValidationCompleted(ByVal Success As Boolean)
     Private DBCSB As MySqlConnectionStringBuilder
     Public Property UID As String
@@ -91,6 +91,7 @@ Public Class DatabaseClient
         Try
             If Parameters.Length <> Values.Length Then
                 Throw New Exception("Parameters() and Values() arguments must be of equal length.")
+                MsgBox("Lengths not equal")
             Else
                 Dim DBParams As New ParameterizedQuery(DBCSB.GetConnectionString(True), SQLq, Tag)
                 For i As Integer = 0 To Parameters.Length - 1
@@ -105,20 +106,23 @@ Public Class DatabaseClient
                 End If
                 HandledThread.Start(DBParams)
             End If
-        Catch
+        Catch ex As Exception
+            MsgBox(ex.Message)
+            Throw ex
             RaiseEvent ExecutionFailed(Me.Tag)
         End Try
     End Sub
     Private Sub ExistCheck(Result As Object, e As ThreadStarterEventArgs)
         Dim ResultArr() As Object = DirectCast(Result, Object())
-        RaiseEvent ExistsCheckCompleted(DirectCast(ResultArr(0), Boolean), DirectCast(ResultArr(1), Integer), DirectCast(ResultArr(2), Integer), DirectCast(ResultArr(3), Boolean))
+        RaiseEvent ExistsCheckCompleted(DirectCast(ResultArr(0), Boolean), DirectCast(ResultArr(1), Integer), DirectCast(ResultArr(2), Integer), DirectCast(ResultArr(3), Boolean), DirectCast(ResultArr(4), String))
     End Sub
     ' FIKS
     Private Function ExecuteParamQuery(Params As Object) As Object
         Dim ParamInstance As ParameterizedQuery = DirectCast(Params, ParameterizedQuery)
         Dim DBConnection As New MySqlConnection(ParamInstance.ConnectionString)
         Dim ErrorOccurred As Boolean
-        Dim Ret(1) As Object
+        Dim ErrorMessage As String = ""
+        Dim Ret(2) As Object
         Dim RetTable As New DataTable
         Try
             DBConnection.Open()
@@ -136,8 +140,9 @@ Public Class DatabaseClient
             End With
 
             SQLcmd.Dispose()
-        Catch
+        Catch ex As Exception
             ErrorOccurred = True
+            ErrorMessage = ex.Message
         Finally
             With DBConnection
                 .Close()
@@ -147,9 +152,10 @@ Public Class DatabaseClient
         If Not ParamInstance.CheckIfExists Then
             Ret(0) = RetTable
             Ret(1) = ErrorOccurred
+            Ret(2) = ErrorMessage
             Return Ret
         Else
-            Dim Result(3) As Object
+            Dim Result(4) As Object
             Dim RetCount As Integer
             With RetTable
                 RetCount = .Rows.Count
@@ -161,6 +167,7 @@ Public Class DatabaseClient
                 Result(1) = RetCount
                 Result(2) = ParamInstance.Tag
                 Result(3) = ErrorOccurred
+                Result(4) = ErrorMessage
                 .Dispose()
             End With
             Return Result
@@ -203,8 +210,9 @@ Public Class DatabaseClient
         Dim RetArr() As Object = DirectCast(State, Object())
         Dim DT As DataTable = DirectCast(RetArr(0), DataTable)
         Dim ErrorOccurred As Boolean = DirectCast(RetArr(1), Boolean)
+        Dim ErrorMessage As String = DirectCast(RetArr(2), String)
         If DT IsNot Nothing Then
-            RaiseEvent ListLoaded(Me, New DatabaseListEventArgs(DT, ErrorOccurred))
+            RaiseEvent ListLoaded(Me, New DatabaseListEventArgs(DT, ErrorOccurred, ErrorMessage))
         Else
             RaiseEvent ExecutionFailed(Me.Tag)
         End If

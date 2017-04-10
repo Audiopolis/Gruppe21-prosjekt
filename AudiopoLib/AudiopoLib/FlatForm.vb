@@ -11,9 +11,12 @@ Public Class FormField
     Private varValue As Object = Nothing
     Private varSecondaryValue As Object = Nothing
     Private varSpacingBottom As Integer = 10
-    Private varDrawGradient As Boolean = True
+    Private varDrawGradient As Boolean
+    Private varDrawBorder(3) As Boolean
+    Private varDrawBorderOnHeader As Boolean = True
+    Private varDrawDotsOnHeader As Boolean = True
     Protected Friend varFieldType As FormElementType
-    Protected Friend Event ValueChanged(Sender As FormField, ByVal Value As Object)
+    Public Event ValueChanged(Sender As FormField, ByVal Value As Object)
     Protected Friend Event SecondaryValueChanged(Sender As FormField, ByVal Value As Object)
     Protected Event HeaderVisibleChanged(ByVal Visible As Boolean)
     Protected Friend varIsInputType As Boolean = True
@@ -21,13 +24,106 @@ Public Class FormField
     Protected MeType As FormElementType
     Protected Friend GradBrush As LinearGradientBrush
     Private DashedPen As Pen
+    Private varBorderPen As New Pen(Color.FromArgb(220, 220, 220))
     Private varDrawDash(3) As Boolean
+    Protected varMinMax() As Integer = {0, 200}
+    Protected varRequired, varIsNumeric, varIsValid As Boolean
+    Public Event ValidChanged(Sender As FormField)
+
+    Protected varRequireSpecificValue As Boolean
+    Protected varRequiredValue As Object = Nothing
+    Public Overloads Sub RequireSpecificValue()
+        varRequireSpecificValue = False
+    End Sub
+    Public Overloads Sub RequireSpecificValue(Value As Object)
+        varRequireSpecificValue = True
+        varRequiredValue = Value
+    End Sub
+    Public Property IsValid As Boolean
+        Get
+            Return varIsValid
+        End Get
+        Set(value As Boolean)
+            Dim ChangeOccurred As Boolean
+            If value <> varIsValid Then ChangeOccurred = True
+            varIsValid = value
+            OnValidChanged(ChangeOccurred)
+        End Set
+    End Property
+    Protected Overridable Sub OnValidChanged(ChangeOccurred As Boolean)
+        If varIsValid Then
+            varBorderPen.Color = Color.FromArgb(220, 220, 220)
+        Else
+            varBorderPen.Color = Color.FromArgb(255, 50, 50)
+        End If
+        If ChangeOccurred Then
+            RaiseEvent ValidChanged(Me)
+        End If
+        Invalidate(True)
+    End Sub
     Public Enum ElementSide
         Left = 0
         Top = 1
         Right = 2
         Bottom = 3
     End Enum
+    Public Overridable Function Validate() As Boolean
+        Return True
+    End Function
+    Protected Overridable Sub OnNumericChanged()
+
+    End Sub
+    Public Property Numeric As Boolean
+        Get
+            Return varIsNumeric
+        End Get
+        Set(value As Boolean)
+            varIsNumeric = value
+        End Set
+    End Property
+    Public Property Required As Boolean
+        Get
+            Return varRequired
+        End Get
+        Set(value As Boolean)
+            varRequired = value
+        End Set
+    End Property
+    Public Property MinLength As Integer
+        Get
+            Return varMinMax(0)
+        End Get
+        Set(value As Integer)
+            varMinMax(0) = value
+        End Set
+    End Property
+    Public Property MaxLength As Integer
+        Get
+            Return varMinMax(1)
+        End Get
+        Set(value As Integer)
+            varMinMax(1) = value
+        End Set
+    End Property
+    Protected Friend Overridable Sub Clear(ByVal ClearNonInput As Boolean)
+
+    End Sub
+    Public Property DrawBorderOnHeader As Boolean
+        Get
+            Return varDrawBorderOnHeader
+        End Get
+        Set(value As Boolean)
+            varDrawBorderOnHeader = value
+        End Set
+    End Property
+    Public Property DrawDotsOnHeader As Boolean
+        Get
+            Return varDrawDotsOnHeader
+        End Get
+        Set(value As Boolean)
+            varDrawDotsOnHeader = value
+        End Set
+    End Property
     Private Sub OnHeaderTextAlignChanged() Handles labHeader.TextAlignChanged
         Select Case labHeader.TextAlign
             Case ContentAlignment.TopLeft
@@ -50,6 +146,20 @@ Public Class FormField
                 labHeader.Padding = New Padding(0, 0, 6, 2)
         End Select
     End Sub
+    Public ReadOnly Property BorderPen As Pen
+        Get
+            Return varBorderPen
+        End Get
+    End Property
+    Public Property DrawBorder(ByVal Side As ElementSide) As Boolean
+        Get
+            Return varDrawBorder(Side)
+        End Get
+        Set(value As Boolean)
+            varDrawBorder(Side) = value
+            Invalidate()
+        End Set
+    End Property
     Public Property DrawDashedSepararators(ByVal Side As ElementSide) As Boolean
         Get
             Return varDrawDash(Side)
@@ -111,6 +221,7 @@ Public Class FormField
     End Sub
     Protected Overridable Sub OnValueChanged(ByVal Value As Object)
         RaiseEvent ValueChanged(Me, Value)
+        IsValid = True
     End Sub
     Protected Overridable Sub OnSecondaryValueChanged(ByVal Value As Object)
         RaiseEvent SecondaryValueChanged(Me, Value)
@@ -124,6 +235,8 @@ Public Class FormField
             End If
             'If varDrawDash(0) Then
 
+
+
             If varDrawDash(0) Then
                 .DrawLine(DashedPen, Point.Empty, New Point(0, Height))
             End If
@@ -135,6 +248,19 @@ Public Class FormField
             End If
             If varDrawDash(3) Then
                 .DrawLine(DashedPen, New Point(0, Height), New Point(Width, Height))
+            End If
+
+            If varDrawBorder(0) Then
+                .DrawLine(varBorderPen, Point.Empty, New Point(0, Height))
+            End If
+            If varDrawBorder(1) Then
+                .DrawLine(varBorderPen, Point.Empty, New Point(Width, 0))
+            End If
+            If varDrawBorder(2) Then
+                .DrawLine(varBorderPen, New Point(Width - 1, 0), New Point(Width - 1, Height))
+            End If
+            If varDrawBorder(3) Then
+                .DrawLine(varBorderPen, New Point(0, Height - 1), New Point(Width, Height - 1))
             End If
 
             'End If
@@ -155,11 +281,16 @@ Public Class FormField
     '        DrawGradient = True
     '    End If
     'End Sub
-    Public Sub New(ByVal FieldSpacing As Integer, ByVal FieldType As FormElementType)
+    Public Sub New(ByVal FieldSpacing As Integer, ByVal FieldType As FormElementType, Style As FormFieldStyle)
         DoubleBuffered = True
-        Using NH As New HatchBrush(HatchStyle.DottedGrid, ColorHelper.Add(Color.FromArgb(5, 53, 68), 20))
+        'Using NH As New HatchBrush(HatchStyle.DottedGrid, ColorHelper.Add(Color.FromArgb(5, 53, 68), 20))
+        Using NH As New HatchBrush(HatchStyle.DottedGrid, ColorHelper.Add(Style.HeaderBG, 20), ColorHelper.Add(Style.HeaderBG, -50))
             DashedPen = New Pen(NH)
         End Using
+        Dim DrawBordersArr() As Boolean = Style.DrawBorders
+        For i As Integer = 0 To 3
+            varDrawBorder(i) = DrawBordersArr(i)
+        Next
         varFieldType = FieldType
         varSpacingBottom = FieldSpacing
         SetStyle(ControlStyles.Selectable, False)
@@ -168,30 +299,49 @@ Public Class FormField
             .TabStop = False
             .Location = Point.Empty
             .Width = Width
-            .Height = 17
+            .Height = Style.HeaderHeight
             .Font = New Font(.Font.FontFamily, 8)
-            .BackColor = Color.FromArgb(5, 53, 68)
+            .BackColor = Style.HeaderBG
+            .ForeColor = Style.HeaderFG
             .TextAlign = ContentAlignment.MiddleLeft
-            .ForeColor = Color.White
             .Padding = New Padding(6, 0, 0, 0)
             .Parent = Me
             AddHandler .Paint, AddressOf PaintLines
         End With
-        BackColor = Color.FromArgb(7, 70, 91)
+        If FieldType = FormElementType.TextField Then
+            BackColor = Style.TextBG
+            ForeColor = Style.TextFG
+        Else
+            BackColor = Style.BodyBG
+            ForeColor = Style.BodyFG
+        End If
         varTopColor = Color.FromArgb(50, ColorHelper.Multiply(BackColor, 1.5))
         varBottomColor = Color.FromArgb(50, BackColor)
     End Sub
     Private Sub PaintLines(Sender As Object, e As PaintEventArgs)
         Dim LabSize As Size = labHeader.ClientSize
         With e.Graphics
-            If varDrawDash(0) Then
-                .DrawLine(DashedPen, Point.Empty, New Point(0, LabSize.Height))
+            If varDrawDotsOnHeader Then
+                If varDrawDash(0) Then
+                    .DrawLine(DashedPen, Point.Empty, New Point(0, LabSize.Height))
+                End If
+                If varDrawDash(1) Then
+                    .DrawLine(DashedPen, Point.Empty, New Point(LabSize.Width, 0))
+                End If
+                If varDrawDash(2) Then
+                    .DrawLine(DashedPen, New Point(LabSize.Width, 0), New Point(LabSize.Width, LabSize.Height))
+                End If
             End If
-            If varDrawDash(1) Then
-                .DrawLine(DashedPen, Point.Empty, New Point(LabSize.Width, 0))
-            End If
-            If varDrawDash(2) Then
-                .DrawLine(DashedPen, New Point(LabSize.Width, 0), New Point(LabSize.Width, LabSize.Height))
+            If varDrawBorderOnHeader Then
+                If varDrawBorder(0) Then
+                    .DrawLine(varBorderPen, Point.Empty, New Point(0, LabSize.Height))
+                End If
+                If varDrawBorder(1) Then
+                    .DrawLine(varBorderPen, Point.Empty, New Point(LabSize.Width, 0))
+                End If
+                If varDrawBorder(2) Then
+                    .DrawLine(varBorderPen, New Point(LabSize.Width - 1, 0), New Point(LabSize.Width - 1, LabSize.Height))
+                End If
             End If
         End With
     End Sub
@@ -256,11 +406,10 @@ Public Class FormField
         ResumeLayout()
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        With labHeader
-            .Dispose()
-        End With
-        If GradBrush IsNot Nothing Then
-            GradBrush.Dispose()
+        If disposing Then
+            If GradBrush IsNot Nothing Then
+                GradBrush.Dispose()
+            End If
         End If
         MyBase.Dispose(disposing)
     End Sub
@@ -277,7 +426,126 @@ Public Enum FormElementType
     Label
     DropDown
     Radio
+    Space
 End Enum
+Public Class FormFieldStylePresets
+    Public Shared ReadOnly Property PlainWhite As FormFieldStyle
+        Get
+            Return New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.Black, Color.White, Color.Black, {True, True, True, True}, 20)
+        End Get
+    End Property
+End Class
+Public Class FormFieldStyle
+    Private varHeaderBG, varHeaderFG, varBodyBG, varBodyFG, varTextBG, varTextFG As Color
+    Private varDrawBorders(3) As Boolean
+    Private varHeaderHeight As Integer
+    Public Overloads Property DrawBorders(ByVal Side As FormField.ElementSide) As Boolean
+        Get
+            Return varDrawBorders(Side)
+        End Get
+        Set(value As Boolean)
+            varDrawBorders(Side) = value
+        End Set
+    End Property
+    Public Overloads Property DrawBorders(ByVal Side As Integer) As Boolean
+        Get
+            Return varDrawBorders(Side)
+        End Get
+        Set(value As Boolean)
+            varDrawBorders(Side) = value
+        End Set
+    End Property
+    Public Overloads Property DrawBorders As Boolean()
+        Get
+            Return varDrawBorders
+        End Get
+        Set(value As Boolean())
+            varDrawBorders = value
+        End Set
+    End Property
+    Public Property HeaderBG As Color
+        Get
+            Return varHeaderBG
+        End Get
+        Set(value As Color)
+            varHeaderBG = value
+        End Set
+    End Property
+    Public Property HeaderFG As Color
+        Get
+            Return varHeaderFG
+        End Get
+        Set(value As Color)
+            varHeaderFG = value
+        End Set
+    End Property
+    Public Property BodyBG As Color
+        Get
+            Return varBodyBG
+        End Get
+        Set(value As Color)
+            varBodyBG = value
+        End Set
+    End Property
+    Public Property BodyFG As Color
+        Get
+            Return varBodyFG
+        End Get
+        Set(value As Color)
+            varBodyFG = value
+        End Set
+    End Property
+    Public Property TextBG As Color
+        Get
+            Return varTextBG
+        End Get
+        Set(value As Color)
+            varTextBG = value
+        End Set
+    End Property
+    Public Property TextFG As Color
+        Get
+            Return varTextFG
+        End Get
+        Set(value As Color)
+            varTextFG = value
+        End Set
+    End Property
+    Public Property HeaderHeight As Integer
+        Get
+            Return varHeaderHeight
+        End Get
+        Set(value As Integer)
+            varHeaderHeight = value
+        End Set
+    End Property
+    ''' <summary>
+    ''' Initializes a new FormFieldStyle with the specified colors.
+    ''' </summary>
+    Public Sub New(ByVal HeaderBG As Color, ByVal HeaderFG As Color, ByVal BodyBG As Color, ByVal BodyFG As Color, ByVal TextBG As Color, ByVal TextFG As Color, ByVal DrawBorders() As Boolean, ByVal HeaderHeight As Integer)
+        varHeaderBG = HeaderBG
+        varHeaderFG = HeaderFG
+        varBodyBG = BodyBG
+        varBodyFG = BodyFG
+        varTextBG = TextBG
+        varTextFG = TextFG
+        varDrawBorders = DrawBorders
+        varHeaderHeight = HeaderHeight
+    End Sub
+    ''' <summary>
+    ''' Initializes a new FormFieldStyle with the default colors.
+    ''' </summary>
+    Public Sub New()
+        varHeaderBG = Color.FromArgb(5, 53, 68)
+        varHeaderFG = Color.White
+        varBodyBG = Color.FromArgb(7, 70, 91)
+        varBodyFG = Color.White
+        varTextBG = ColorHelper.Multiply(Color.FromArgb(7, 70, 91), 0.4)
+        varTextFG = Color.White
+        varHeaderHeight = 17
+    End Sub
+End Class
+
 Public Class FormElement
     Private E As FormElementType
     Private W As Integer
@@ -322,39 +590,7 @@ Public Class HeaderValuePair
         Type = ElementType
     End Sub
 End Class
-Public Class FlatFormResult
-    Private ResultArr()() As HeaderValuePair
-    Public Function GetAllSeries() As HeaderValuePair()
-        Dim Counter As Integer
-        For i As Integer = 0 To ResultArr.GetLength(0) - 1
-            For n As Integer = 0 To ResultArr.GetLength(1) - 1
-                Counter += 1
-            Next
-        Next
-        Dim Ret(Counter) As HeaderValuePair
-        Dim CounterX As Integer
-        For ix As Integer = 0 To ResultArr.GetLength(0) - 1
-            For nx As Integer = 0 To ResultArr.GetLength(1) - 1
-                CounterX += 1
-                Ret(CounterX) = ResultArr(ix)(nx)
-            Next
-        Next
-        Return Ret
-    End Function
-    Protected Friend Sub New(Result As HeaderValuePair()())
-        ResultArr = Result
-    End Sub
 
-    Public Function Header(ByVal Row As Integer, ByVal Field As Integer) As String
-        Return ResultArr(Row)(Field).Header
-    End Function
-    Public Function Value(ByVal Row As Integer, ByVal Field As Integer) As Object
-        Return ResultArr(Row)(Field).Value
-    End Function
-    Public Function FieldType(ByVal Row As Integer, ByVal Field As Integer) As FormElementType
-        Return ResultArr(Row)(Field).Type
-    End Function
-End Class
 Public Class FlatForm
 #Region "FlatForm"
     Inherits Control
@@ -362,6 +598,7 @@ Public Class FlatForm
     Private RadioContextList As List(Of RadioButtonContext)
     Private RowList As List(Of FormRow)
     Private varRowHeight As Integer = 57
+    Private varNewFieldStyle As New FormFieldStyle()
     Public ReadOnly Property Last As FormField
         Get
             Dim Ret As FormField
@@ -385,6 +622,14 @@ Public Class FlatForm
             varRowHeight = value
         End Set
     End Property
+    Public Property NewFieldStyle As FormFieldStyle
+        Get
+            Return varNewFieldStyle
+        End Get
+        Set(value As FormFieldStyle)
+            varNewFieldStyle = value
+        End Set
+    End Property
     Public ReadOnly Property Row(ByVal Index As Integer) As FormRow
         Get
             Return RowList(Index)
@@ -402,21 +647,23 @@ Public Class FlatForm
             Return RowList
         End Get
     End Property
-    Public ReadOnly Property Result() As FlatFormResult
+    Public ReadOnly Property Result() As HeaderValuePair()
         Get
             Dim iLast As Integer = RowList.Count - 1
-            Dim RetArr(iLast)() As HeaderValuePair
-            For i As Integer = 0 To iLast
-                Dim ThisRow As FormRow = RowList(i)
-                Dim nLast As Integer = RowList(i).Fields.Count - 1
-                Dim PairArr(nLast) As HeaderValuePair
-                For n As Integer = 0 To nLast
-                    Dim Field As FormField = ThisRow.Fields(n)
-                    PairArr(n) = New HeaderValuePair(Field.Header.Text, Field.Value, Field.varFieldType)
+            Dim RetList As New List(Of HeaderValuePair)
+            For Each R As FormRow In RowList
+                For Each Item As FormField In R.Fields
+                    With Item
+                        Select Case .varFieldType
+                            Case FormElementType.CheckBox, FormElementType.Radio, FormElementType.TextField
+                                RetList.Add(New HeaderValuePair(.Header.Text, .Value, .varFieldType))
+                        End Select
+                    End With
                 Next
-                RetArr(i) = PairArr
             Next
-            Return New FlatFormResult(RetArr)
+            Dim RetArr() As HeaderValuePair = RetList.ToArray
+            RetList = Nothing
+            Return RetArr
         End Get
     End Property
     Public ReadOnly Property FieldCount As Integer
@@ -440,10 +687,28 @@ Public Class FlatForm
             Return RowList(Row).Fields(Index)
         End Get
     End Property
-    Public Sub New(ByVal Width As Integer, ByVal Height As Integer, ByVal FieldSpacing As Integer)
+    Public Function Validate() As Boolean
+        SuspendLayout()
+        Dim EverythingValid As Boolean = True
+        For Each R As FormRow In RowList
+            If Not R.Validate Then
+                EverythingValid = False
+            End If
+        Next
+        For Each C As RadioButtonContext In RadioContextList
+            If Not C.Validate Then
+                EverythingValid = False
+            End If
+        Next
+        ResumeLayout(True)
+        Return EverythingValid
+    End Function
+    Public Sub New(ByVal Width As Integer, ByVal Height As Integer, ByVal FieldSpacing As Integer, Optional ByRef NewFieldStyle As FormFieldStyle = Nothing)
+        If NewFieldStyle IsNot Nothing Then
+            varNewFieldStyle = NewFieldStyle
+        End If
         RowList = New List(Of FormRow)
         RadioContextList = New List(Of RadioButtonContext)
-        RadioContextList.Add(New RadioButtonContext)
         varFieldSpacing = FieldSpacing
         With Me
             .SuspendLayout()
@@ -463,6 +728,13 @@ Public Class FlatForm
                 Height = Testheight
             End If
         End If
+    End Sub
+    Public Sub ClearAll(Optional ByVal ClearNonInput As Boolean = False)
+        SuspendLayout()
+        For Each R As FormRow In RowList
+            R.ClearAll(ClearNonInput)
+        Next
+        ResumeLayout(True)
     End Sub
     Protected Overrides Sub OnVisibleChanged(e As EventArgs)
         MyBase.OnVisibleChanged(e)
@@ -538,8 +810,8 @@ Public Class FlatForm
             Next
         Next
     End Sub
-    Public Sub AddRadioContext()
-        Dim R As New RadioButtonContext
+    Public Sub AddRadioContext(IsRequired As Boolean)
+        Dim R As New RadioButtonContext(IsRequired)
         RadioContextList.Add(R)
     End Sub
     Public Overloads Sub AddField(Elements() As FormElement)
@@ -599,27 +871,29 @@ Public Class FlatForm
             Dim NewControl As FormField
             Select Case FieldType
                 Case FormElementType.CheckBox
-                    NewControl = New FormCheckBox(varFieldSpacing)
+                    NewControl = New FormCheckBox(varFieldSpacing, varNewFieldStyle)
                 Case FormElementType.TextField
-                    NewControl = New FormTextField(varFieldSpacing)
+                    NewControl = New FormTextField(varFieldSpacing, varNewFieldStyle)
                     With NewControl
-                        .BackColor = ColorHelper.Multiply(.BackColor, 0.4)
+                        '.BackColor = ColorHelper.Multiply(.BackColor, 0.4)
                         .DrawGradient = False
                     End With
                 Case FormElementType.Button
-                    NewControl = New FormButton(varFieldSpacing)
+                    NewControl = New FormButton(varFieldSpacing, varNewFieldStyle)
                 Case FormElementType.DropDown
-                    NewControl = New FormDropDown(varFieldSpacing)
+                    NewControl = New FormDropDown(varFieldSpacing, varNewFieldStyle)
                 Case FormElementType.Label
-                    NewControl = New FormLabel(varFieldSpacing)
+                    NewControl = New FormLabel(varFieldSpacing, varNewFieldStyle)
                 Case FormElementType.Radio
                     With RadioContextList
-                        If .Count = 0 Then .Add(New RadioButtonContext)
+                        If .Count = 0 Then .Add(New RadioButtonContext(True))
                         With .Item(.Count - 1)
-                            NewControl = New FormRadioButton(.Count, (varFieldSpacing))
+                            NewControl = New FormRadioButton(.Count, (varFieldSpacing), varNewFieldStyle)
                             .Add(DirectCast(NewControl, FormRadioButton))
                         End With
                     End With
+                Case FormElementType.Space
+                    NewControl = New FormSpace(varFieldSpacing, varNewFieldStyle)
                 Case Else
                     NewControl = Nothing
             End Select
@@ -652,7 +926,6 @@ Public Class FlatForm
                 .Item(i).Dispose()
             Next
         End With
-        RowList = Nothing
         MyBase.Dispose(disposing)
     End Sub
 #End Region
@@ -665,11 +938,25 @@ Public Class FlatForm
                 Return FieldList
             End Get
         End Property
+        Protected Friend Sub ClearAll(ByVal ClearNonInput As Boolean)
+            For Each Field As FormField In FieldList
+                Field.Clear(ClearNonInput)
+            Next
+        End Sub
         Protected Friend ReadOnly Property FieldSpacing As Integer
             Get
                 Return varFieldSpacing
             End Get
         End Property
+        Protected Friend Function Validate() As Boolean
+            Dim EverythingValid As Boolean = True
+            For Each F As FormField In FieldList
+                If Not F.Validate Then
+                    EverythingValid = False
+                End If
+            Next
+            Return EverythingValid
+        End Function
         Public Sub RemoveGaps()
             SuspendLayout()
             With FieldList
@@ -761,13 +1048,21 @@ Public Class FlatForm
             Return Width - OtherTotal
         End Function
         Protected Overrides Sub Dispose(disposing As Boolean)
-            With FieldList
-                Dim iLast As Integer = .Count - 1
-                For i As Integer = 0 To iLast
-                    .Item(i).Dispose()
-                Next
-            End With
+            If disposing Then
+                With FieldList
+                    Dim iLast As Integer = .Count - 1
+                    For i As Integer = 0 To iLast
+                        .Item(i).Dispose()
+                    Next
+                End With
+            End If
             MyBase.Dispose(disposing)
+        End Sub
+    End Class
+    Private Class FormSpace
+        Inherits FormField
+        Public Sub New(ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.CheckBox, Style)
         End Sub
     End Class
     Private Class FormCheckBox
@@ -776,18 +1071,33 @@ Public Class FlatForm
         Private WithEvents Check As PictureBox
         Private FocusedBrush As New SolidBrush(Color.Gray)
         Private varChecked As Boolean
+        Private Shared varCheckBoxBorderPen As New Pen(Color.FromArgb(240, 240, 240))
+        Private CheckBorderRect As Rectangle
         Private CheckBrush As New SolidBrush(Color.Black)
+        Public Overrides Function Validate() As Boolean
+            If varRequired And Not DirectCast(Value, Boolean) Then
+                IsValid = False
+            ElseIf varRequireSpecificValue AndAlso Not (varRequiredValue.Equals(Value)) Then
+                IsValid = False
+            End If
+            Return varIsValid
+        End Function
         Private Property Checked As Boolean
             Get
                 Return varChecked
             End Get
             Set(value As Boolean)
                 varChecked = value
+                Me.Value = value
                 If Check IsNot Nothing Then
                     Check.Invalidate()
                 End If
             End Set
         End Property
+        Protected Friend Overrides Sub Clear(ByVal ClearNonInput As Boolean)
+            MyBase.Clear(ClearNonInput)
+            Value = False
+        End Sub
         Protected Overrides Sub OnUserClick()
             MyBase.OnUserClick()
             If varChecked Then
@@ -809,12 +1119,13 @@ Public Class FlatForm
             End With
         End Sub
         Private Sub OnCheckPaint(Sender As Object, e As PaintEventArgs) Handles Check.Paint
-            If varChecked Then
-                With e.Graphics
+            With e.Graphics
+                .DrawRectangle(varCheckBoxBorderPen, CheckBorderRect)
+                If varChecked Then
                     .SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
                     .DrawString(ChrW(&H2713), SystemFonts.MessageBoxFont, CheckBrush, Point.Empty)
-                End With
-            End If
+                End If
+            End With
         End Sub
         Protected Overrides Sub OnValueChanged(Value As Object)
             MyBase.OnValueChanged(Value)
@@ -841,8 +1152,8 @@ Public Class FlatForm
             Check.Invalidate()
             OnValueChanged(varChecked)
         End Sub
-        Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing, FormElementType.CheckBox)
+        Public Sub New(ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.CheckBox, Style)
             SetStyle(ControlStyles.Selectable, True)
             MeType = FormElementType.CheckBox
             Check = New PictureBox
@@ -857,6 +1168,7 @@ Public Class FlatForm
                 .Left = 10
                 .Show()
             End With
+            CheckBorderRect = New Rectangle(Point.Empty, New Size(15, 15))
             With TextLab
                 .Hide()
                 .Parent = Me
@@ -865,7 +1177,7 @@ Public Class FlatForm
                 .Padding = New Padding(34, 0, 0, 0)
                 .Left = 0
                 .Top = 14
-                .ForeColor = Color.White
+                .ForeColor = Style.BodyFG
                 .Text = "Meld meg på"
                 .FlatStyle = FlatStyle.Flat
                 .TextAlign = ContentAlignment.MiddleLeft
@@ -903,6 +1215,7 @@ Public Class FlatForm
         Protected Overrides Sub Dispose(disposing As Boolean)
             TextLab.Dispose()
             Check.Dispose()
+            varCheckBoxBorderPen.Dispose()
             CheckBrush.Dispose()
             FocusedBrush.Dispose()
             MyBase.Dispose(disposing)
@@ -912,8 +1225,8 @@ Public Class FlatForm
     Private Class FormButton
         Inherits FormField
         Private TextLab As New Label
-        Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing, FormElementType.Button)
+        Public Sub New(ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.Button, Style)
             MeType = FormElementType.Button
         End Sub
         Protected Overrides Sub OnSecondaryValueChanged(Value As Object)
@@ -927,63 +1240,158 @@ Public Class FlatForm
         End Sub
     End Class
 
-    Private Class FormTextField
+    Public Class FormTextField
         Inherits FormField
         Private PaddingLeft As Integer = 10
-        Private TextField As TextBox
+        Private WithEvents varTextField As TextBox
+        Private varPlaceHolder As String = ""
+        Private varDrawPlaceHolder As Boolean
+        Private PlaceHolderPoint As Point = Point.Empty
+        Private WithEvents PlaceHolderSurface As New Control
+        Private Sub SendPlaceHolderSurfaceToBack() Handles PlaceHolderSurface.Click, PlaceHolderSurface.GotFocus
+            TextField.Focus()
+            TextField.BringToFront()
+            PlaceHolderSurface.Hide()
+            If Not varIsValid Then
+                IsValid = True
+            End If
+        End Sub
+        Public Property PlaceHolder As String
+            Get
+                Return varPlaceHolder
+            End Get
+            Set(value As String)
+                varPlaceHolder = value
+            End Set
+        End Property
+        Protected Friend Overrides Sub Clear(ByVal ClearNonInput As Boolean)
+            MyBase.Clear(ClearNonInput)
+            varTextField.Clear()
+        End Sub
+        Public Overrides Function Validate() As Boolean
+            IsValid = True
+            If varRequired And (TextField.Text = "" OrElse TextField.Text Is Nothing) Then
+                IsValid = False
+            ElseIf varRequireSpecificValue AndAlso Not varRequiredValue.Equals(Value) Then
+                IsValid = False
+            ElseIf varIsNumeric AndAlso Not IsNumeric(TextField.Text) Then
+                IsValid = False
+            Else
+                Dim TFTL As Integer = TextField.TextLength
+                If varMinMax(0) > TFTL OrElse varMinMax(1) < TFTL Then
+                    IsValid = False
+                End If
+            End If
+            Return IsValid
+        End Function
+        Private Sub PlaceHolder_Paint(Sender As Object, e As PaintEventArgs) Handles PlaceHolderSurface.Paint
+            If varPlaceHolder <> "" Then
+                Using NewBrush As New SolidBrush(Color.FromArgb(70, ForeColor))
+                    With PlaceHolderSurface
+                        e.Graphics.DrawString(varPlaceHolder, varTextField.Font, NewBrush, PlaceHolderPoint)
+                    End With
+                End Using
+            End If
+        End Sub
+        Private Sub Field_TextChanged() Handles varTextField.TextChanged
+            Value = varTextField.Text
+            If TextField.Text = "" AndAlso Not TextField.Focused Then
+                TextField.SendToBack()
+                PlaceHolderSurface.Show()
+            End If
+            With PlaceHolderSurface
+                PlaceHolderPoint = New Point(PaddingLeft - 6, .Height \ 2 - TextRenderer.MeasureText(varTextField.Text, varTextField.Font).Height \ 2 - 6)
+            End With
+        End Sub
+        Private Sub Field_LostFocused() Handles varTextField.LostFocus
+            If TextField.Text = "" Then
+                TextField.SendToBack()
+                PlaceHolderSurface.Show()
+            End If
+        End Sub
+        Public ReadOnly Property TextField As TextBox
+            Get
+                Return varTextField
+            End Get
+        End Property
+        Public Shadows Property Font As Font
+            Get
+                Return MyBase.Font
+            End Get
+            Set(value As Font)
+                MyBase.Font = value
+            End Set
+        End Property
         Private Sub Me_BackColorChanged(Sender As Object, e As EventArgs) Handles Me.BackColorChanged
-            If TextField IsNot Nothing Then
-                TextField.BackColor = BackColor
+            If varTextField IsNot Nothing Then
+                varTextField.BackColor = BackColor
             End If
         End Sub
 
-        Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing, FormElementType.TextField)
+        Public Sub New(ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.TextField, Style)
             MeType = FormElementType.TextField
-            TextField = New TextBox
-            With Me
-                .Hide()
-                '.BackColor = Color.FromArgb(7, 70, 91)
-                .ForeColor = Color.White
+            varTextField = New TextBox
+            Hide()
+            With PlaceHolderSurface
+                .Parent = Me
+                .Width = Width - 2
+                .Left = 1
+                .Top = Header.Bottom + 1
+                .Height = Height - .Top - 2
+                .Cursor = Cursors.IBeam
+                ' Sett font
             End With
-            With TextField
+            With varTextField
                 .Parent = Me
                 .Left = PaddingLeft
-                .BackColor = Color.FromArgb(7, 70, 91)
-                .Width = Width - PaddingLeft
+                .Width = Width - PaddingLeft * 2
                 .Height = 16
                 .Top = CInt((Height / 2) - (.Height / 2) + (Header.Height / 2))
-                .ForeColor = Color.White
+                .ForeColor = Style.TextFG
                 .BorderStyle = BorderStyle.None
-                .Show()
+                .SendToBack()
             End With
+            BackColor = Style.TextBG
+            Value = ""
             Show()
         End Sub
         Protected Overrides Sub OnSizeChanged(e As EventArgs)
             MyBase.OnSizeChanged(e)
-            With TextField
-                .Width = Width - PaddingLeft
+            With varTextField
+                .Width = Width - PaddingLeft * 2
                 .Top = CInt((Height / 2) - (.Height / 2) + (Header.Height / 2))
+            End With
+            With PlaceHolderSurface
+                .Width = Width - 2
+                .Top = Header.Bottom + 1
+                .Height = Height - .Top - 2
+                PlaceHolderPoint = New Point(PaddingLeft - 6, .Height \ 2 - TextRenderer.MeasureText(varTextField.Text, varTextField.Font).Height \ 2 - 6)
             End With
         End Sub
         Protected Overrides Sub OnVisibleChanged(e As EventArgs)
             MyBase.OnVisibleChanged(e)
-            With TextField
-                .Width = Width - PaddingLeft
+            With varTextField
+                .Width = Width - PaddingLeft * 2
                 .Top = CInt((Height / 2) - (.Height / 2) + (Header.Height / 2))
+            End With
+            With PlaceHolderSurface
+                .Width = Width - 2
+                .Top = Header.Bottom + 1
+                .Height = Height - .Top - 2
+                PlaceHolderPoint = New Point(PaddingLeft - 6, .Height \ 2 - TextRenderer.MeasureText(varTextField.Text, varTextField.Font).Height \ 2 - 6)
             End With
         End Sub
         Protected Overrides Sub OnValueChanged(Value As Object)
             MyBase.OnValueChanged(Value)
-            TextField.Text = DirectCast(Value, String)
+            varTextField.Text = DirectCast(Value, String)
         End Sub
         Protected Overrides Sub OnSecondaryValueChanged(Value As Object)
             MyBase.OnSecondaryValueChanged(Value)
-            TextField.Text = DirectCast(Value, String)
-        End Sub
-        Protected Overrides Sub Dispose(disposing As Boolean)
-            TextField.Dispose()
-            MyBase.Dispose(disposing)
+            varTextField.Text = DirectCast(Value, String)
+            If Not varIsValid Then
+                IsValid = True
+            End If
         End Sub
     End Class
 
@@ -1012,8 +1420,8 @@ Public Class FlatForm
                     TextLab.Padding = New Padding(0, 0, 6, 3)
             End Select
         End Sub
-        Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing, FormElementType.Label)
+        Public Sub New(ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.Label, Style)
             MeType = FormElementType.Label
             varIsInputType = False
             SetStyle(ControlStyles.Selectable, False)
@@ -1024,15 +1432,21 @@ Public Class FlatForm
                 .Parent = Me
                 '.BackColor = Color.FromArgb(7, 70, 91)
                 .BackColor = Color.Transparent
-                .ForeColor = Color.White
+                .ForeColor = Style.BodyFG
                 .AutoSize = False
                 .TextAlign = ContentAlignment.MiddleLeft
                 .Padding = New Padding(6, 0, 0, 0)
-                .Left = 0
+                .Left = 1
                 .Top = Header.Height
+                .Width = Width - 2
             End With
             Value = "Change the default text using the Value property."
-
+        End Sub
+        Protected Friend Overrides Sub Clear(ClearNonInput As Boolean)
+            MyBase.Clear(ClearNonInput)
+            If ClearNonInput Then
+                Value = ""
+            End If
         End Sub
         Protected Overrides Sub OnValueChanged(Value As Object)
             MyBase.OnValueChanged(Value)
@@ -1080,8 +1494,8 @@ Public Class FlatForm
 
     Private Class FormDropDown
         Inherits FormField
-        Public Sub New(ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing, FormElementType.DropDown)
+        Public Sub New(ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.DropDown, Style)
             MeType = FormElementType.DropDown
         End Sub
         Protected Overrides Sub Dispose(disposing As Boolean)
@@ -1089,7 +1503,7 @@ Public Class FlatForm
         End Sub
     End Class
 
-    Private Class FormRadioButton
+    Public Class FormRadioButton
         Inherits FormField
         Private WithEvents CheckSurface As PictureBox
         Private WithEvents TextLab As Label
@@ -1097,6 +1511,7 @@ Public Class FlatForm
         Private CheckBrush As New SolidBrush(Color.White)
         Private DotBrush As New SolidBrush(Color.Black)
         Private HoverBrush As New SolidBrush(Color.LightGray)
+        Private RadioBorderPen As New Pen(Color.FromArgb(240, 240, 240), 1.5)
         Private Hovering As Boolean
         Private varIndex As Integer
         Private ReadOnly Property Checked As Boolean
@@ -1117,11 +1532,23 @@ Public Class FlatForm
         Protected Overrides Sub OnUserClick()
             MyBase.OnUserClick()
             If Not varChecked Then
-                Check()
+                Value = True
             End If
         End Sub
-        Public Sub New(ByVal RadioContextIndex As Integer, ByVal FieldSpacing As Integer)
-            MyBase.New(FieldSpacing, FormElementType.Radio)
+        Public Overrides Function Validate() As Boolean
+            If varRequireSpecificValue AndAlso Not (varRequiredValue.Equals(Value)) Then
+                IsValid = False
+            Else
+                IsValid = True
+            End If
+            Return IsValid
+        End Function
+        Protected Friend Overrides Sub Clear(ByVal ClearNonInput As Boolean)
+            MyBase.Clear(ClearNonInput)
+            Value = False
+        End Sub
+        Public Sub New(ByVal RadioContextIndex As Integer, ByVal FieldSpacing As Integer, Style As FormFieldStyle)
+            MyBase.New(FieldSpacing, FormElementType.Radio, Style)
             SuspendLayout()
             MeType = FormElementType.Radio
             CheckSurface = New PictureBox
@@ -1144,24 +1571,27 @@ Public Class FlatForm
                 .Padding = New Padding(34, 0, 0, 0)
                 .Location = New Point(0, Header.Height)
                 .Height = Height - Header.Height
-                .ForeColor = Color.White
+                .ForeColor = Style.BodyFG
                 .Text = "Meld meg på"
                 .FlatStyle = FlatStyle.Flat
                 .TextAlign = ContentAlignment.MiddleLeft
                 .SendToBack()
                 .Show()
             End With
+            Value = False
             Show()
             ResumeLayout()
         End Sub
         Private Sub CheckSurface_Paint(Sender As Object, e As PaintEventArgs) Handles CheckSurface.Paint
-            Dim DotRect As Rectangle
+            Dim DotRect, BorderRect As Rectangle
             With CheckSurface
                 DotRect = New Rectangle(0, 0, .Width - 1, .Height - 1)
+                BorderRect = New Rectangle(0, 0, .Width - 1, .Height - 1)
             End With
             With e.Graphics
                 .SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
                 .FillEllipse(CheckBrush, DotRect)
+                .DrawEllipse(RadioBorderPen, BorderRect)
                 If varChecked Then
                     DotRect.Inflate(-4, -4)
                     .FillEllipse(DotBrush, DotRect)
@@ -1220,6 +1650,7 @@ Public Class FlatForm
         Protected Overrides Sub OnValueChanged(Value As Object)
             MyBase.OnValueChanged(Value)
             varChecked = DirectCast(Value, Boolean)
+            Value = varChecked
             CheckSurface.Refresh()
         End Sub
         Protected Overrides Sub OnSecondaryValueChanged(Value As Object)
@@ -1231,21 +1662,51 @@ Public Class FlatForm
             CheckSurface.Dispose()
             CheckBrush.Dispose()
             DotBrush.Dispose()
+            RadioBorderPen.Dispose()
             HoverBrush.Dispose()
             MyBase.Dispose(disposing)
         End Sub
     End Class
 
-    Private Class RadioButtonContext
+    Public Class RadioButtonContext
         Implements IDisposable
-
+        Private varIsRequired As Boolean
+        Private IsValid As Boolean = True
         Private ControlList As List(Of FormRadioButton)
+        Public Property IsRequired As Boolean
+            Get
+                Return varIsRequired
+            End Get
+            Set(value As Boolean)
+                varIsRequired = value
+            End Set
+        End Property
         Public ReadOnly Property Count As Integer
             Get
                 Return ControlList.Count
             End Get
         End Property
-        Public Sub New()
+        Public Function Validate() As Boolean
+            IsValid = True
+            If varIsRequired Then
+                Dim SomethingSelected As Boolean
+                For Each R As FormRadioButton In ControlList
+                    If DirectCast(R.Value, Boolean) Then
+                        SomethingSelected = True
+                        Exit For
+                    End If
+                Next
+                If Not SomethingSelected Then
+                    IsValid = False
+                    For Each R As FormRadioButton In ControlList
+                        R.IsValid = False
+                    Next
+                End If
+            End If
+            Return IsValid
+        End Function
+        Protected Friend Sub New(IsRequired As Boolean)
+            varIsRequired = IsRequired
             ControlList = New List(Of FormRadioButton)(4)
         End Sub
         Public Sub Add(R As FormRadioButton)

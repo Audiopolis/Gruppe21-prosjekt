@@ -15,6 +15,7 @@ Public Class Unlock
     End Sub
     Private Sub CorrectKey(Sender As Object, ConnectionSucceeded As Boolean) Handles AdminUnlock.CorrectKey
         If ConnectionSucceeded Then
+            AdminUnlock.Hide()
             Hide()
             Splash.Show()
         Else

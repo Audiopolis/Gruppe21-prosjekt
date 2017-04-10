@@ -45,7 +45,7 @@ Public Class Skjema
             .AddField(FormElementType.TextField)
             .AddField(FormElementType.Radio, 120, True)
             .AddField(FormElementType.Radio)
-            .AddRadioContext()
+            .AddRadioContext(True)
             .AddField(FormElementType.Radio, 120, True)
             .AddField(FormElementType.Radio)
             .Field(1, 2).Extrude(FieldExtrudeSide.Left, 10)

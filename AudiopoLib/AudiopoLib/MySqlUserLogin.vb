@@ -5,7 +5,7 @@ Option Infer Off
 Public Class MySqlUserLogin
     Private WithEvents DBC As DatabaseClient
     Private IfValidAction As Action
-    Private InIfInvalidAction As Action(Of Boolean)
+    Private InIfInvalidAction As Action(Of Boolean, String)
     Private ExecuteIfMultipleMatches As Boolean = True
     Public Event MultipleFound()
     Public Property ExecuteIfMultiple As Boolean
@@ -33,7 +33,7 @@ Public Class MySqlUserLogin
         DBC.SQLQuery = Query
         DBC.Execute(Parameters, Values, True)
     End Sub
-    Private Sub Fin(ByVal Exists As Boolean, ByVal RowCount As Integer, Tag As Integer, ByVal ErrorOccurred As Boolean) Handles DBC.ExistsCheckCompleted
+    Private Sub Fin(ByVal Exists As Boolean, ByVal RowCount As Integer, Tag As Integer, ByVal ErrorOccurred As Boolean, ErrorMessage As String) Handles DBC.ExistsCheckCompleted
         If Exists Then
             If RowCount = 1 OrElse ExecuteIfMultipleMatches Then
                 If IfValidAction IsNot Nothing Then
@@ -44,7 +44,7 @@ Public Class MySqlUserLogin
             End If
         Else
             If InIfInvalidAction IsNot Nothing Then
-                InIfInvalidAction.Invoke(ErrorOccurred)
+                InIfInvalidAction.Invoke(ErrorOccurred, ErrorMessage)
             End If
         End If
     End Sub
@@ -56,8 +56,8 @@ Public Class MySqlUserLogin
     ''' <summary>
     ''' Address of a method that accepts a boolean value indicating whether or not an error occurred.
     ''' </summary>
-    Public Overloads WriteOnly Property IfInvalid As Action(Of Boolean)
-        Set(Action As Action(Of Boolean))
+    Public Overloads WriteOnly Property IfInvalid As Action(Of Boolean, String)
+        Set(Action As Action(Of Boolean, String))
             InIfInvalidAction = Action
         End Set
     End Property
