@@ -1,7 +1,7 @@
 ﻿Imports AudiopoLib
 
 Public Class Unlock
-    Private WithEvents AdminUnlock As New AdminUnlockWrapper("C:\Users\Magnus\Desktop\Testinstallasjon\Blodbank\cred\", "auth.txt")
+    Private WithEvents AdminUnlock As New AdminUnlockWrapper(Application.StartupPath & "\cred\", "auth.txt")
     Private NotifManager As New NotificationManager(Me)
     Private LayoutHelper As New FormLayoutTools(Me)
     Private Sub Unlock_Load(sender As Object, e As EventArgs) Handles MyBase.Load
