@@ -56,21 +56,21 @@ Public Class FormNavigationButton
     End Sub
 End Class
 
-Public Class QuestionnaireResult
-    Private ResultsArr() As FlatFormResult
-    Protected Friend Sub New(ByVal Results() As FlatFormResult)
-        ResultsArr = Results
-    End Sub
-    Public Function Value(ByVal Form As Integer, ByVal Row As Integer, ByVal Field As Integer) As Object
-        Return ResultsArr(Form).Value(Row, Field)
-    End Function
-    Public Function Header(ByVal Form As Integer, ByVal Row As Integer, ByVal Field As Integer) As String
-        Return ResultsArr(Form).Header(Row, Field)
-    End Function
-    Public Function FieldType(ByVal Form As Integer, ByVal Row As Integer, ByVal Field As Integer) As FormElementType
-        Return ResultsArr(Form).FieldType(Row, Field)
-    End Function
-End Class
+'Public Class QuestionnaireResult
+'    Private ResultsArr() As FlatFormResult
+'    Protected Friend Sub New(ByVal Results() As FlatFormResult)
+'        ResultsArr = Results
+'    End Sub
+'    Public Function Value(ByVal Form As Integer, ByVal Row As Integer, ByVal Field As Integer) As Object
+'        Return ResultsArr(Form).Value(Row, Field)
+'    End Function
+'    Public Function Header(ByVal Form As Integer, ByVal Row As Integer, ByVal Field As Integer) As String
+'        Return ResultsArr(Form).Header(Row, Field)
+'    End Function
+'    Public Function FieldType(ByVal Form As Integer, ByVal Row As Integer, ByVal Field As Integer) As FormElementType
+'        Return ResultsArr(Form).FieldType(Row, Field)
+'    End Function
+'End Class
 
 Public Class Questionnaire
     Inherits Control
@@ -138,14 +138,14 @@ Public Class Questionnaire
     Private FormNav As FormNavigation
     Private varFormIndex As Integer = -1
     Private PanTimer As Timers.Timer
-    Public Function Result() As QuestionnaireResult
-        Dim iLast As Integer = FormList.Count - 1
-        Dim ResultArr(iLast) As FlatFormResult
-        For i As Integer = 0 To FormList.Count - 1
-            ResultArr(i) = FormList(i).Result
-        Next
-        Return New QuestionnaireResult(ResultArr)
-    End Function
+    'Public Function Result() As QuestionnaireResult
+    '    Dim iLast As Integer = FormList.Count - 1
+    '    Dim ResultArr(iLast) As FlatFormResult
+    '    For i As Integer = 0 To FormList.Count - 1
+    '        ResultArr(i) = FormList(i).Result
+    '    Next
+    '    Return New QuestionnaireResult(ResultArr)
+    'End Function
     Public Overloads ReadOnly Property Forms(ByVal Index As Integer) As FlatForm
         Get
             Return FormList(Index)

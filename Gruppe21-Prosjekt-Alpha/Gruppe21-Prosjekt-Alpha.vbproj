@@ -84,7 +84,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
@@ -101,6 +100,13 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdminCredentials.vb" />
+    <Compile Include="AdminUnlock.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="BlodBeholder.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="BlodgiverDashboard.Designer.vb">
       <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
     </Compile>
@@ -111,12 +117,22 @@
     <Compile Include="blodgiverDashboard2.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="BorderControl.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DatabaseCredentials.vb" />
     <Compile Include="FlatList.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Footer.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="GlobalControl.vb" />
     <Compile Include="Globals.vb" />
     <Compile Include="GridMenu.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="InfoLabel.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="LoggInn_Admin.vb">
@@ -158,6 +174,10 @@
     </Compile>
     <Compile Include="PaintMessageHelper.vb" />
     <Compile Include="PersonaliaDisplay.vb" />
+    <Compile Include="PieChart.vb">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="CryptoServiceProvider.vb" />
     <Compile Include="Skjema.Designer.vb">
       <DependentUpon>Skjema.vb</DependentUpon>
     </Compile>
@@ -188,6 +208,12 @@
     </Compile>
     <Compile Include="TopBar.vb">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Unlock.Designer.vb">
+      <DependentUpon>Unlock.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Unlock.vb">
+      <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +246,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Timeoversikt.resx">
       <DependentUpon>Timeoversikt.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Unlock.resx">
+      <DependentUpon>Unlock.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -277,6 +306,51 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\TimeBestillingIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Firmalogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TimeBestillingIcon2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LoggUtIcon2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\loadingLogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Firmalogo2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LOADING.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RedigerProfilIcon - Copy.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Doktor1%27.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OKIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\AvbrytIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Doktor2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DoktorPassord.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OpprettKontoInfo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NeiTakkIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NesteIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

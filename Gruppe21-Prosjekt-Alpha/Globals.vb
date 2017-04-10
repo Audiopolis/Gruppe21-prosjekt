@@ -1,4 +1,7 @@
 ﻿Module Globals
+
+    ' ALPHA
+
     Public Testoversikt As Timeoversikt
     Public Testdashbord As BlodgiverDashboard
     Public Testlogginn As LoggInn_Admin
@@ -9,6 +12,10 @@
     Public ThirdTabTest As ThirdTab
     Public PersonaliaTest As Personopplysninger
 
+
+    ' BETA
     Public MainWindow As Main
+    Public Credentials As DatabaseCredentials
+    Public LoggInnTab As LoggInn
 
 End Module
