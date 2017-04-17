@@ -2,28 +2,31 @@
 
 Public Class BorderControl
     Inherits ContainerControl
-    Private varBorderPen, varDashedPenH, varDashedPenV As Pen
+    Private varBorderPen As Pen
     Private varDashed As Boolean
-    Public Sub MakeDashed(BackColor As Color)
-        If varDashedPenH IsNot Nothing Then
-            varDashedPenH.Dispose()
-        End If
-        If varDashedPenV IsNot Nothing Then
-            varDashedPenV.Dispose()
-        End If
-        Using NH As New HatchBrush(HatchStyle.DashedHorizontal, varBorderPen.Color, BackColor)
-            varDashedPenH = New Pen(NH)
-        End Using
-        Using NV As New HatchBrush(HatchStyle.DashedVertical, varBorderPen.Color, BackColor)
-            varDashedPenV = New Pen(NV)
-        End Using
+    Private varDrawBorders() As Boolean = {True, True, True, True}
+    Private DashFG, DashBG As Color
+    Public Property DrawBorder(ByVal Side As AudiopoLib.FormField.ElementSide) As Boolean
+        Get
+            Return varDrawBorders(CInt(Side))
+        End Get
+        Set(value As Boolean)
+            varDrawBorders(CInt(Side)) = value
+            Invalidate()
+        End Set
+    End Property
+    Public Sub MakeDashed(ForeColor As Color, BackColor As Color)
+        DashFG = ForeColor
+        DashBG = BackColor
         varDashed = True
+        Invalidate()
     End Sub
     Public Sub MakeSolid()
         varDashed = False
     End Sub
     Public Sub New(BorderColor As Color)
         DoubleBuffered = True
+        ResizeRedraw = True
         varBorderPen = New Pen(BorderColor)
     End Sub
     Public Property BorderPen As Pen
@@ -41,27 +44,53 @@ Public Class BorderControl
         Dim Width As Integer = ClientSize.Width
         With e.Graphics
             If Not varDashed Then
-                .DrawLine(varBorderPen, Point.Empty, New Point(0, Height - 1))
-                .DrawLine(varBorderPen, Point.Empty, New Point(Width - 1, 0))
-                .DrawLine(varBorderPen, New Point(Width - 1, 0), New Point(Width - 1, Height - 1))
-                .DrawLine(varBorderPen, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
+                If varDrawBorders(0) Then
+                    .DrawLine(varBorderPen, Point.Empty, New Point(0, Height - 1))
+                End If
+                If varDrawBorders(1) Then
+                    .DrawLine(varBorderPen, Point.Empty, New Point(Width - 1, 0))
+                End If
+                If varDrawBorders(2) Then
+                    .DrawLine(varBorderPen, New Point(Width - 1, 0), New Point(Width - 1, Height - 1))
+                End If
+                If varDrawBorders(3) Then
+                    .DrawLine(varBorderPen, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
+                End If
             Else
-                .DrawLine(varDashedPenV, Point.Empty, New Point(0, Height - 1))
-                .DrawLine(varDashedPenH, Point.Empty, New Point(Width - 1, 0))
-                .DrawLine(varDashedPenV, New Point(Width - 1, 0), New Point(Width - 1, Height - 1))
-                .DrawLine(varDashedPenH, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
+                If varDrawBorders(0) Then
+                    Using HB As New HatchBrush(HatchStyle.DashedVertical, DashFG, DashBG)
+                        Using P As New Pen(HB)
+                            .DrawLine(P, Point.Empty, New Point(0, Height - 1))
+                        End Using
+                    End Using
+                End If
+                If varDrawBorders(1) Then
+                    Using HB As New HatchBrush(HatchStyle.DashedHorizontal, DashFG, DashBG)
+                        Using P As New Pen(HB)
+                            .DrawLine(P, Point.Empty, New Point(Width - 1, 0))
+                        End Using
+                    End Using
+                End If
+                If varDrawBorders(2) Then
+                    Using HB As New HatchBrush(HatchStyle.DashedVertical, DashFG, DashBG)
+                        Using P As New Pen(HB)
+                            .DrawLine(P, New Point(Width - 1, 0), New Point(Width - 1, Height - 1))
+                        End Using
+                    End Using
+                End If
+                If varDrawBorders(3) Then
+                    Using HB As New HatchBrush(HatchStyle.DashedHorizontal, DashFG, DashBG)
+                        Using P As New Pen(HB)
+                            .DrawLine(P, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
+                        End Using
+                    End Using
+                End If
             End If
         End With
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
         If disposing Then
             varBorderPen.Dispose()
-            If varDashedPenH IsNot Nothing Then
-                varDashedPenH.Dispose()
-            End If
-            If varDashedPenV IsNot Nothing Then
-                varDashedPenV.Dispose()
-            End If
         End If
         MyBase.Dispose(disposing)
     End Sub

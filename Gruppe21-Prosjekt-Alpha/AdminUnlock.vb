@@ -156,7 +156,9 @@ Public Class AdminUnlockWrapper
             End If
             LG.Dispose()
             LoadingSurface.Dispose()
-            ValidityChecker.Dispose()
+            If ValidityChecker IsNot Nothing Then
+                ValidityChecker.Dispose()
+            End If
             InnerContainer.Dispose()
         End If
         MyBase.Dispose(disposing)

@@ -3,6 +3,7 @@ Option Explicit On
 Option Infer Off
 Imports System.Drawing
 Imports System.Drawing.Drawing2D
+Imports System.Text
 Imports System.Windows.Forms
 
 Public Class FormField
@@ -281,8 +282,23 @@ Public Class FormField
     '        DrawGradient = True
     '    End If
     'End Sub
+
+    'To reduce flicker
+    Protected Overrides ReadOnly Property CreateParams() As CreateParams
+        Get
+            Dim params As CreateParams = MyBase.CreateParams
+            params.ExStyle = params.ExStyle Or &H2000000
+            Return params
+        End Get
+    End Property
+
     Public Sub New(ByVal FieldSpacing As Integer, ByVal FieldType As FormElementType, Style As FormFieldStyle)
         DoubleBuffered = True
+        SetStyle(ControlStyles.UserPaint, True)
+        SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+        SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+        UpdateStyles()
+
         'Using NH As New HatchBrush(HatchStyle.DottedGrid, ColorHelper.Add(Color.FromArgb(5, 53, 68), 20))
         Using NH As New HatchBrush(HatchStyle.DottedGrid, ColorHelper.Add(Style.HeaderBG, 20), ColorHelper.Add(Style.HeaderBG, -50))
             DashedPen = New Pen(NH)
@@ -406,12 +422,15 @@ Public Class FormField
         ResumeLayout()
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        If disposing Then
-            If GradBrush IsNot Nothing Then
-                GradBrush.Dispose()
+        Try
+            If disposing Then
+                If GradBrush IsNot Nothing Then
+                    GradBrush.Dispose()
+                End If
             End If
-        End If
-        MyBase.Dispose(disposing)
+            MyBase.Dispose(disposing)
+        Catch
+        End Try
     End Sub
 End Class
 Public Enum FieldExtrudeSide
@@ -599,6 +618,16 @@ Public Class FlatForm
     Private RowList As List(Of FormRow)
     Private varRowHeight As Integer = 57
     Private varNewFieldStyle As New FormFieldStyle()
+
+    'To reduce flicker
+    Protected Overrides ReadOnly Property CreateParams() As CreateParams
+        Get
+            Dim params As CreateParams = MyBase.CreateParams
+            params.ExStyle = params.ExStyle Or &H2000000
+            Return params
+        End Get
+    End Property
+
     Public ReadOnly Property Last As FormField
         Get
             Dim Ret As FormField
@@ -647,6 +676,18 @@ Public Class FlatForm
             Return RowList
         End Get
     End Property
+    Public Function GetRadioSeries() As String
+        Dim SB As New StringBuilder
+        For Each Context As RadioButtonContext In RadioContextList
+            Dim Checked As Integer = Context.GetChecked
+            If Checked < 0 Then
+                SB.Append("X")
+            Else
+                SB.Append(Checked)
+            End If
+        Next
+        Return SB.ToString
+    End Function
     Public ReadOnly Property Result() As HeaderValuePair()
         Get
             Dim iLast As Integer = RowList.Count - 1
@@ -704,6 +745,12 @@ Public Class FlatForm
         Return EverythingValid
     End Function
     Public Sub New(ByVal Width As Integer, ByVal Height As Integer, ByVal FieldSpacing As Integer, Optional ByRef NewFieldStyle As FormFieldStyle = Nothing)
+        DoubleBuffered = True
+        SetStyle(ControlStyles.UserPaint, True)
+        SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+        SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+        UpdateStyles()
+
         If NewFieldStyle IsNot Nothing Then
             varNewFieldStyle = NewFieldStyle
         End If
@@ -721,6 +768,7 @@ Public Class FlatForm
     '    Height = RowList(RowList.Count - 1).Bottom
     'End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
+        SuspendLayout()
         MyBase.OnResize(e)
         If RowList.Count > 0 Then
             Dim Testheight As Integer = RowList(RowList.Count - 1).Bottom - varFieldSpacing
@@ -728,6 +776,7 @@ Public Class FlatForm
                 Height = Testheight
             End If
         End If
+        ResumeLayout(True)
     End Sub
     Public Sub ClearAll(Optional ByVal ClearNonInput As Boolean = False)
         SuspendLayout()
@@ -933,6 +982,16 @@ Public Class FlatForm
         Inherits Control
         Private varFieldSpacing As Integer
         Private FieldList As List(Of FormField)
+
+        'To reduce flicker
+        Protected Overrides ReadOnly Property CreateParams() As CreateParams
+            Get
+                Dim params As CreateParams = MyBase.CreateParams
+                params.ExStyle = params.ExStyle Or &H2000000
+                Return params
+            End Get
+        End Property
+
         Public ReadOnly Property Fields As List(Of FormField)
             Get
                 Return FieldList
@@ -994,9 +1053,14 @@ Public Class FlatForm
             End With
         End Sub
         Protected Friend Sub New(ByVal FieldSpacing As Integer)
-            FieldList = New List(Of FormField)
             DoubleBuffered = True
+            SetStyle(ControlStyles.UserPaint, True)
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+            SetStyle(ControlStyles.AllPaintingInWmPaint, True)
             SetStyle(ControlStyles.Selectable, False)
+            UpdateStyles()
+
+            FieldList = New List(Of FormField)
             TabStop = False
             'GradSurface = New Control
             'With GradSurface
@@ -1435,7 +1499,7 @@ Public Class FlatForm
                 .ForeColor = Style.BodyFG
                 .AutoSize = False
                 .TextAlign = ContentAlignment.MiddleLeft
-                .Padding = New Padding(6, 0, 0, 0)
+                .Padding = New Padding(6, 0, 6, 0)
                 .Left = 1
                 .Top = Header.Height
                 .Width = Width - 2
@@ -1511,10 +1575,10 @@ Public Class FlatForm
         Private CheckBrush As New SolidBrush(Color.White)
         Private DotBrush As New SolidBrush(Color.Black)
         Private HoverBrush As New SolidBrush(Color.LightGray)
-        Private RadioBorderPen As New Pen(Color.FromArgb(240, 240, 240), 1.5)
+        Private RadioBorderPen As New Pen(Color.FromArgb(120, 120, 120), 1.5)
         Private Hovering As Boolean
         Private varIndex As Integer
-        Private ReadOnly Property Checked As Boolean
+        Public ReadOnly Property Checked As Boolean
             Get
                 Return varChecked
             End Get
@@ -1522,7 +1586,7 @@ Public Class FlatForm
         Private Sub Check()
             varChecked = True
             CheckSurface.Refresh()
-            OnValueChanged(varChecked)
+            Value = varChecked
         End Sub
         Public ReadOnly Property RadioIndex As Integer
             Get
@@ -1673,6 +1737,19 @@ Public Class FlatForm
         Private varIsRequired As Boolean
         Private IsValid As Boolean = True
         Private ControlList As List(Of FormRadioButton)
+        Public Function GetChecked() As Integer
+            Dim Ret As Integer = -1
+            Dim Counter As Integer = 0
+            For Each C As FormRadioButton In ControlList
+                If C.Checked Then
+                    Ret = Counter
+                    Exit For
+                Else
+                    Counter += 1
+                End If
+            Next
+            Return Ret
+        End Function
         Public Property IsRequired As Boolean
             Get
                 Return varIsRequired

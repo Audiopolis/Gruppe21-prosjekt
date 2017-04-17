@@ -27,7 +27,7 @@ Public NotInheritable Class Splash
         'Testlogginn = New LoggInn_Admin
         'Testspørreskjema = New Skjema
 
-        blodgiverDashboard2.Show()
+        'blodgiverDashboard2.Show()
         'Testlogginn.Show()
         MainWindow = New Main
         MainWindow.Show()

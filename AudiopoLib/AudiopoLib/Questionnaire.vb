@@ -72,21 +72,83 @@ End Class
 '    End Function
 'End Class
 
-Public Class Questionnaire
+Public NotInheritable Class Questionnaire
     Inherits Control
     Private Class FormNavigation
         Inherits Label
         Private NextButton, PrevButton As FormNavigationButton
+        Private CustomNext, CustomPrev, CustomFinished As Control
         Private BtnSpacing As Integer
+        Private varCustomButtons As Boolean
         Public Event NextClicked()
         Public Event PreviousClicked()
+        Public Event FinishedClicked()
+        Public Sub SwitchFinishedButton(SwitchOn As Boolean)
+            If SwitchOn Then
+                If varCustomButtons Then
+                    CustomNext.Hide()
+                    CustomFinished.Show()
+                Else
+                    NextButton.Hide()
+                    'TODO: Add default finished button
+                End If
+            Else
+                If varCustomButtons Then
+                    CustomNext.Show()
+                    CustomFinished.Hide()
+                Else
+                    NextButton.Show()
+                    'TODO: Add default finished button
+                End If
+            End If
+        End Sub
+        Public Sub AddCustomButtons(CustomPreviousButton As Control, CustomNextButton As Control, CustomFinishedButton As Control)
+            NextButton.Hide()
+            PrevButton.Hide()
+            varCustomButtons = True
+            With CustomPreviousButton
+                .Parent = Me
+                CustomPrev = CustomPreviousButton
+                AddHandler .Click, AddressOf OnPreviousClicked
+            End With
+            With CustomNextButton
+                .Parent = Me
+                CustomNext = CustomNextButton
+                AddHandler .Click, AddressOf OnNextClicked
+            End With
+            With CustomFinishedButton
+                .Parent = Me
+                CustomFinished = CustomFinishedButton
+                AddHandler .Click, AddressOf OnFinishedClicked
+            End With
+        End Sub
+        Private Sub OnFinishedClicked(sender As Object, e As EventArgs)
+            RaiseEvent FinishedClicked()
+        End Sub
         Private Sub RefreshButtons() Handles Me.SizeChanged, Me.VisibleChanged
-            If PrevButton IsNot Nothing Then
-                With PrevButton
+            If Not varCustomButtons Then
+                If PrevButton IsNot Nothing Then
+                    With PrevButton
+                        .Left = (Width - .Width - BtnSpacing) \ 2
+                        .Top = 0
+                    End With
+                    With NextButton
+                        .Left = (Width - .Width + BtnSpacing) \ 2
+                        .BringToFront()
+                        .Top = 0
+                    End With
+                End If
+            Else
+                With CustomPrev
                     .Left = (Width - .Width - BtnSpacing) \ 2
                     .Top = 0
                 End With
-                With NextButton
+                With CustomNext
+                    .Left = (Width - .Width + BtnSpacing) \ 2
+                    .BringToFront()
+                    .Top = 0
+                End With
+                With CustomFinished
                     .Left = (Width - .Width + BtnSpacing) \ 2
                     .BringToFront()
                     .Top = 0
@@ -97,9 +159,7 @@ Public Class Questionnaire
             BtnSpacing = ButtonSpacing
             With Me
                 .Parent = ParentQuestionnaire
-                .Left = 0
-                .Top = 0
-                .Height = Height 'endre til = Height
+                .Height = Height
                 .Width = ParentQuestionnaire.Width
                 .BringToFront()
                 .Show()
@@ -132,12 +192,29 @@ Public Class Questionnaire
         Private Sub OnPreviousClicked(sender As Object, e As EventArgs)
             RaiseEvent PreviousClicked()
         End Sub
+        Protected Overrides Sub Dispose(disposing As Boolean)
+            If CustomPrev IsNot Nothing Then
+                RemoveHandler CustomPrev.Click, AddressOf OnPreviousClicked
+            End If
+            If CustomNext IsNot Nothing Then
+                AddHandler CustomNext.Click, AddressOf OnNextClicked
+            End If
+            MyBase.Dispose(disposing)
+        End Sub
     End Class
+
     Private SC As SynchronizationContext = SynchronizationContext.Current
     Private FormList As List(Of FlatForm)
-    Private FormNav As FormNavigation
+    Private WithEvents FormNav As FormNavigation
     Private varFormIndex As Integer = -1
     Private PanTimer As Timers.Timer
+    Private varNavOffset(1) As Integer
+    Public Event FinishedClicked()
+    Public ReadOnly Property Form(ByVal Index As Integer) As FlatForm
+        Get
+            Return FormList(Index)
+        End Get
+    End Property
     'Public Function Result() As QuestionnaireResult
     '    Dim iLast As Integer = FormList.Count - 1
     '    Dim ResultArr(iLast) As FlatFormResult
@@ -156,30 +233,44 @@ Public Class Questionnaire
             Return FormList
         End Get
     End Property
+    Private Sub OnFinishedClick() Handles FormNav.FinishedClicked
+        RaiseEvent FinishedClicked()
+    End Sub
     Public Property FormIndex As Integer
         Get
             Return varFormIndex
         End Get
         Set(value As Integer)
+            Dim PreviousValue As Integer = varFormIndex
             If varFormIndex >= 0 Then
                 FormList(varFormIndex).Hide()
             End If
             varFormIndex = value
             With FormList(varFormIndex)
                 .Display()
+                .Location = New Point(Width \ 2 - .Width \ 2, (Height - FormNav.Height) \ 2 - .Height \ 2)
                 .Show()
             End With
+            Dim FormCount As Integer = FormList.Count - 1
+            If varFormIndex = FormCount Then
+                FormNav.SwitchFinishedButton(True)
+            ElseIf PreviousValue = FormCount AndAlso value <> FormCount Then
+                FormNav.SwitchFinishedButton(False)
+            End If
         End Set
     End Property
-    Public Sub New(Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100)
+    Public Sub New(Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100, Optional NavigationOffsetY As Integer = 0, Optional NavigationOffsetX As Integer = 0)
+        varNavOffset = {NavigationOffsetX, NavigationOffsetY}
         Initialize(NavigationHeight, NextPreviousButtonSpacing)
     End Sub
-    Public Sub New(Parent As Control, Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100)
+    Public Sub New(Parent As Control, Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100, Optional NavigationOffsetX As Integer = 0, Optional NavigationOffsetY As Integer = 0)
         Me.Parent = Parent
+        varNavOffset = {NavigationOffsetX, NavigationOffsetY}
         Initialize(NavigationHeight, NextPreviousButtonSpacing)
     End Sub
-    Public Sub New(ByVal Rectangle As Rectangle, Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100)
+    Public Sub New(ByVal Rectangle As Rectangle, Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100, Optional NavigationOffsetX As Integer = 0, Optional NavigationOffsetY As Integer = 0)
         ' Study before deciding to correct:
+        varNavOffset = {NavigationOffsetX, NavigationOffsetY}
         PanTimer.AutoReset = False
         With Rectangle
             Left = .Left
@@ -189,12 +280,17 @@ Public Class Questionnaire
         End With
         Initialize(NavigationHeight, NextPreviousButtonSpacing)
     End Sub
-    Public Sub New(ByVal Width As Integer, ByVal Height As Integer, Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100)
+    Public Sub New(ByVal Width As Integer, ByVal Height As Integer, Optional ByVal NavigationHeight As Integer = 40, Optional ByVal NextPreviousButtonSpacing As Integer = 100, Optional NavigationOffsetY As Integer = 0, Optional NavigationOffsetX As Integer = 0)
+        varNavOffset = {NavigationOffsetX, NavigationOffsetY}
         With Me
             .Width = Width
             .Height = Height
         End With
         Initialize(NavigationHeight, NextPreviousButtonSpacing)
+    End Sub
+    Public Sub AddCustomButtons(CustomPreviousButton As Control, CustomNextButton As Control, FinishedButton As Control)
+        FinishedButton.Hide()
+        FormNav.AddCustomButtons(CustomPreviousButton, CustomNextButton, FinishedButton)
     End Sub
     Public Overloads Sub Display(Optional ByVal StartFormIndex As Integer = 0)
         Show()
@@ -207,6 +303,8 @@ Public Class Questionnaire
         PanTimer = New Timers.Timer(1000 / 60)
         AddHandler PanTimer.Elapsed, AddressOf PanTimerTick
         FormNav = New FormNavigation(Me, NavHeight, NavBtnSpacing)
+        FormNav.Left += varNavOffset(0)
+        FormNav.Top += varNavOffset(1)
         AddHandler FormNav.NextClicked, AddressOf OnNextClicked
         AddHandler FormNav.PreviousClicked, AddressOf OnPreviousClicked
         SetStyle(ControlStyles.SupportsTransparentBackColor, False)
@@ -238,30 +336,44 @@ Public Class Questionnaire
         With Form
             .Hide()
             .Parent = Me
-            .Left = CInt((Width / 2) - (.Width / 2))
-            .Top = CInt(((Height - FormNav.Height) / 2) - (.Height / 2))
+            .Left = Width \ 2 - .Width \ 2
+            .Top = (Height - FormNav.Height) \ 2 - .Height \ 2
         End With
         FormList.Add(Form)
         If varFormIndex = -1 Then
             varFormIndex = 0
         End If
     End Sub
-    Private Sub RefreshNav() Handles Me.SizeChanged, Me.VisibleChanged
-        If FormNav IsNot Nothing Then
-            With FormNav
-                .SuspendLayout()
-                .Left = 0
-                .Top = Height - .Height
-                .Width = Width
-                .ResumeLayout()
-            End With
-        End If
-        ' Change to if list isnot nothing (if buggy)
-        If varFormIndex >= 0 Then
-            With FormList(varFormIndex)
-                .Top = (Height - FormNav.Height) \ 2 - .Height \ 2
-                .Left = CInt(Width / 2 - .Width / 2)
-            End With
+    Protected Overrides Sub OnResize(e As EventArgs)
+        MyBase.OnResize(e)
+        RefreshNav()
+    End Sub
+    Protected Overrides Sub OnVisibleChanged(e As EventArgs)
+        RefreshNav(True)
+        MyBase.OnVisibleChanged(e)
+    End Sub
+    Private Sub RefreshNav(Optional ByVal IgnoreInvisible As Boolean = False)
+        If Visible OrElse IgnoreInvisible Then
+            SuspendLayout()
+            If FormNav IsNot Nothing Then
+                With FormNav
+                    .SuspendLayout()
+                    .Left = 0 + varNavOffset(0)
+                    .Top = Height - .Height + varNavOffset(1)
+                    .Width = Width
+                    .ResumeLayout()
+                End With
+            End If
+            ' Change to if list isnot nothing (if buggy)
+            If varFormIndex >= 0 Then
+                With FormList(varFormIndex)
+                    '.Top = Height \ 2 - .Height \ 2
+                    .Top = (Height - FormNav.Height) \ 2 - .Height \ 2
+                    .Left = Width \ 2 - .Width \ 2
+                    .BringToFront()
+                End With
+            End If
+            ResumeLayout(True)
         End If
     End Sub
     Public Sub NewForm(ByVal Width As Integer, ByVal Height As Integer, ByVal FieldSpacing As Integer)
