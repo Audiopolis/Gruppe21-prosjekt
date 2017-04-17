@@ -36,10 +36,14 @@ Public Class Main
             PersonaliaTest = New Personopplysninger(Windows) ' Index = 3
 
             ' BETA
-            LoggInnTab = New LoggInn(Windows) ' Index = 4
+            LoggInnTab = New LoggInnNy(Windows) ' Index = 4
+            Dashboard = New DashboardTab(Windows) ' Index = 5
+
+            Egenerklæring = New EgenerklæringTab(Windows) ' Index = 6
+            ' IS CREATED UPON LOGIN
 
             With Windows
-                .BackColor = Color.White
+                .BackColor = Color.FromArgb(240, 240, 240)
                 .Index = 4
             End With
             WindowState = FormWindowState.Maximized
@@ -54,7 +58,6 @@ Public Class Main
         End
     End Sub
 End Class
-
 
 Public Class FirstTab
     Inherits Tab
@@ -425,7 +428,10 @@ Public Class Personopplysninger
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private FirstHeader As New FullWidthControl(FormPanel)
     Private FormResult() As String
+    Private PasswordResult() As String
     Private NotifManager As New NotificationManager(FirstHeader)
+    Private CreateLogin As Boolean = True
+    Private PicSuccess As New PictureBox
     Private Sub TopBarButtonClick(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
         Select Case CInt(Sender.Tag)
             Case 0
@@ -460,51 +466,41 @@ Public Class Personopplysninger
                     DataArr(11) = "0"
                 End If
                 FormResult = DataArr
-
-                ' TODO: Validate form
-                Dim IsValid As Boolean = True
-
-                If IsValid Then
-                    Personalia.Hide()
-                    PicDoktor.Hide()
-                    FormInfo.Hide()
-                    SendKnapp.Hide()
-                    NeiTakkKnapp.Hide()
-                    With AvbrytKnapp
-                        .Hide()
-                        .Left = FormInfo.Left
+                Personalia.Hide()
+                PicDoktor.Hide()
+                FormInfo.Hide()
+                SendKnapp.Hide()
+                NeiTakkKnapp.Hide()
+                With AvbrytKnapp
+                    .Hide()
+                    .Left = FormInfo.Left
+                End With
+                With SendKnapp
+                    .IconImage = My.Resources.OKIcon
+                    With .Label
+                        .Text = "Opprett bruker"
                     End With
-                    With SendKnapp
-                        .IconImage = My.Resources.OKIcon
-                        With .Label
-                            .Text = "Opprett bruker"
-                        End With
-                        '.BackColor = Color.FromArgb(0, 102, 148)
-                        '.BackColor = Color.FromArgb(184, 237, 178)
-                        '.ForeColor = Color.White
-                        '.ForeColor = ColorHelper.Multiply(.BackColor, 0.1)
-                        .Left = Personalia.Right - .Width
-                        With .Label
-                            .Font = New Font(.Font, FontStyle.Bold)
-                            .UseCompatibleTextRendering = True
-                            .Text = .Text
-                        End With
+                    .Left = Personalia.Right - .Width
+                    With .Label
+                        .Font = New Font(.Font, FontStyle.Bold)
+                        .UseCompatibleTextRendering = True
+                        .Text = .Text
                     End With
-                    With NeiTakkKnapp
-                        .Top = SendKnapp.Top
-                        .Left = SendKnapp.Left - .Width - 10
-                        .Show()
-                    End With
-                    AvbrytKnapp.Show()
-                    SendKnapp.Show()
-                    PicOpprettKontoInfo.Show()
-                    PicDoktorPassord.Show()
-                    PasswordForm.Field(0, 0).Value = FormResult(0)
-                    PasswordForm.Show()
-                    PasswordFormVisible = True
-                End If
+                End With
+                With NeiTakkKnapp
+                    .Top = SendKnapp.Top
+                    .Left = SendKnapp.Left - .Width - 10
+                    .Show()
+                End With
+                AvbrytKnapp.Show()
+                SendKnapp.Show()
+                PicOpprettKontoInfo.Show()
+                PicDoktorPassord.Show()
+                PasswordForm.Field(0, 0).Value = FormResult(0)
+                PasswordForm.Show()
+                PasswordFormVisible = True
             Else
-                NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fyllt inn riktig.", NotificationPreset.OffRedAlert)
+                NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fylt inn riktig.", NotificationPreset.OffRedAlert)
             End If
         ElseIf PasswordForm.Validate Then
             DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_adresse", "@b_postnr", "@b_kjonn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@send_epost", "@send_sms"}, FormResult)
@@ -512,13 +508,30 @@ Public Class Personopplysninger
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
         If e.ErrorOccurred Then
-            NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fyllt inn riktig.", NotificationPreset.OffRedAlert)
+            NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fylt inn riktig.", NotificationPreset.OffRedAlert)
         Else
-            NotifManager.Display("Du er nå registrert i vårt system.", NotificationPreset.GreenSuccess)
+            If CreateLogin = True Then
+                CreateLogin = False
+                Dim Result() As HeaderValuePair = PasswordForm.Result
+                PasswordResult = {FormResult(0), Result(1).Value.ToString}
+                DBC.SQLQuery = "INSERT INTO Brukerkonto (b_fodselsnr, passord) VALUES (@fodselsnr, @passord);"
+                DBC.Execute({"@fodselsnr", "@passord"}, {PasswordResult(0), PasswordResult(1)})
+            Else
+                PasswordForm.Hide()
+                PicDoktorPassord.Hide()
+                SendKnapp.Hide()
+                AvbrytKnapp.Hide()
+                NeiTakkKnapp.Hide()
+                InfoLab.Hide()
+                FormInfo.Hide()
+                PicOpprettKontoInfo.Hide()
+                PicSuccess.Show()
+                NotifManager.Display("Du er nå registrert i vårt system.", NotificationPreset.GreenSuccess)
+            End If
         End If
     End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
-        NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fyllt inn riktig.", NotificationPreset.OffRedAlert)
+        NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fylt ut riktig.", NotificationPreset.OffRedAlert)
     End Sub
     Public Shadows Sub Show()
         FormPanel.Hide()
@@ -760,10 +773,20 @@ Public Class Personopplysninger
             .Hide()
             '.MakeDashed(Color.Red)
         End With
-
+        With PicSuccess
+            .Hide()
+            .Parent = FormPanel
+            .Size = New Size(64, 64)
+            .BackColor = Color.LimeGreen
+            .Location = New Point(FormPanel.Width \ 2 - .Width \ 2, FormPanel.Height \ 2 - .Height \ 2)
+        End With
         DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
         FormPanel.Show()
         ResumeLayout()
+    End Sub
+    Private Sub PanInTest() Handles Me.DoubleClick
+        InfoLab.PanIn()
+        Beep()
     End Sub
     Private Sub PasswordChanged(Sender As FormField, Value As Object)
         PasswordForm.Field(2, 0).RequireSpecificValue(PasswordForm.Field(1, 0).Value.ToString)
@@ -780,6 +803,7 @@ Public Class Personopplysninger
     End Sub
     Private Sub ResetForm()
         FormPanel.Hide()
+        DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
         With PasswordForm
             .ClearAll(True)
             .Hide()
@@ -803,6 +827,7 @@ Public Class Personopplysninger
         PasswordForm.Hide()
         FormInfo.Show()
         PicOpprettKontoInfo.Hide()
+        PicSuccess.Hide()
         FormResult = Nothing
         With Personalia
             .ClearAll()
@@ -834,256 +859,257 @@ Public Class Personopplysninger
     End Sub
 End Class
 
-Public Class OppdaterInfo
-    Inherits Tab
-    Private Personalia As New FlatForm(400, 300, 3, FormFieldStylePresets.PlainWhite)
-    Private PasswordForm As New FlatForm(200, 100, 3, FormFieldStylePresets.PlainWhite)
-    Private TopBar As New TopBar(Me)
-    Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
-    Private PicDoktor, PicDoktorPassord As New PictureBox
-    Private FormInfo As New Label
-    Private InfoLab As New InfoLabel
-    Private WithEvents SendKnapp As New TopBarButton(FormPanel, My.Resources.OKIcon, "Meld meg inn", New Size(135, 36))
-    Private AvbrytKnapp As New TopBarButton(FormPanel, My.Resources.AvbrytIcon, "Avbryt", New Size(135, 36), True)
+'Public Class OppdaterInfo
+'    Inherits Tab
+'    Private Personalia As New FlatForm(400, 300, 3, FormFieldStylePresets.PlainWhite)
+'    Private PasswordForm As New FlatForm(200, 100, 3, FormFieldStylePresets.PlainWhite)
+'    Private TopBar As New TopBar(Me)
+'    Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
+'    Private PicDoktor, PicDoktorPassord As New PictureBox
+'    Private FormInfo As New Label
+'    Private InfoLab As New InfoLabel
+'    Private WithEvents SendKnapp As New TopBarButton(FormPanel, My.Resources.OKIcon, "Meld meg inn", New Size(135, 36))
+'    Private AvbrytKnapp As New TopBarButton(FormPanel, My.Resources.AvbrytIcon, "Avbryt", New Size(135, 36), True)
 
-    Private LayoutTool As New FormLayoutTools(Me)
-    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
-    Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
-    Private FirstHeader As New FullWidthControl(FormPanel)
+'    Private LayoutTool As New FormLayoutTools(Me)
+'    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+'    Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+'    Private FirstHeader As New FullWidthControl(FormPanel)
 
-    Private NotifManager As New NotificationManager(FirstHeader)
+'    Private NotifManager As New NotificationManager(FirstHeader)
 
-    Private Sub SendClick() Handles SendKnapp.Click
-        Dim Result() As HeaderValuePair = Personalia.Result
-        Dim DataArr(11) As String
-        For i As Integer = 0 To 4
-            DataArr(i) = Result(i).Value.ToString
-        Next
-        If DirectCast(Result(5).Value, Boolean) Then
-            DataArr(5) = "1"
-        Else
-            DataArr(5) = "0"
-        End If
-        For i As Integer = 7 To 10
-            DataArr(i - 1) = Result(i).Value.ToString
-        Next
-        If DirectCast(Result(11).Value, Boolean) Then
-            DataArr(10) = "1"
-        Else
-            DataArr(10) = "0"
-        End If
-        If DirectCast(Result(12).Value, Boolean) Then
-            DataArr(11) = "1"
-        Else
-            DataArr(11) = "0"
-        End If
-        DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
-        DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_adresse", "@b_postnr", "@b_kjonn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@send_epost", "@send_sms"}, DataArr)
-    End Sub
-    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
-        If e.ErrorOccurred Then
-            NotifManager.Display("Noe gikk galt! Vennligst se over skjemaet og forsikre deg om at alle obligatoriske felt er fylt ut.", NotificationPreset.OffRedAlert)
-        Else
-            Personalia.Hide()
-            PasswordForm.Show()
-            PicDoktor.Hide()
-            PicDoktorPassord.Show()
-            NotifManager.Display("Du er nå registrert i vårt system!", NotificationPreset.GreenSuccess)
-        End If
-    End Sub
-    Private Sub DBC_Failed() Handles DBC.ExecutionFailed
-        NotifManager.Display("Noe gikk galt! Vennligst se over skjemaet og forsikre deg om at alle obligatoriske felt er fylt ut.", NotificationPreset.OffRedAlert)
-    End Sub
-    Public Shadows Sub Show()
-        FormPanel.Hide()
-        MyBase.Show()
-    End Sub
-    Private Sub Me_VisibleChanged() Handles Me.VisibleChanged
-        If Visible Then
-            FormPanel.Show()
-        End If
-    End Sub
-    Public Sub New(Window As MultiTabWindow)
-        MyBase.New(Window)
-        DoubleBuffered = True
-        SuspendLayout()
-        BackColor = Color.FromArgb(240, 240, 240)
-        With FormPanel
-            .Hide()
-            .Parent = Me
-            .Top = TopBar.Bottom + 20
-            .Left = 30
-            .Width = 817
-            .Height = 480
-            .BackColor = Color.FromArgb(225, 225, 225)
-        End With
-        With FirstHeader
-            .Width = 817
-            .Height = 40
-            .Text = "Registrering"
-            .BackColor = Color.FromArgb(183, 187, 191)
-            .ForeColor = Color.White
-        End With
-#Region "Form"
-        With Personalia
-            .NewRowHeight = 50
-            .AddField(FormElementType.TextField, 180)
-            .Last.Header.Text = "Fødselsnummer (11 siffer)"
-            .AddField(FormElementType.TextField, 107)
-            .Last.Header.Text = "Fornavn"
-            .AddField(FormElementType.TextField)
-            .Last.Header.Text = "Etternavn"
-            .AddField(FormElementType.TextField, 290)
-            With .Last
-                .Header.Text = "Privatadresse"
-            End With
-            .AddField(FormElementType.TextField)
-            With .Last
-                .Header.Text = "Postnummer"
-            End With
-            .NewRowHeight = 50
-            .AddField(FormElementType.Radio, 200)
-            With .Last
-                .Value = True
-                .Header.Text = "Kjønn"
-                .SecondaryValue = "Jeg er mann"
-                .DrawBorder(FormField.ElementSide.Right) = False
-            End With
-            .AddField(FormElementType.Radio)
-            With .Last
-                .Value = True
-                .SecondaryValue = "Jeg er kvinne"
-                .DrawBorder(FormField.ElementSide.Left) = False
-                .DrawDashedSepararators(FormField.ElementSide.Left) = True
-                .Extrude(FieldExtrudeSide.Left, 3)
-                .DrawDotsOnHeader = False
-            End With
-            .AddField(FormElementType.TextField, 133)
-            With .Last
-                .Header.Text = "Telefon privat"
-            End With
-            .AddField(FormElementType.TextField, 133)
-            With .Last
-                .Header.Text = "Telefon mobil"
-            End With
-            .AddField(FormElementType.TextField)
-            With .Last
-                .Header.Text = "Telefon arbeid"
-            End With
-            .AddField(FormElementType.TextField)
-            With .Last
-                .Header.Text = "Epost-adresse"
-            End With
-            .AddField(FormElementType.CheckBox)
-            .NewRowHeight = 40
-            With .Last
-                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via epost"
-                .DrawBorder(FormField.ElementSide.Bottom) = False
-            End With
-            .AddField(FormElementType.CheckBox)
-            With .Last
-                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via SMS"
-                .DrawBorder(FormField.ElementSide.Top) = False
-                .DrawDashedSepararators(FormField.ElementSide.Top) = True
-                .SwitchHeader(False)
-            End With
-            .MergeWithAbove(6, 0, 0, True)
-            .Parent = FormPanel
-            .Display()
-            .Location = New Point(20, 60)
-        End With
-#End Region
-        With PasswordForm
-            .AddField(FormElementType.Label)
-            With .Last
-                .Header.Text = "Bruker-ID"
-                .Value = "Fødselsnummer"
-            End With
-            .AddField(FormElementType.TextField)
-            With .Last
-                .Header.Text = "Velg et passord"
-            End With
-            .Parent = FormPanel
-            .Display()
-        End With
-        Dim NB As New Button
-        With NB
-            .Size = New Size(100, 100)
-            .Location = Point.Empty
-            .Parent = Me
-            .Show()
-            .Enabled = False
-            .Hide()
-        End With
-        With TopBar
-            .AddButton(My.Resources.TimeBestillingIcon, "Bestill ny time", New Size(135, 36))
-            .AddButton(My.Resources.EgenerklaeringIcon, "Registrer egenerklæring", New Size(135, 36))
-            .AddButton(My.Resources.RedigerProfilIcon, "Rediger profil", New Size(135, 36))
-            .AddLogout("Logg ut", New Size(135, 36))
-        End With
-        With SendKnapp
-            .Top = Personalia.Bottom + 10
-            .Left = Personalia.Right - .Width
-        End With
-        With AvbrytKnapp
-            .BackColor = Color.FromArgb(162, 25, 51)
-            .ForeColor = Color.White
-            .Top = SendKnapp.Top
-            .Left = SendKnapp.Left - .Width - 10
-        End With
-        With PicDoktor
-            .BackgroundImage = My.Resources.Doktor2
-            .Size = .BackgroundImage.Size
-            .Parent = FormPanel
-            .Top = Personalia.Bottom - .Height
-            .Left = Personalia.Right + 20
-        End With
-        With PicDoktorPassord
-            .BackgroundImage = My.Resources.DoktorPassord
-            .Size = .BackgroundImage.Size
-            .Parent = FormPanel
-            .Location = PicDoktor.Location
-        End With
-        With PasswordForm
-            .Location = New Point(PicDoktorPassord.Left \ 2 - .Width \ 2)
-            .Top = PicDoktorPassord.Bottom - 210
-        End With
-        With FormInfo
-            .Parent = FormPanel
-            .Top = Personalia.Bottom + 10
-            .Left = Personalia.Left
-            .AutoSize = False
-            .Height = SendKnapp.Height
-            .Width = AvbrytKnapp.Left - .Left
-            .TextAlign = ContentAlignment.MiddleLeft
-            .ForeColor = Color.FromArgb(80, 80, 80)
-            .Text = "* markerer obligatoriske felt"
-        End With
-        With InfoLab
-            .Parent = FormPanel
-            .Top = PicDoktor.Bottom + 10
-            .Left = PicDoktor.Left
-            .Width = PicDoktor.Width
-            .Height = SendKnapp.Height
-            .Text = "Trenger du mer informasjon?" & vbNewLine & "Besøk www.GiBlod.no"
-        End With
-        FormPanel.Show()
-        ResumeLayout()
-    End Sub
-    Protected Overrides Sub OnResize(e As EventArgs)
-        SuspendLayout()
-        MyBase.OnResize(e)
-        ' TODO: Remove LayoutTool as it is not used
-        If LayoutTool IsNot Nothing Then
-            With FormPanel
-                .Top = TopBar.Bottom + 20
-                .Left = Width \ 2 - .Width \ 2
-                .Top = TopBar.Bottom + (Height - TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2
-            End With
-        End If
-        ResumeLayout(True)
-    End Sub
-End Class
+'    Private Sub SendClick() Handles SendKnapp.Click
+'        Dim Result() As HeaderValuePair = Personalia.Result
+'        Dim DataArr(11) As String
+'        For i As Integer = 0 To 4
+'            DataArr(i) = Result(i).Value.ToString
+'        Next
+'        If DirectCast(Result(5).Value, Boolean) Then
+'            DataArr(5) = "1"
+'        Else
+'            DataArr(5) = "0"
+'        End If
+'        For i As Integer = 7 To 10
+'            DataArr(i - 1) = Result(i).Value.ToString
+'        Next
+'        If DirectCast(Result(11).Value, Boolean) Then
+'            DataArr(10) = "1"
+'        Else
+'            DataArr(10) = "0"
+'        End If
+'        If DirectCast(Result(12).Value, Boolean) Then
+'            DataArr(11) = "1"
+'        Else
+'            DataArr(11) = "0"
+'        End If
+'        DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
+'        DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_adresse", "@b_postnr", "@b_kjonn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@send_epost", "@send_sms"}, DataArr)
+'    End Sub
+'    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+'        If e.ErrorOccurred Then
+'            NotifManager.Display("Noe gikk galt! Vennligst se over skjemaet og forsikre deg om at alle obligatoriske felt er fylt ut.", NotificationPreset.OffRedAlert)
+'        Else
+'            Personalia.Hide()
+'            PasswordForm.Show()
+'            PicDoktor.Hide()
+'            PicDoktorPassord.Show()
+'            NotifManager.Display("Du er nå registrert i vårt system!", NotificationPreset.GreenSuccess)
+'        End If
+'    End Sub
+'    Private Sub DBC_Failed() Handles DBC.ExecutionFailed
+'        NotifManager.Display("Noe gikk galt! Vennligst se over skjemaet og forsikre deg om at alle obligatoriske felt er fylt ut.", NotificationPreset.OffRedAlert)
+'    End Sub
+'    Public Shadows Sub Show()
+'        FormPanel.Hide()
+'        MyBase.Show()
+'    End Sub
+'    Private Sub Me_VisibleChanged() Handles Me.VisibleChanged
+'        If Visible Then
+'            FormPanel.Show()
+'        End If
+'    End Sub
+'    Public Sub New(Window As MultiTabWindow)
+'        MyBase.New(Window)
+'        DoubleBuffered = True
+'        SuspendLayout()
+'        BackColor = Color.FromArgb(240, 240, 240)
+'        With FormPanel
+'            .Hide()
+'            .Parent = Me
+'            .Top = TopBar.Bottom + 20
+'            .Left = 30
+'            .Width = 817
+'            .Height = 480
+'            .BackColor = Color.FromArgb(225, 225, 225)
+'        End With
+'        With FirstHeader
+'            .Width = 817
+'            .Height = 40
+'            .Text = "Registrering"
+'            .BackColor = Color.FromArgb(183, 187, 191)
+'            .ForeColor = Color.White
+'        End With
+'#Region "Form"
+'        With Personalia
+'            .NewRowHeight = 50
+'            .AddField(FormElementType.TextField, 180)
+'            .Last.Header.Text = "Fødselsnummer (11 siffer)"
+'            .AddField(FormElementType.TextField, 107)
+'            .Last.Header.Text = "Fornavn"
+'            .AddField(FormElementType.TextField)
+'            .Last.Header.Text = "Etternavn"
+'            .AddField(FormElementType.TextField, 290)
+'            With .Last
+'                .Header.Text = "Privatadresse"
+'            End With
+'            .AddField(FormElementType.TextField)
+'            With .Last
+'                .Header.Text = "Postnummer"
+'            End With
+'            .NewRowHeight = 50
+'            .AddField(FormElementType.Radio, 200)
+'            With .Last
+'                .Value = True
+'                .Header.Text = "Kjønn"
+'                .SecondaryValue = "Jeg er mann"
+'                .DrawBorder(FormField.ElementSide.Right) = False
+'            End With
+'            .AddField(FormElementType.Radio)
+'            With .Last
+'                .Value = True
+'                .SecondaryValue = "Jeg er kvinne"
+'                .DrawBorder(FormField.ElementSide.Left) = False
+'                .DrawDashedSepararators(FormField.ElementSide.Left) = True
+'                .Extrude(FieldExtrudeSide.Left, 3)
+'                .DrawDotsOnHeader = False
+'            End With
+'            .AddField(FormElementType.TextField, 133)
+'            With .Last
+'                .Header.Text = "Telefon privat"
+'            End With
+'            .AddField(FormElementType.TextField, 133)
+'            With .Last
+'                .Header.Text = "Telefon mobil"
+'            End With
+'            .AddField(FormElementType.TextField)
+'            With .Last
+'                .Header.Text = "Telefon arbeid"
+'            End With
+'            .AddField(FormElementType.TextField)
+'            With .Last
+'                .Header.Text = "Epost-adresse"
+'            End With
+'            .AddField(FormElementType.CheckBox)
+'            .NewRowHeight = 40
+'            With .Last
+'                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via epost"
+'                .DrawBorder(FormField.ElementSide.Bottom) = False
+'            End With
+'            .AddField(FormElementType.CheckBox)
+'            With .Last
+'                .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via SMS"
+'                .DrawBorder(FormField.ElementSide.Top) = False
+'                .DrawDashedSepararators(FormField.ElementSide.Top) = True
+'                .SwitchHeader(False)
+'            End With
+'            .MergeWithAbove(6, 0, 0, True)
+'            .Parent = FormPanel
+'            .Display()
+'            .Location = New Point(20, 60)
+'        End With
+'#End Region
+'        With PasswordForm
+'            .AddField(FormElementType.Label)
+'            With .Last
+'                .Header.Text = "Bruker-ID"
+'                .Value = "Fødselsnummer"
+'            End With
+'            .AddField(FormElementType.TextField)
+'            With .Last
+'                .Header.Text = "Velg et passord"
+'            End With
+'            .Parent = FormPanel
+'            .Display()
+'        End With
+'        Dim NB As New Button
+'        With NB
+'            .Size = New Size(100, 100)
+'            .Location = Point.Empty
+'            .Parent = Me
+'            .Show()
+'            .Enabled = False
+'            .Hide()
+'        End With
+'        With TopBar
+'            .AddButton(My.Resources.TimeBestillingIcon, "Bestill ny time", New Size(135, 36))
+'            .AddButton(My.Resources.EgenerklaeringIcon, "Registrer egenerklæring", New Size(135, 36))
+'            .AddButton(My.Resources.RedigerProfilIcon, "Rediger profil", New Size(135, 36))
+'            .AddLogout("Logg ut", New Size(135, 36))
+'        End With
+'        With SendKnapp
+'            .Top = Personalia.Bottom + 10
+'            .Left = Personalia.Right - .Width
+'        End With
+'        With AvbrytKnapp
+'            .BackColor = Color.FromArgb(162, 25, 51)
+'            .ForeColor = Color.White
+'            .Top = SendKnapp.Top
+'            .Left = SendKnapp.Left - .Width - 10
+'        End With
+'        With PicDoktor
+'            .BackgroundImage = My.Resources.Doktor2
+'            .Size = .BackgroundImage.Size
+'            .Parent = FormPanel
+'            .Top = Personalia.Bottom - .Height
+'            .Left = Personalia.Right + 20
+'        End With
+'        With PicDoktorPassord
+'            .BackgroundImage = My.Resources.DoktorPassord
+'            .Size = .BackgroundImage.Size
+'            .Parent = FormPanel
+'            .Location = PicDoktor.Location
+'        End With
+'        With PasswordForm
+'            .Location = New Point(PicDoktorPassord.Left \ 2 - .Width \ 2)
+'            .Top = PicDoktorPassord.Bottom - 210
+'        End With
+'        With FormInfo
+'            .Parent = FormPanel
+'            .Top = Personalia.Bottom + 10
+'            .Left = Personalia.Left
+'            .AutoSize = False
+'            .Height = SendKnapp.Height
+'            .Width = AvbrytKnapp.Left - .Left
+'            .TextAlign = ContentAlignment.MiddleLeft
+'            .ForeColor = Color.FromArgb(80, 80, 80)
+'            .Text = "* markerer obligatoriske felt"
+'        End With
+'        With InfoLab
+'            .Parent = FormPanel
+'            .Top = PicDoktor.Bottom + 10
+'            .Left = PicDoktor.Left
+'            .Width = PicDoktor.Width
+'            .Height = SendKnapp.Height
+'            .BackColor = Color.Red
+'            .Text = "Trenger du mer informasjon?" & vbNewLine & "Besøk www.GiBlod.no"
+'        End With
+'        FormPanel.Show()
+'        ResumeLayout()
+'    End Sub
+'    Protected Overrides Sub OnResize(e As EventArgs)
+'        SuspendLayout()
+'        MyBase.OnResize(e)
+'        ' TODO: Remove LayoutTool as it is not used
+'        If LayoutTool IsNot Nothing Then
+'            With FormPanel
+'                .Top = TopBar.Bottom + 20
+'                .Left = Width \ 2 - .Width \ 2
+'                .Top = TopBar.Bottom + (Height - TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2
+'            End With
+'        End If
+'        ResumeLayout(True)
+'    End Sub
+'End Class
 
 'Public NotInheritable Class EncryptedReadWrite
 '    Implements IDisposable
@@ -1178,8 +1204,216 @@ End Class
 '    End Function
 'End Class
 
+Public Class LoggInnNy
+    Inherits Tab
+    Private LoginForm As New FlatForm(243, 100, 3, New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.FromArgb(80, 80, 80), Color.White, Color.Black, {True, True, True, True}, 20))
+    Private WithEvents TopBar As New TopBar(Me)
+    Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
+    Private PicSideInfo As New PictureBox
+    Private PicInfoAbove As New PictureBox
+    Private FormInfo As New Label
+    Private InfoLab As New InfoLabel
+    Private WithEvents LoggInnKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Logg inn", New Size(0, 36))
+    Private OpprettBrukerKnapp As New TopBarButton(FormPanel, My.Resources.RedigerProfilIcon, "Opprett bruker", New Size(0, 36))
+    Private LayoutTool As New FormLayoutTools(Me)
+    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    'Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private WithEvents UserLogin As New MySqlUserLogin(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private FormHeader As New FullWidthControl(FormPanel)
+    Private NotifManager As New NotificationManager(FormHeader)
+    Private LeftSide As New BorderControl(Color.FromArgb(210, 210, 210))
+    Private RightSide As New PictureBox
+    Private PersonalNumber As String
+    Private Sub LoginValid()
+        CurrentLogin = New UserInfo(PersonalNumber)
+        Dashboard.Initiate()
+        Egenerklæring.InitiateForm()
+        Parent.Index = 5
+    End Sub
+    Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
+        If ErrorOccurred Then
+            NotifManager.Display("Noe gikk galt. Vennligst kontakt betjeningen.", NotificationPreset.OffRedAlert)
+        Else
+            NotifManager.Display("Brukernavnet eller passordet er feil.", NotificationPreset.OffRedAlert)
+        End If
+    End Sub
+    Public Shadows Sub Show()
+        FormPanel.Hide()
+        MyBase.Show()
+    End Sub
+    Private Sub Me_VisibleChanged() Handles Me.VisibleChanged
+        If Visible Then
+            FormPanel.Show()
+        End If
+    End Sub
+    Protected Overrides Sub OnDoubleClick(e As EventArgs)
+        MyBase.OnDoubleClick(e)
+    End Sub
+    Public Sub New(Window As MultiTabWindow)
+        MyBase.New(Window)
+        With UserLogin
+            .IfInvalid = AddressOf LoginInvalid
+            .IfValid = AddressOf LoginValid
+        End With
+        DoubleBuffered = True
+        SuspendLayout()
+        BackColor = Color.FromArgb(240, 240, 240)
+        With FormPanel
+            .Hide()
+            .Parent = Me
+            .Top = TopBar.Bottom + 20
+            .Left = 30
+            .Width = 817
+            .Height = 480
+            .BackColor = Color.FromArgb(225, 225, 225)
+        End With
+        With FormHeader
+            .Width = 817
+            .Height = 40
+            .Text = "Logg inn"
+            .BackColor = Color.FromArgb(183, 187, 191)
+            .ForeColor = Color.White
+        End With
+        With LeftSide
+            .Parent = FormPanel
+            .Size = New Size(FormPanel.Width \ 2, FormPanel.Height - FormHeader.Bottom - 1)
+            .Top = FormHeader.Bottom
+            .DrawBorder(FormField.ElementSide.Bottom) = False
+            .DrawBorder(FormField.ElementSide.Top) = False
+            .DrawBorder(FormField.ElementSide.Left) = False
+            '.MakeDashed(Color.Red, Color.Blue)
+        End With
+        With RightSide
+            .Parent = FormPanel
+            .Location = New Point(LeftSide.Right, LeftSide.Top)
+            .Size = New Size(FormPanel.Width - .Left - 1, FormPanel.Height - .Top - 1)
+            .BackgroundImage = My.Resources.PicLoggInn
+            .BackgroundImageLayout = ImageLayout.Center
+        End With
+#Region "LoginForm"
+        With LoginForm
+            .AddField(FormElementType.TextField)
+            With .Last
+                .Header.Text = "Fødselsnummer (11 siffer)"
+                .Required = True
+                .MinLength = 6
+                .MaxLength = 50
+            End With
+            With DirectCast(.Last, FlatForm.FormTextField)
+                .PlaceHolder = "Fødselsnummer"
+            End With
+            .AddField(FormElementType.TextField)
+            With .Last
+                .Header.Text = "Passord"
+                .Required = True
+                .MinLength = 6
+                .MaxLength = 50
+            End With
+            With DirectCast(.Last, FlatForm.FormTextField)
+                .PlaceHolder = "Passord"
+                .TextField.UseSystemPasswordChar = True
+            End With
+            .Parent = LeftSide
+            .Location = New Point(LeftSide.Width \ 2 - .Width \ 2, LeftSide.Height \ 2 - .Height \ 2)
+            .Display()
+        End With
+#End Region
+        'Dim NB As New Button
+        'With NB
+        '    .Hide()
+        '    .Size = New Size(100, 100)
+        '    .Location = Point.Empty
+        '    .Parent = Me
+        '    .Enabled = False
+        'End With
+
+        With TopBar
+            'AddHandler .Click, AddressOf 
+        End With
+        With OpprettBrukerKnapp
+            .Parent = LeftSide
+            .Left = LoginForm.Left
+            .Top = LoginForm.Bottom + 10
+            AddHandler .Click, AddressOf OpprettBruker_Click
+        End With
+        With LoggInnKnapp
+            .Parent = LeftSide
+            .Left = OpprettBrukerKnapp.Right + 10
+            .Top = LoginForm.Bottom + 10
+            AddHandler .Click, AddressOf LoggInn_Click
+        End With
+        With FormInfo
+            .Parent = FormPanel
+            .AutoSize = False
+            .Height = LoggInnKnapp.Height
+            .TextAlign = ContentAlignment.MiddleLeft
+            .ForeColor = Color.FromArgb(80, 80, 80)
+            .Text = "* markerer obligatoriske felt"
+        End With
+        With InfoLab
+            .Parent = FormPanel
+            .Height = LoggInnKnapp.Height
+            .Width = PicSideInfo.Width
+            .Text = "Ved å registrere deg, samtykker du i at denne informasjonen blir lagret i våre systemer. Du kan når som helst slette disse opplysningene."
+        End With
+        With PicInfoAbove
+            .Parent = FormPanel
+            .Top = TopBar.Bottom
+            .Left = 20
+            .BackgroundImage = My.Resources.OpprettKontoInfo
+            .BackgroundImageLayout = ImageLayout.Center
+            .Height = .BackgroundImage.Height
+            .Width = .BackgroundImage.Width
+            .Hide()
+            '.MakeDashed(Color.Red)
+        End With
+        FormPanel.Show()
+        ResumeLayout()
+    End Sub
+    Private Sub OpprettBruker_Click(sender As Object, e As EventArgs)
+        Parent.Index = 3
+    End Sub
+    Private Sub LoggInn_Click(sender As Object, e As EventArgs)
+        PersonalNumber = LoginForm.Field(0, 0).Value.ToString
+        UserLogin.LoginAsync(LoginForm.Field(0, 0).Value.ToString, LoginForm.Field(1, 0).Value.ToString, "Brukerkonto", "b_fodselsnr", "passord")
+    End Sub
+    Private Sub PasswordChanged(Sender As FormField, Value As Object)
+        LoginForm.Field(2, 0).RequireSpecificValue(LoginForm.Field(1, 0).Value.ToString)
+    End Sub
+    Private Sub PasswordValidChanged(Sender As FormField)
+        With LoginForm
+            .Field(1, 0).IsValid = Sender.IsValid
+            .Field(2, 0).IsValid = Sender.IsValid
+        End With
+    End Sub
+    Private Sub ResetForm()
+        FormPanel.Hide()
+        With LoginForm
+            .ClearAll()
+        End With
+    End Sub
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        RemoveHandler OpprettBrukerKnapp.Click, AddressOf OpprettBruker_Click
+        RemoveHandler LoggInnKnapp.Click, AddressOf LoggInn_Click
+        MyBase.Dispose(disposing)
+    End Sub
+    Protected Overrides Sub OnResize(e As EventArgs)
+        SuspendLayout()
+        MyBase.OnResize(e)
+        ' TODO: Remove LayoutTool
+        If LayoutTool IsNot Nothing Then
+            With FormPanel
+                .Left = Width \ 2 - .Width \ 2
+                .Top = TopBar.Bottom + (Height - TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2
+            End With
+        End If
+        ResumeLayout(True)
+    End Sub
+End Class
+
 Public Class LoggInn
     Inherits Tab
+
     Private LayoutHelper As New FormLayoutTools(Me)
     Private NotifManager As New NotificationManager(Me)
     Private logo As HemoGlobeLogo
@@ -1213,5 +1447,125 @@ Public Class LoggInn
     End Sub
     Private Sub BliMedClicked(Sender As Object, e As EventArgs) Handles LoginBox.BliMedClicked
         Parent.Index = 3
+    End Sub
+End Class
+
+Public Class DashboardTab
+    Inherits Tab
+    Private Header As New TopBar(Me)
+    Dim ScrollList As New Donasjoner(Me)
+    Dim WithEvents Beholder As New BlodBeholder(My.Resources.Tom_beholder, My.Resources.Full_beholder)
+    Private WelcomeLabel As New InfoLabel(True, Direction.Right)
+    Dim current As Integer
+    Dim increment As Boolean = True
+    Dim IsLoaded As Boolean
+    Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private Sub TopBarButtonClick(sender As Object, e As EventArgs)
+        Dim SenderButton As TopBarButton = DirectCast(sender, TopBarButton)
+        If SenderButton.IsLogout Then
+            Parent.Index = 4
+            Logout()
+        Else
+            Select Case CInt(SenderButton.Tag)
+                Case 0
+                Case 1
+                    Parent.Index = 6
+                Case 2
+                    Parent.Index = 6
+            End Select
+        End If
+    End Sub
+
+    Public Sub New(ParentWindow As MultiTabWindow)
+        MyBase.New(ParentWindow)
+        If Not IsLoaded Then
+            With Header
+                .AddButton(My.Resources.TimeBestillingIcon, "Bestill ny time", New Size(135, 36))
+                .AddButton(My.Resources.EgenerklaeringIcon, "Registrer egenerklæring", New Size(135, 36))
+                .AddButton(My.Resources.RedigerProfilIcon, "Rediger profil", New Size(135, 36))
+                .AddLogout("Logg ut", New Size(135, 36))
+                AddHandler .ButtonClick, AddressOf TopBarButtonClick
+            End With
+            With ScrollList
+                .Parent = Me
+                .Location = New Point(20, Header.Bottom + 20)
+                With .List
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                    .AddItem()
+                End With
+                .Size = New Size(300, 300)
+            End With
+            With Beholder
+                .Parent = Me
+                .Location = New Point(ClientSize.Width - .Width - 20, Header.Bottom + 20)
+            End With
+            With WelcomeLabel
+                .ForeColor = Color.White
+                .Parent = Header
+                .Top = Header.Height \ 2 - .Height \ 2
+                .Text = "Du er logget inn som..."
+                .Height = Header.LogoutButton.Height - 3
+            End With
+            IsLoaded = True
+        End If
+    End Sub
+    Public Sub Initiate()
+        With DBC
+            .SQLQuery = "SELECT b_fornavn, b_etternavn FROM Blodgiver WHERE b_fodselsnr = @nr;"
+            .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
+        End With
+    End Sub
+    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        With e.Data
+            WelcomeLabel.Text = "Du er logget inn som " & .Rows(0).Item(0).ToString & " " & .Rows(0).Item(1).ToString
+            WelcomeLabel.PanIn()
+        End With
+    End Sub
+    'Public Shadows Sub Show()
+    '    MyBase.Show()
+    'End Sub
+    Private Sub SubClickTest() Handles Beholder.Click
+        If increment Then
+            current += 30
+        Else
+            current -= 30
+        End If
+        Beholder.SlideToPercentage(current)
+        If current >= 90 Then
+            increment = False
+        ElseIf current <= 0 Then
+            increment = True
+        End If
+    End Sub
+    Protected Overrides Sub OnResize(e As EventArgs)
+        SuspendLayout()
+        MyBase.OnResize(e)
+        If IsLoaded Then
+            With Beholder
+                .Location = New Point(ClientSize.Width - .Width - 20, Header.Bottom + 20)
+            End With
+            With WelcomeLabel
+                .Location = New Point(Width - 430, Header.LogoutButton.Top)
+                .Size = New Size(300, Header.LogoutButton.Height - 3)
+            End With
+        End If
+        ResumeLayout(True)
+    End Sub
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        RemoveHandler Header.ButtonClick, AddressOf TopBarButtonClick
+        MyBase.Dispose(disposing)
     End Sub
 End Class

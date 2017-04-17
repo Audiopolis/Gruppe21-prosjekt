@@ -26,14 +26,15 @@ Public Class Donasjoner
         With Wrapper
             .Parent = Me
         End With
-        BackColor = Parent.BackColor
+        BackColor = Color.FromArgb(200, 200, 200)
         With Me
             .Size = New Size(400, 500)
         End With
         With HeaderControl
-            .BackColor = Color.FromArgb(136, 126, 113)
+            .BackColor = Color.FromArgb(200, 200, 200)
             .TextAlign = ContentAlignment.MiddleLeft
-            .ForeColor = Color.White
+            .ForeColor = Color.FromArgb(60, 60, 60)
+            .Text = "Tidligere blodtappinger"
         End With
         With FList
             .Left = 1
@@ -130,7 +131,6 @@ Public Class FlatList
     End Sub
     Public Sub New()
         With Me
-            .BackColor = Color.Beige
             '.HorizontalScroll.Enabled = False
             .HorizontalScroll.Maximum = 0
             .AutoScroll = False

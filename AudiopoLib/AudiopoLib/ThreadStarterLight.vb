@@ -103,10 +103,10 @@ Public NotInheritable Class ThreadStarterLight
     Protected Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
             If disposing Then
-                If SubMethod IsNot Nothing Then
+                If SubMethod IsNot Nothing AndAlso (SubMethod.IsCanceled OrElse SubMethod.IsCompleted OrElse SubMethod.IsFaulted) Then
                     SubMethod.Dispose()
                 End If
-                If FuncMethod IsNot Nothing Then
+                If FuncMethod IsNot Nothing AndAlso (FuncMethod.IsCanceled OrElse FuncMethod.IsCompleted OrElse FuncMethod.IsFaulted) Then
                     FuncMethod.Dispose()
                 End If
             End If

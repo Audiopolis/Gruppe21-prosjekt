@@ -2,14 +2,29 @@
 Public Class TopBar
     Inherits ContainerControl
     Private logo As New HemoGlobeLogo
-    Private LogoutButton As TopBarButton
-    Private buttonList As New List(Of TopBarButton)
+    Private varLogoutButton As TopBarButton
+    Private varButtonList As New List(Of TopBarButton)
     Private BorderPen As New Pen(Color.FromArgb(72, 78, 83))
     Private HighlightPen As New Pen(Color.FromArgb(247, 247, 247))
     Public Event ButtonClick(Sender As TopBarButton, e As EventArgs)
     Protected Overridable Sub Test()
         MsgBox("Hei")
     End Sub
+    Public ReadOnly Property ButtonList As List(Of TopBarButton)
+        Get
+            Return varButtonList
+        End Get
+    End Property
+    Public ReadOnly Property Button(ByVal Index As Integer) As TopBarButton
+        Get
+            Return varButtonList(Index)
+        End Get
+    End Property
+    Public ReadOnly Property LogoutButton As TopBarButton
+        Get
+            Return varLogoutButton
+        End Get
+    End Property
     Public Sub New(ParentControl As Control)
         BackColor = Color.FromArgb(110, 120, 127)
         Dock = DockStyle.Top
@@ -21,7 +36,7 @@ Public Class TopBar
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
-        For Each C As TopBarButton In buttonList
+        For Each C As TopBarButton In varButtonList
             With C
                 .Top = (Height - .Height) \ 2 + 1
             End With
@@ -51,12 +66,13 @@ Public Class TopBar
         End With
     End Sub
     Public Sub AddLogout(Text As String, Size As Size)
-        LogoutButton = New TopBarButton(Me, My.Resources.LoggUtIcon, Text, Size, True)
+        varLogoutButton = New TopBarButton(Me, My.Resources.LoggUtIcon, Text, Size, True)
         With LogoutButton
             .Top = (Height - .Height) \ 2 + 1
             .Left = Width - .Width - .Top
             .BackColor = Color.FromArgb(162, 25, 51)
             .ForeColor = Color.White
+            AddHandler .Click, AddressOf OnButtonClick
         End With
     End Sub
     Protected Overrides Sub OnPaint(e As PaintEventArgs)
@@ -64,9 +80,12 @@ Public Class TopBar
         e.Graphics.DrawLine(BorderPen, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        For Each B As TopBarButton In buttonList
+        For Each B As TopBarButton In varButtonList
             RemoveHandler B.Click, AddressOf OnButtonClick
         Next
+        If LogoutButton IsNot Nothing Then
+            RemoveHandler LogoutButton.Click, AddressOf OnButtonClick
+        End If
         MyBase.Dispose(disposing)
     End Sub
 End Class
@@ -82,6 +101,15 @@ Public Class TopBarButton
     'Private LinePen As New Pen(Color.FromArgb(220, 220, 220))
     Private DrawRect, ShadowRect As Rectangle
     Private TextPoint As Point
+    Private varMinWidth As Integer = 0
+    Public Property MinimumWidth As Integer
+        Get
+            Return varMinWidth
+        End Get
+        Set(value As Integer)
+            varMinWidth = value
+        End Set
+    End Property
     Public Property IconImage As Image
         Get
             Return varIcon.BackgroundImage
@@ -117,12 +145,17 @@ Public Class TopBarButton
     Private Sub SetTextHeight() Handles TBButtonLabel.TextChanged
         Dim TextSize As Size = TextRenderer.MeasureText(Label.Text, Label.Font)
         TextPoint = New Point(TBButtonLabel.Left, TBButtonLabel.Height \ 2 - TextSize.Height \ 2 - 3)
-        Width = TextSize.Width + varIcon.Right + 20
+        If TextSize.Width + varIcon.Right + 20 < varMinWidth Then
+            Width = varMinWidth
+        Else
+            Width = TextSize.Width + varIcon.Right + 20
+        End If
         Invalidate()
     End Sub
-    Protected Friend Sub New(ParentTopBar As TopBar, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False)
+    Protected Friend Sub New(ParentTopBar As TopBar, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False, Optional MinWidth As Integer = 0)
         varIsLogout = IsLogout
         Hide()
+        varMinWidth = MinWidth
         ResizeRedraw = True
         DoubleBuffered = True
         BackColor = Color.FromArgb(235, 235, 235)
@@ -155,9 +188,10 @@ Public Class TopBarButton
             MyBase.ForeColor = value
         End Set
     End Property
-    Protected Friend Sub New(ParentControl As Control, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False)
+    Protected Friend Sub New(ParentControl As Control, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False, Optional MinWidth As Integer = 0)
         varIsLogout = IsLogout
         Hide()
+        varMinWidth = MinWidth
         DoubleBuffered = True
         BackColor = Color.FromArgb(235, 235, 235)
         'BackColor = Color.FromArgb(247, 247, 247)
