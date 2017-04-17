@@ -15,7 +15,7 @@ Public Class DatabaseClient
     Private HandledThread As ThreadStarter
     Public Event ListLoaded(Sender As Object, e As DatabaseListEventArgs)
     Public Event ExecutionFailed(ByVal ClientTag As Integer)
-    Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer, ByVal ErrorOccurred As Boolean)
+    Public Event ExistsCheckCompleted(ByVal Exists As Boolean, ByVal RowCount As Integer, ByVal Tag As Integer, ByVal ErrorOccurred As Boolean, ErrorMessage As String)
     Public Event ValidationCompleted(ByVal Success As Boolean)
     Private DBCSB As MySqlConnectionStringBuilder
     Public Property UID As String
@@ -105,20 +105,22 @@ Public Class DatabaseClient
                 End If
                 HandledThread.Start(DBParams)
             End If
-        Catch
+        Catch ex As Exception
+            Throw ex
             RaiseEvent ExecutionFailed(Me.Tag)
         End Try
     End Sub
     Private Sub ExistCheck(Result As Object, e As ThreadStarterEventArgs)
         Dim ResultArr() As Object = DirectCast(Result, Object())
-        RaiseEvent ExistsCheckCompleted(DirectCast(ResultArr(0), Boolean), DirectCast(ResultArr(1), Integer), DirectCast(ResultArr(2), Integer), DirectCast(ResultArr(3), Boolean))
+        RaiseEvent ExistsCheckCompleted(DirectCast(ResultArr(0), Boolean), DirectCast(ResultArr(1), Integer), DirectCast(ResultArr(2), Integer), DirectCast(ResultArr(3), Boolean), DirectCast(ResultArr(4), String))
     End Sub
     ' FIKS
     Private Function ExecuteParamQuery(Params As Object) As Object
         Dim ParamInstance As ParameterizedQuery = DirectCast(Params, ParameterizedQuery)
         Dim DBConnection As New MySqlConnection(ParamInstance.ConnectionString)
         Dim ErrorOccurred As Boolean
-        Dim Ret(1) As Object
+        Dim ErrorMessage As String = "Nothing to show"
+        Dim Ret(2) As Object
         Dim RetTable As New DataTable
         Try
             DBConnection.Open()
@@ -134,10 +136,10 @@ Public Class DatabaseClient
                 .Fill(RetTable)
                 .Dispose()
             End With
-
             SQLcmd.Dispose()
-        Catch
+        Catch ex As Exception
             ErrorOccurred = True
+            ErrorMessage = ex.Message
         Finally
             With DBConnection
                 .Close()
@@ -147,9 +149,10 @@ Public Class DatabaseClient
         If Not ParamInstance.CheckIfExists Then
             Ret(0) = RetTable
             Ret(1) = ErrorOccurred
+            Ret(2) = ErrorMessage
             Return Ret
         Else
-            Dim Result(3) As Object
+                Dim Result(4) As Object
             Dim RetCount As Integer
             With RetTable
                 RetCount = .Rows.Count
@@ -161,6 +164,7 @@ Public Class DatabaseClient
                 Result(1) = RetCount
                 Result(2) = ParamInstance.Tag
                 Result(3) = ErrorOccurred
+                Result(4) = ErrorMessage
                 .Dispose()
             End With
             Return Result
@@ -169,9 +173,10 @@ Public Class DatabaseClient
     Private Function ExecuteQuery(Params As Object) As Object
         Dim QueryInstance As RegularQuery = DirectCast(Params, RegularQuery)
         Dim DBConnection As New MySqlConnection(QueryInstance.ConnectionString)
-        Dim Ret(1) As Object
+        Dim Ret(2) As Object
         Dim RetTable As New DataTable
         Dim ErrorOccurred As Boolean = False
+        Dim ErrorMessage As String = ""
         Try
             DBConnection.Open()
             Dim SQLcmd As New MySqlCommand(QueryInstance.Query, DBConnection)
@@ -182,8 +187,9 @@ Public Class DatabaseClient
                 SQLcmd.Dispose()
                 .Dispose()
             End With
-        Catch
+        Catch ex As Exception
             ErrorOccurred = True
+            ErrorMessage = ex.Message
         Finally
             With DBConnection
                 .Close()
@@ -192,6 +198,7 @@ Public Class DatabaseClient
         End Try
         Ret(0) = RetTable
         Ret(1) = ErrorOccurred
+        Ret(2) = ErrorMessage
         Return Ret
     End Function
     Public ReadOnly Property Connection As MySqlConnectionStringBuilder
@@ -203,8 +210,9 @@ Public Class DatabaseClient
         Dim RetArr() As Object = DirectCast(State, Object())
         Dim DT As DataTable = DirectCast(RetArr(0), DataTable)
         Dim ErrorOccurred As Boolean = DirectCast(RetArr(1), Boolean)
+        Dim ErrorMessage As String = DirectCast(RetArr(2), String)
         If DT IsNot Nothing Then
-            RaiseEvent ListLoaded(Me, New DatabaseListEventArgs(DT, ErrorOccurred))
+            RaiseEvent ListLoaded(Me, New DatabaseListEventArgs(DT, ErrorOccurred, ErrorMessage))
         Else
             RaiseEvent ExecutionFailed(Me.Tag)
         End If

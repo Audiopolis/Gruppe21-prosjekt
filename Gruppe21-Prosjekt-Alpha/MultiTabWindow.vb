@@ -260,11 +260,13 @@ Public Class Tab
     End Property
     Public Sub New(Parent As MultiTabWindow)
         Hide()
-        With Me
-            .Hide()
-            .Location = ZeroPoint
-            .Parent = Parent
-        End With
+        DoubleBuffered = True
+        SetStyle(ControlStyles.UserPaint, True)
+        SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+        SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+        UpdateStyles()
+        Location = ZeroPoint
+        Me.Parent = Parent
     End Sub
     Public Sub Close(Optional Dispose As Boolean = True)
         OnClosing(New TabClosingEventArgs)

@@ -36,6 +36,31 @@ AudiopoLib
  <param name="DefaultColor"></param>
  <returns>Color on hover, color on disabled, color on mouse down, color on </returns>
 </member>
+<member name="T:AudiopoLib.EaseInOut">
+ <summary>
+ Provides functions to be used in conjunction with a timer to achieve an easing animation.
+ </summary>
+</member>
+<member name="M:AudiopoLib.EaseInOut.GetY(System.Double,System.Double,System.Int32,System.Int32)">
+ <summary>
+ Given an initial value, a final value, the current timer tick and the final timer tick, returns the value to assign to the eased property or number.
+ </summary>
+ <param name="InitialY">The initial to ease in from.</param>
+ <param name="GoalY">The final value to ease out to.</param>
+ <param name="CurrentX">The number of timer ticks that have elapsed.</param>
+ <param name="LastX">The number of timer ticks that have elapsed + the number of timer ticks that will elapse.</param>
+ <returns>A double with the eased value.</returns>
+</member>
+<member name="M:AudiopoLib.FormFieldStyle.#ctor(System.Drawing.Color,System.Drawing.Color,System.Drawing.Color,System.Drawing.Color,System.Drawing.Color,System.Drawing.Color,System.Boolean[],System.Int32)">
+ <summary>
+ Initializes a new FormFieldStyle with the specified colors.
+ </summary>
+</member>
+<member name="M:AudiopoLib.FormFieldStyle.#ctor">
+ <summary>
+ Initializes a new FormFieldStyle with the default colors.
+ </summary>
+</member>
 <member name="P:AudiopoLib.MenuManager`1.MenuAtIndex(System.String)">
  <summary>
  Returns the ListMenu associated with the specified key (string) in the MenuManager's dictionary.

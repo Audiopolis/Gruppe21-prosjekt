@@ -45,7 +45,7 @@ Public Class LoggInn_Admin
         txtBrukernavn.Clear()
         txtPassord.Clear()
     End Sub
-    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean)
+    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean, ErrorMessage As String)
         LoadingGraphics.StopSpin()
         SuspendLayout()
         For Each C As Control In GroupLoggInn.Controls
@@ -72,7 +72,7 @@ Public Class LoggInn_Admin
             LoadingGraphics = New LoadingGraphics(Of PictureBox)(PicLoadingSurface)
             LayoutTool = New FormLayoutTools(Me)
             ' TEMPORARY; TODO: Switch to secure class
-            UserLogin = New MySqlUserLogin("mysql.stud.iie.ntnu.no", "g_oops_21", "g_oops_21", "NWRhPBUk")
+            UserLogin = New MySqlUserLogin(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
             UserLogin.IfValid = AddressOf LoginValid
             UserLogin.IfInvalid = AddressOf LoginInvalid
             NotifManager = New NotificationManager(Me)
@@ -113,8 +113,6 @@ Public Class LoggInn_Admin
         'Test1.TestEncoding("Hei lol", "kek")
         'Test1.Decode("kek")
     End Sub
-
-
 
     Private Sub FWButton_Click(sender As Object, e As EventArgs) Handles FWButton.Click
         SuspendLayout()
