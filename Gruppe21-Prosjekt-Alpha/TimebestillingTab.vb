@@ -209,6 +209,7 @@ Public Class Timetabell
     Protected Sub OnTimeElementClick(Sender As TimeElement)
         RefreshStates()
         varSelected = Sender
+        MsgBox(varSelected.Tid.ToString("HH:mm"))
         varSelected.BackColor = Color.LimeGreen
         varSelected.ForeColor = Color.White
     End Sub
