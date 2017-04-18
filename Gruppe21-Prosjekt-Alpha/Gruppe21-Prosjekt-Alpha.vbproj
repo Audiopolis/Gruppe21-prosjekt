@@ -197,6 +197,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TestFlatForm.vb" />
+    <Compile Include="TimebestillingTab.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TimeInformasjon.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -366,6 +369,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\OKIconHvit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EgenerklæringTekst.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
