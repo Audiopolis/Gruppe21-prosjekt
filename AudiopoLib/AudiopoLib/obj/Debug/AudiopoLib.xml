@@ -22,19 +22,125 @@ AudiopoLib
   resource lookups using this strongly typed resource class.
 </summary>
 </member>
+<member name="T:AudiopoLib.CustomCalendar">
+ <summary>
+ A highly customizable calendar control. For interaction with individual calendar days, handle the Click, MouseEnter and MouseLeave events.
+ </summary>
+</member>
 <member name="M:AudiopoLib.CustomCalendar.WeekHeader.GetLabel(System.Int32)">
  <summary>
  Gets the header label displaying the name of the specified day of the week.
  </summary>
  <param name="DayOfTheWeek">Zero-based index of the day of the week (Monday = 0)</param>
 </member>
-<member name="M:AudiopoLib.CustomCalendar.AutoGenerateColor(AudiopoLib.CustomCalendar.CalendarElement,System.Drawing.Color)">
+<member name="M:AudiopoLib.CustomCalendar.SetDayNames(System.String[],System.Boolean)">
  <summary>
- 
+ Replaces the default names for Monday through Sunday with the specified string array.
  </summary>
- <param name="Element"></param>
- <param name="DefaultColor"></param>
- <returns>Color on hover, color on disabled, color on mouse down, color on </returns>
+ <param name="Names">An array of string representing the days of the week, starting with Sunday and ending with Saturday.</param>
+ <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.ApplyCustomStyle(System.DateTime[],System.Int32,System.Boolean)">
+ <summary>
+ Applies the specified custom style (that has been added using the 
+ </summary>
+ <param name="Dates"></param>
+ <param name="StyleKey"></param>
+ <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.RemoveCustomStyle(System.Int32,System.Boolean,System.Boolean)">
+ <summary>
+ Use this method if all dates with a given custom style should be reset to the default style.
+ </summary>
+ <param name="StyleKey"></param>
+ <param name="RemoveFromDictionary">If true, removes the custom style from the dictionary. If the style is to be used again, it must be added again.</param>
+ <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.RemoveCustomStyle(System.DateTime[],System.Boolean)">
+ <summary>
+ Use this (slow) method if only some dates with a given style should be reset to the default style.
+ </summary>
+ <param name="Dates">The dates that have a custom style applied to them that should be removed.</param>
+   ''' <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.Show(System.Boolean,System.Boolean)">
+ <summary>
+ Shows the calendar without calling the Display method. Stylistic changes to the calendar only get applied if the Display method has been shown.
+ </summary>
+ <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify True if stylistic changes have been made to the calendar while it was hidden.</param>
+ <param name="SuppressDisplay">Specifies whether or not to display the form if it has not already been displayed (not recommended).</param>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.Show">
+ <summary>
+ If the Display method has not yet been called, displays the calendar. If the Display method has been called, shows the calendar without calling RefreshCalendar.
+ </summary>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.Display">
+ <summary>
+ Applies changes and displays the calendar. Call this method the first time the calendar is shown. Changes to the calendar may not display correctly unless this method has been called.
+ </summary>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.ArrowColorDefault">
+ <summary>
+ Gets or sets the color of the next and previous buttons when they are not hovered.
+ </summary>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.ArrowColorHover">
+ <summary>
+ Gets or sets the color of the next and previous buttons when they are hovered.
+ </summary>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.CurrentMonth">
+ <summary>
+ Gets the number of the currently displaying month, or sets which month to display.
+ </summary>
+ <returns>An integer value between 1 and 12 (inclusive).</returns>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.AutoShrink">
+ <summary>
+ Specifies whether or not the SizeToContent method should be automatically called as necessary.
+ </summary>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.SizeToContent">
+ <summary>
+ Sets the width and height of the calendar to the right and bottom edges of its elements.
+ </summary>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.RefreshCalendar">
+ <summary>
+ Applies changes to the calendar. Call this method only if exceptional circumstances causes the calendar to display incorrectly.
+ </summary>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.DrawGradient">
+ <summary>
+ Specifies whether or not to draw subtle gradients on the Calendar's days. The initial and final color are determined by the CalendarDay's BackColor property. Default = False.
+ </summary>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.Day(System.DateTime)">
+ <summary>
+ Gets the CalendarDay control currently representing the specified date.
+ </summary>
+ <returns>The CalendarDay displaying the specified date, or Nothing if the date is not included in the current view.</returns>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.Day(System.Int32)">
+ <summary>
+ Gets the CalendarDay at the specified index (going left to right, including days in the previous and next month's area, if any).
+ </summary>
+ <param name="Index">An integer value between 0 and 41 inclusive.</param>
+ <returns>The CalendarDay at the specified index (going left to right, including days in the previous and next month's area, if any).</returns>
+</member>
+<member name="P:AudiopoLib.CustomCalendar.Days">
+ <summary>
+ Gets an array of all 42 CalendarDay controls, which include both visible and hidden days.
+ </summary>
+ <returns></returns>
+</member>
+<member name="M:AudiopoLib.CustomCalendar.AddCustomStyle(System.Int32,AudiopoLib.CustomCalendar.CalendarDayStyle)">
+ <summary>
+ Adds the specified custom style to a dictionary, so that it can be applied with the specified key using the ApplyCustomStyle method.
+ </summary>
+ <param name="Key">A unique key that can be used to identify the style when it is applied.</param>
+ <param name="Style">The style to be applied to specific dates.</param>
 </member>
 <member name="T:AudiopoLib.EaseInOut">
  <summary>

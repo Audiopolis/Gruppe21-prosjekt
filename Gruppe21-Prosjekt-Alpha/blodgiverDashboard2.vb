@@ -56,14 +56,14 @@ Public Class blodgiverDashboard2
         End With
         With Beholder
             .Parent = Me
-            .Location = New Point(Width \ 2 - .Width \ 2, Height \ 2 - .Height \ 2)
+            .Location = New Point(ClientSize.Width - .Width - 20, Header.Bottom + 20)
         End With
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         SuspendLayout()
         MyBase.OnResize(e)
         With Beholder
-            .Location = New Point(Width \ 2 - .Width \ 2, Height \ 2 - .Height \ 2)
+            .Location = New Point(ClientSize.Width - .Width - 20, Header.Bottom + 20)
         End With
         ResumeLayout(True)
     End Sub

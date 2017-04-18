@@ -91,7 +91,6 @@ Public Class DatabaseClient
         Try
             If Parameters.Length <> Values.Length Then
                 Throw New Exception("Parameters() and Values() arguments must be of equal length.")
-                MsgBox("Lengths not equal")
             Else
                 Dim DBParams As New ParameterizedQuery(DBCSB.GetConnectionString(True), SQLq, Tag)
                 For i As Integer = 0 To Parameters.Length - 1
@@ -107,7 +106,6 @@ Public Class DatabaseClient
                 HandledThread.Start(DBParams)
             End If
         Catch ex As Exception
-            MsgBox(ex.Message)
             Throw ex
             RaiseEvent ExecutionFailed(Me.Tag)
         End Try
@@ -121,7 +119,7 @@ Public Class DatabaseClient
         Dim ParamInstance As ParameterizedQuery = DirectCast(Params, ParameterizedQuery)
         Dim DBConnection As New MySqlConnection(ParamInstance.ConnectionString)
         Dim ErrorOccurred As Boolean
-        Dim ErrorMessage As String = ""
+        Dim ErrorMessage As String = "Nothing to show"
         Dim Ret(2) As Object
         Dim RetTable As New DataTable
         Try
@@ -138,7 +136,6 @@ Public Class DatabaseClient
                 .Fill(RetTable)
                 .Dispose()
             End With
-
             SQLcmd.Dispose()
         Catch ex As Exception
             ErrorOccurred = True
@@ -155,7 +152,7 @@ Public Class DatabaseClient
             Ret(2) = ErrorMessage
             Return Ret
         Else
-            Dim Result(4) As Object
+                Dim Result(4) As Object
             Dim RetCount As Integer
             With RetTable
                 RetCount = .Rows.Count
@@ -176,9 +173,10 @@ Public Class DatabaseClient
     Private Function ExecuteQuery(Params As Object) As Object
         Dim QueryInstance As RegularQuery = DirectCast(Params, RegularQuery)
         Dim DBConnection As New MySqlConnection(QueryInstance.ConnectionString)
-        Dim Ret(1) As Object
+        Dim Ret(2) As Object
         Dim RetTable As New DataTable
         Dim ErrorOccurred As Boolean = False
+        Dim ErrorMessage As String = ""
         Try
             DBConnection.Open()
             Dim SQLcmd As New MySqlCommand(QueryInstance.Query, DBConnection)
@@ -189,8 +187,9 @@ Public Class DatabaseClient
                 SQLcmd.Dispose()
                 .Dispose()
             End With
-        Catch
+        Catch ex As Exception
             ErrorOccurred = True
+            ErrorMessage = ex.Message
         Finally
             With DBConnection
                 .Close()
@@ -199,6 +198,7 @@ Public Class DatabaseClient
         End Try
         Ret(0) = RetTable
         Ret(1) = ErrorOccurred
+        Ret(2) = ErrorMessage
         Return Ret
     End Function
     Public ReadOnly Property Connection As MySqlConnectionStringBuilder

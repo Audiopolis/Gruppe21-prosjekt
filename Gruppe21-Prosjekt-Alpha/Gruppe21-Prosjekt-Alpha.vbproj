@@ -121,6 +121,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="DatabaseCredentials.vb" />
+    <Compile Include="EgenerklæringTab.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FlatList.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -194,6 +197,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TestFlatForm.vb" />
+    <Compile Include="TimebestillingTab.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TimeInformasjon.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -351,6 +357,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\NesteIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NyLogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PicLoggInn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ForrigeIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\OKIconHvit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\EgenerklæringTekst.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

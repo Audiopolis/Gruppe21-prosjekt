@@ -75,7 +75,7 @@ Public Class AdminUnlockWrapper
         End With
         LG = New LoadingGraphics(Of PictureBox)(LoadingSurface)
         With LG
-            .Pen.Color = Color.Red
+            .Pen.Color = Color.FromArgb(230, 50, 80)
             .Stroke = 3
         End With
         Show()
@@ -156,7 +156,9 @@ Public Class AdminUnlockWrapper
             End If
             LG.Dispose()
             LoadingSurface.Dispose()
-            ValidityChecker.Dispose()
+            If ValidityChecker IsNot Nothing Then
+                ValidityChecker.Dispose()
+            End If
             InnerContainer.Dispose()
         End If
         MyBase.Dispose(disposing)
