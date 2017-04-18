@@ -37,7 +37,10 @@ Public NotInheritable Class Splash
 
         GB.Dispose()
         Close()
-        Dispose()
+
+        'TODO: Dispose Splash on end
+
+        'Dispose()
     End Sub
 
     Private Sub DelayTimer_Elapsed(Sender As Object, e As ElapsedEventArgs) Handles DelayTimer.Elapsed

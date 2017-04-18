@@ -177,9 +177,7 @@
     </Compile>
     <Compile Include="PaintMessageHelper.vb" />
     <Compile Include="PersonaliaDisplay.vb" />
-    <Compile Include="PieChart.vb">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="PieChart.vb" />
     <Compile Include="CryptoServiceProvider.vb" />
     <Compile Include="Skjema.Designer.vb">
       <DependentUpon>Skjema.vb</DependentUpon>
@@ -372,6 +370,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\EgenerklæringTekst.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TimeTabellInfo.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

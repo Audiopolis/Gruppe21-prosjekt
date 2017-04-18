@@ -217,11 +217,10 @@ End Class
 
 Public Class Tab
     Inherits Control
-    Private Shared ZeroPoint As New Point(0, 0)
+    'Private Shared ZeroPoint As New Point(0, 0)
     Private varScaleToParent As Boolean = True
     Protected Friend ListIndex As Integer = -1
     Public Event LayoutRefreshed(Sender As Tab)
-
     Public Property ScaleToWindow As Boolean
         Get
             Return varScaleToParent
@@ -265,7 +264,6 @@ Public Class Tab
         SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
         SetStyle(ControlStyles.AllPaintingInWmPaint, True)
         UpdateStyles()
-        Location = ZeroPoint
         Me.Parent = Parent
     End Sub
     Public Sub Close(Optional Dispose As Boolean = True)

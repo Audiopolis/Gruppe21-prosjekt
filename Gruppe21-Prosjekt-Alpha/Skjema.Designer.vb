@@ -7,6 +7,7 @@ Partial Class Skjema
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
+                LayoutTool.Dispose()
                 components.Dispose()
             End If
         Finally

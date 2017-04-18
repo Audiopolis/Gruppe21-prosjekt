@@ -94,7 +94,7 @@ Public Class Skjema
         End With
 
         Spørreskjema = New Questionnaire(Me)
-        PaintMessageHelper.SuspendDrawing(Spørreskjema)
+        'PaintMessageHelper.SuspendDrawing(Spørreskjema)
         With Spørreskjema
             .Width = 500
             .Height = 500

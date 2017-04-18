@@ -41,7 +41,7 @@ Public Class AdminCredentials
         Catch CryptoEx As System.Security.Cryptography.CryptographicException
             Return Nothing
         Catch DirEx As System.IO.DirectoryNotFoundException
-            Throw DirEx
+            Throw
         End Try
     End Function
 End Class

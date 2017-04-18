@@ -80,13 +80,20 @@ Public Class TopBar
         e.Graphics.DrawLine(BorderPen, New Point(0, Height - 1), New Point(Width - 1, Height - 1))
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        For Each B As TopBarButton In varButtonList
-            RemoveHandler B.Click, AddressOf OnButtonClick
-        Next
-        If LogoutButton IsNot Nothing Then
-            RemoveHandler LogoutButton.Click, AddressOf OnButtonClick
-        End If
-        MyBase.Dispose(disposing)
+        Try
+            If disposing Then
+                For Each B As TopBarButton In varButtonList
+                    RemoveHandler B.Click, AddressOf OnButtonClick
+                Next
+                If LogoutButton IsNot Nothing Then
+                    RemoveHandler LogoutButton.Click, AddressOf OnButtonClick
+                End If
+                BorderPen.Dispose()
+                HighlightPen.Dispose()
+            End If
+        Finally
+            MyBase.Dispose(disposing)
+        End Try
     End Sub
 End Class
 Public Class TopBarButton
