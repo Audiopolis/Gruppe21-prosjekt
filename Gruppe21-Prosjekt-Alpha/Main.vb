@@ -396,7 +396,7 @@ Public Class ThirdTab
         End With
 
         Spørreskjema = New Questionnaire(Me)
-        PaintMessageHelper.SuspendDrawing(Spørreskjema)
+        'PaintMessageHelper.SuspendDrawing(Spørreskjema)
         With Spørreskjema
             .Width = 500
             .Height = 500
@@ -838,9 +838,14 @@ Public Class Personopplysninger
         PasswordFormVisible = False
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        RemoveHandler PasswordForm.Field(1, 0).ValueChanged, AddressOf PasswordChanged
-        RemoveHandler PasswordForm.Field(1, 0).ValidChanged, AddressOf PasswordValidChanged
-        RemoveHandler PasswordForm.Field(2, 0).ValidChanged, AddressOf PasswordValidChanged
+        If disposing Then
+            RemoveHandler PasswordForm.Field(1, 0).ValueChanged, AddressOf PasswordChanged
+            RemoveHandler PasswordForm.Field(1, 0).ValidChanged, AddressOf PasswordValidChanged
+            RemoveHandler PasswordForm.Field(2, 0).ValidChanged, AddressOf PasswordValidChanged
+            LayoutTool.Dispose()
+            NotifManager.Dispose()
+
+        End If
         MyBase.Dispose(disposing)
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -1281,7 +1286,6 @@ Public Class LoggInnNy
             .DrawBorder(FormField.ElementSide.Bottom) = False
             .DrawBorder(FormField.ElementSide.Top) = False
             .DrawBorder(FormField.ElementSide.Left) = False
-            '.MakeDashed(Color.Red, Color.Blue)
         End With
         With RightSide
             .Parent = FormPanel
@@ -1318,15 +1322,6 @@ Public Class LoggInnNy
             .Display()
         End With
 #End Region
-        'Dim NB As New Button
-        'With NB
-        '    .Hide()
-        '    .Size = New Size(100, 100)
-        '    .Location = Point.Empty
-        '    .Parent = Me
-        '    .Enabled = False
-        'End With
-
         With TopBar
             'AddHandler .Click, AddressOf 
         End With
@@ -1393,14 +1388,17 @@ Public Class LoggInnNy
         End With
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        RemoveHandler OpprettBrukerKnapp.Click, AddressOf OpprettBruker_Click
-        RemoveHandler LoggInnKnapp.Click, AddressOf LoggInn_Click
+        If disposing Then
+            NotifManager.Dispose()
+            LayoutTool.Dispose()
+            RemoveHandler OpprettBrukerKnapp.Click, AddressOf OpprettBruker_Click
+            RemoveHandler LoggInnKnapp.Click, AddressOf LoggInn_Click
+        End If
         MyBase.Dispose(disposing)
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         SuspendLayout()
         MyBase.OnResize(e)
-        ' TODO: Remove LayoutTool
         If LayoutTool IsNot Nothing Then
             With FormPanel
                 .Left = Width \ 2 - .Width \ 2
@@ -1413,7 +1411,6 @@ End Class
 
 Public Class LoggInn
     Inherits Tab
-
     Private LayoutHelper As New FormLayoutTools(Me)
     Private NotifManager As New NotificationManager(Me)
     Private logo As HemoGlobeLogo
@@ -1472,7 +1469,6 @@ Public Class DashboardTab
                 Case 1
                     Parent.Index = 6
                 Case 2
-                    Parent.Index = 6
             End Select
         End If
     End Sub

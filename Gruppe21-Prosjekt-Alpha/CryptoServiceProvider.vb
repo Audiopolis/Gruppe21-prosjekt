@@ -1,5 +1,7 @@
 ﻿Imports System.Security.Cryptography
 Public NotInheritable Class CryptoServiceProvider
+    Implements IDisposable
+
     Private TripleDes As New TripleDESCryptoServiceProvider
     Sub New(ByVal key As String)
         TripleDes.Key = TruncateHash(key, TripleDes.KeySize \ 8)
@@ -31,8 +33,9 @@ Public NotInheritable Class CryptoServiceProvider
         Catch
             Ret = Nothing
             plaintextBytes = Nothing
-            ms.Dispose()
-            encStream.Dispose()
+            If encStream IsNot Nothing Then
+                encStream.Dispose()
+            End If
         End Try
         Return Ret
     End Function
@@ -50,9 +53,27 @@ Public NotInheritable Class CryptoServiceProvider
             Ret = Nothing
         Finally
             encryptedBytes = Nothing
-            ms.Dispose()
-            decStream.Dispose()
+            If decStream IsNot Nothing Then
+                decStream.Dispose()
+            End If
         End Try
         Return Ret
     End Function
+
+#Region "IDisposable Support"
+    Private disposedValue As Boolean
+    Protected Sub Dispose(disposing As Boolean)
+        If Not disposedValue Then
+            If disposing Then
+                If TripleDes IsNot Nothing Then
+                    TripleDes.Dispose()
+                End If
+            End If
+        End If
+        disposedValue = True
+    End Sub
+    Public Sub Dispose() Implements IDisposable.Dispose
+        Dispose(True)
+    End Sub
+#End Region
 End Class
