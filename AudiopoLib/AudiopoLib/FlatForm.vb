@@ -618,7 +618,7 @@ Public Class FlatForm
     Private RowList As List(Of FormRow)
     Private varRowHeight As Integer = 57
     Private varNewFieldStyle As New FormFieldStyle()
-
+    Public Event EnterPressed()
     'To reduce flicker
     Protected Overrides ReadOnly Property CreateParams() As CreateParams
         Get
