@@ -12,26 +12,29 @@ Public Class DoubleBufferedPanel
     End Sub
 End Class
 
+Public Class EgenerklæringTekst
+    Inherits Control
+    Public Sub New()
+        DoubleBuffered = True
+        Size = New Size(540, 550)
+        BackgroundImage = My.Resources.EgenerklæringTekst
+    End Sub
+End Class
+
 Public Class EgenerklæringTab
     Inherits Tab
     Private Questionnaire As New Questionnaire(, 120, -15)
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private LayoutTool As New FormLayoutTools(Me)
-    Private TopBar As New TopBar(Me)
+    Private Tekst As New EgenerklæringTekst
+    Private BorderControl As New BorderControl(Color.FromArgb(109, 109, 109))
+    Private WithEvents TopBar As New TopBar(Me)
     Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    Private LoadingSurface As New PictureBox
+    Private LG As LoadingGraphics(Of PictureBox)
+    Private NotificationArea As FullWidthControl
+    Private NotifManager As NotificationManager
     Private Forms() As FlatForm = {New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite)}
-    Public Sub InitiateForm()
-        With Questionnaire
-            If CurrentLogin.IsMale Then
-                .Add(Forms(6))
-            Else
-                .Add(Forms(7))
-            End If
-            .Add(Forms(8))
-            .Add(Forms(9))
-            .Display(0)
-        End With
-    End Sub
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
         Dim LabelSize As Integer = 360
@@ -144,7 +147,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 1"
         With Forms(1)
             .AddField(FormElementType.Label)
@@ -237,7 +239,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 2"
         With Forms(2)
             .AddField(FormElementType.Label)
@@ -248,7 +249,7 @@ Public Class EgenerklæringTab
             With .LastRow
                 .Height = 24
             End With
-            .NewRowHeight = 50
+            .NewRowHeight = 45
             .AddField(FormElementType.Label, LabelSize)
             With .Last
                 .SwitchHeader(False)
@@ -378,7 +379,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 3"
         With Forms(3)
             .AddField(FormElementType.Label)
@@ -535,7 +535,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 4"
         With Forms(4)
             .AddField(FormElementType.Label)
@@ -570,7 +569,7 @@ Public Class EgenerklæringTab
             With .LastRow
                 .Height = 24
             End With
-            .NewRowHeight -= 2
+            .NewRowHeight = 44
             .AddField(FormElementType.Label, LabelSize)
             With .Last
                 .SwitchHeader(False)
@@ -668,7 +667,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 5"
         With Forms(5)
             .AddField(FormElementType.Label)
@@ -679,7 +677,7 @@ Public Class EgenerklæringTab
             With .LastRow
                 .Height = 24
             End With
-            .NewRowHeight = 50
+            .NewRowHeight = 45
             .AddField(FormElementType.Label, LabelSize)
             With .Last
                 .SwitchHeader(False)
@@ -809,7 +807,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 6"
         With Forms(6)
             'If CurrentLogin.IsMale Then
@@ -843,7 +840,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 7"
         With Forms(7)
             'Else
@@ -927,7 +923,6 @@ Public Class EgenerklæringTab
             'End If
         End With
 #End Region
-
 #Region "Form 8"
         With Forms(8)
             .AddField(FormElementType.Label)
@@ -938,6 +933,7 @@ Public Class EgenerklæringTab
             With .LastRow
                 .Height = 24
             End With
+            .NewRowHeight = 45
             .AddRadioContext(True)
             .AddField(FormElementType.Label, LabelSize)
             With .Last
@@ -1052,7 +1048,6 @@ Public Class EgenerklæringTab
             End With
         End With
 #End Region
-
 #Region "Form 9"
         With Forms(9)
             .AddField(FormElementType.Label)
@@ -1094,7 +1089,6 @@ Public Class EgenerklæringTab
                 .SwitchHeader(False)
                 .SecondaryValue = "Nei"
             End With
-
             .AddField(FormElementType.Label, LabelSize)
             With .Last
                 .SwitchHeader(False)
@@ -1114,11 +1108,19 @@ Public Class EgenerklæringTab
             .AddField(FormElementType.TextField)
             With .Last
                 .Header.Text = "Jeg er født i..."
+                .MaxLength = 54
+                .Required = True
+                .MinLength = 2
             End With
         End With
 #End Region
-        With Questionnaire
+        With BorderControl
             .Parent = Me
+            .Size = New Size(540, 550)
+        End With
+        With Questionnaire
+            .Parent = BorderControl
+            .Location = New Point(1, 41)
             .Add(Forms(0))
             .Add(Forms(1))
             .Add(Forms(2))
@@ -1129,27 +1131,109 @@ Public Class EgenerklæringTab
             FinishedButton.BackColor = Color.LimeGreen
             FinishedButton.ForeColor = Color.White
             .AddCustomButtons(New TopBarButton(Me, My.Resources.ForrigeIcon, "Forrige", New Size(135, 36), False, 100), New TopBarButton(Me, My.Resources.NesteIcon, "Neste", New Size(135, 36), False, 100), FinishedButton)
-            .Size = New Size(540, 550)
-            .BackColor = Color.FromArgb(220, 220, 220)
+            .Size = New Size(538, 508)
+            .BackColor = Color.FromArgb(235, 235, 235)
             AddHandler .FinishedClicked, AddressOf OnFinishedClicked
         End With
         With TopBar
             .AddButton(My.Resources.HjemIcon, "Hjem", New Size(135, 36))
             .AddLogout("Logg ut", New Size(135, 36))
         End With
+        With Tekst
+            .Parent = Me
+            .Left = Questionnaire.Right + 20
+            .Top = Questionnaire.Top
+        End With
         With DBC
             .SQLQuery = "INSERT INTO Egenerklæring (time_id, svar_array, land) VALUES (@timeid, @series, @country);"
         End With
+        With LoadingSurface
+            .Hide()
+            .Size = New Size(50, 50)
+            .Parent = Me
+        End With
+        LG = New LoadingGraphics(Of PictureBox)(LoadingSurface)
+        With LG
+            .Stroke = 3
+            .Pen.Color = Color.FromArgb(230, 50, 80)
+        End With
+        NotificationArea = New FullWidthControl(BorderControl)
+        With NotificationArea
+            .Size = New Size(Questionnaire.Width, 40)
+            .Location = New Point(1, 1)
+            .BackColor = Color.FromArgb(220, 220, 220)
+            .Text = "Egenerklæring"
+            .ForeColor = Color.FromArgb(60, 60, 60)
+            .TextAlign = ContentAlignment.MiddleCenter
+        End With
+        NotifManager = New NotificationManager(NotificationArea)
+    End Sub
+    Public Sub InitiateForm()
+        With Questionnaire
+            If CurrentLogin.IsMale Then
+                .Add(Forms(6))
+            Else
+                .Add(Forms(7))
+            End If
+            .Add(Forms(8))
+            .Add(Forms(9))
+            .Display(0)
+        End With
+    End Sub
+    Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
+        If Sender.IsLogout Then
+            Parent.Index = 4
+            For Each F As FlatForm In Forms
+                F.ClearAll()
+            Next
+            Questionnaire.FormIndex = 0
+            Logout()
+        Else
+            Select Case CInt(Sender.Tag)
+                Case 0
+                    Parent.Index = 5
+                    For Each F As FlatForm In Forms
+                        F.ClearAll()
+                    Next
+                    Questionnaire.FormIndex = 0
+            End Select
+        End If
+    End Sub
+    Protected Overrides Sub OnDoubleClick(e As EventArgs)
+        'TODO: Remove this sub
+        MyBase.OnDoubleClick(e)
+        OnFinishedClicked()
+    End Sub
+    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        LG.StopSpin()
+        If e.ErrorOccurred Then
+            MsgBox(e.ErrorMessage)
+            BorderControl.Show()
+            Tekst.Show()
+            NotifManager.Display("Det oppsto en ukjent feil. Vennligst henvend deg til skranken.", NotificationPreset.OffRedAlert)
+        Else
+            BorderControl.Show()
+            Tekst.Show()
+            NotifManager.Display("Takk for at du sparer miljøet! Egenerklæringen er sendt inn elektronisk.", NotificationPreset.GreenSuccess)
+        End If
+    End Sub
+    Private Sub DBC_Failed(SenderTag As Object) Handles DBC.ExecutionFailed
+        LG.StopSpin()
+        BorderControl.Show()
+        Tekst.Show()
+        NotifManager.Display("Vi har problemer med å kontakte tjeneren. Vennligst henvend deg til skranken.", NotificationPreset.OffRedAlert)
     End Sub
     Private Sub OnFinishedClicked()
         Dim Series As String = GetRadioString()
         If Series IsNot Nothing Then
-            MsgBox("Executing")
+            BorderControl.Hide()
+            Tekst.Hide()
             With DBC
                 .Execute({"@timeid", "@series", "@country"}, {"1", Series, DirectCast(Questionnaire.Form(8).Last.Value, String)})
             End With
+            LG.Spin(30, 10)
         Else
-            MsgBox("Feil")
+            NotifManager.Display("Vennligst svar på alle spørsmålene.", NotificationPreset.OffRedAlert)
         End If
     End Sub
     Private Function GetRadioString() As String
@@ -1184,9 +1268,14 @@ Public Class EgenerklæringTab
         MyBase.OnResize(e)
         If LayoutTool IsNot Nothing Then
             ' TODO: Remove layouttool
-            With Questionnaire
-                .Location = New Point(20, (Height + TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2)
+            With BorderControl
+                .Location = New Point(Width \ 2 - .Width - 10, (Height + TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2)
             End With
+            With Tekst
+                .Left = Width \ 2 + 10
+                .Top = BorderControl.Top
+            End With
+            LayoutTool.CenterOnForm(LoadingSurface)
         End If
         ResumeLayout(True)
     End Sub

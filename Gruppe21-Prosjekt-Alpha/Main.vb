@@ -38,9 +38,8 @@ Public Class Main
             ' BETA
             LoggInnTab = New LoggInnNy(Windows) ' Index = 4
             Dashboard = New DashboardTab(Windows) ' Index = 5
-
             Egenerklæring = New EgenerklæringTab(Windows) ' Index = 6
-            ' IS CREATED UPON LOGIN
+            Timebestilling = New TimebestillingTab(Windows) ' Index = 7
 
             With Windows
                 .BackColor = Color.FromArgb(240, 240, 240)
@@ -1227,8 +1226,9 @@ Public Class LoggInnNy
     Private Sub LoginValid()
         CurrentLogin = New UserInfo(PersonalNumber)
         Dashboard.Initiate()
-        Egenerklæring.InitiateForm()
         Parent.Index = 5
+        Egenerklæring.InitiateForm()
+        LoginForm.ClearAll()
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
         If ErrorOccurred Then
@@ -1468,6 +1468,7 @@ Public Class DashboardTab
         Else
             Select Case CInt(SenderButton.Tag)
                 Case 0
+                    Parent.Index = 7
                 Case 1
                     Parent.Index = 6
                 Case 2

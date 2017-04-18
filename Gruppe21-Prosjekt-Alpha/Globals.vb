@@ -20,6 +20,7 @@
     Public LoggInnTab As LoggInnNy
     Public Dashboard As DashboardTab
     Public Egenerklæring As EgenerklæringTab
+    Public Timebestilling As TimebestillingTab
 
     Public Sub Logout()
         ' TODO: Erase all traces of user data

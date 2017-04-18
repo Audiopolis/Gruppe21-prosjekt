@@ -4,18 +4,73 @@ Option Infer Off
 Imports System.Drawing
 Imports System.Drawing.Drawing2D
 Imports System.Windows.Forms
-Imports AudiopoLib
 
+''' <summary>
+''' A highly customizable calendar control. For interaction with individual calendar days, handle the Click, MouseEnter and MouseLeave events.
+''' </summary>
 Public NotInheritable Class CustomCalendar
-    Inherits Control
+    Inherits ContainerControl
     Implements IDisposable
+#Region "Fields"
+    Private WHeader As WeekHeader
+    Private MHeader As MonthHeader
+    Private Const MaxSquares As Integer = 42
+    Private M As Integer = Date.Now.Month
+    Private SquareArr(41) As CalendarDay
+    Protected Friend DaysOfWeek(), MonthNames() As String
+    Private RHeight, CWidth, varSpacingX, varSpacingY, varMargins(3) As Integer
+    Private ParentContainer As Control
+    Private varAutoShrink As Boolean = True, varHideEmptyRows As Boolean = True
+
+    Private DictCustomStates As New Dictionary(Of Integer, CalendarDayStyle)
+    Private AppliedStylesList As New List(Of DateStylePair)
+
+    Private PrevStyle, CurrStyle, NextStyle As CalendarDayStyle
+
+    Public Shadows Event MouseEnter(Sender As CalendarDay)
+    Public Shadows Event MouseLeave(Sender As CalendarDay)
+    Public Shadows Event Click(Sender As CalendarDay)
+
+    Private IsDisplayed As Boolean
+#End Region
+#Region "Classes"
+    Private NotInheritable Class DateStylePair
+        Private varDate As Date
+        Private varStyleKey As Integer
+        Public Property MyDate As Date
+            Get
+                Return varDate
+            End Get
+            Set(value As Date)
+                varDate = value
+            End Set
+        End Property
+        Public Property StyleKey As Integer
+            Get
+                Return varStyleKey
+            End Get
+            Set(value As Integer)
+                varStyleKey = value
+            End Set
+        End Property
+        Public Sub New(MyDate As Date, StyleKey As Integer)
+            varDate = MyDate
+            varStyleKey = StyleKey
+        End Sub
+    End Class
     Private NotInheritable Class WeekHeader
         Implements IDisposable
         Private WeekDays() As Label = {New Label, New Label, New Label, New Label, New Label, New Label, New Label}
         Private WeekDaysString() As String = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}
-        Private ParentContainer As CustomCalendar
+        Private WithEvents ParentContainer As CustomCalendar
         Private H As Integer
         Private ColWidth As Integer
+        Private Sub ParentBGChanged() Handles ParentContainer.BackColorChanged
+            Dim BG As Color = ParentContainer.BackColor
+            For Each Lab As Label In WeekDays
+                Lab.BackColor = BG
+            Next
+        End Sub
         Public Property Parent As CustomCalendar
             Get
                 Return ParentContainer
@@ -42,22 +97,20 @@ Public NotInheritable Class CustomCalendar
         End Function
         Public Sub SetDayNames()
             WeekDaysString = ParentContainer.DaysOfWeek
-            For i As Integer = 0 To 6
-                WeekDays(i).Text = WeekDaysString(i)
+            For i As Integer = 1 To 6
+                WeekDays(i - 1).Text = WeekDaysString(i)
             Next
+            WeekDays(6).Text = WeekDaysString(0)
         End Sub
         Public Sub New(Parent As CustomCalendar, Left As Integer, Top As Integer, Spacing As Integer, Optional Width As Integer = 100, Optional ByVal Height As Integer = 100)
             ColWidth = Width
             H = Height
             For i As Integer = 0 To 6
-                WeekDays(i).Hide()
-            Next
-            For i As Integer = 0 To 6
                 With WeekDays(i)
                     .Parent = Parent
                     .AutoSize = False
                     .TextAlign = ContentAlignment.MiddleCenter
-                    .BackColor = Color.Transparent
+                    .BackColor = Parent.BackColor
                     .Text = WeekDaysString(i)
                     .Width = ColWidth
                     .Left = Left + i * (Width + Spacing)
@@ -65,9 +118,6 @@ Public NotInheritable Class CustomCalendar
                 End With
             Next
             ParentContainer = Parent
-            For i As Integer = 0 To 6
-                WeekDays(i).Show()
-            Next
         End Sub
 #Region "IDisposable Support"
         Private disposedValue As Boolean ' To detect redundant calls
@@ -143,65 +193,53 @@ Public NotInheritable Class CustomCalendar
             ArrowLeft = New PictureBox
             ArrowRight = New PictureBox
             With MLabel
-                .Left = Left
-                .Top = Top
-                .Width = Width
-                .Height = Height
+                .Location = New Point(Left, Top)
+                .Size = New Size(Width, Height)
                 .TextAlign = ContentAlignment.MiddleCenter
-                .BackColor = Color.Transparent
+                .BackColor = Parent.BackColor
                 .Parent = Parent
-                .Text = Parent.MonthNames(DateTime.Now.Month - 1)
+                .Text = Parent.MonthNames(Date.Now.Month - 1)
             End With
             With ArrowLeft
-                .Width = 16
-                .Height = 16
-                .Left = Left + (Width \ 2) - (.Width \ 2) - 50
+                .Size = New Size(16, 16)
+                .Location = New Point(Left + (Width \ 2) - (.Width \ 2) - 50, Top + (Height \ 2) - (.Height \ 2))
                 .Parent = Parent
-                .Top = Top + (Height \ 2) - (.Height \ 2)
                 .BringToFront()
             End With
             With ArrowRight
-                .Hide()
-                .Width = 16
-                .Height = 16
-                .Left = Left + (Width \ 2) - (.Width \ 2) + 50
+                .Size = New Size(16, 16)
+                .Location = New Point(Left + (Width \ 2) - (.Width \ 2) + 50, Top + (Height \ 2) - (.Height \ 2))
                 .Parent = Parent
-                .Top = Top + (Height \ 2) - (.Height \ 2)
                 .BringToFront()
             End With
             PointsL = {New Point(ArrowLeft.Width - 4, 0), New Point(ArrowLeft.Width - 4, ArrowLeft.Height), New Point(4, (ArrowLeft.Height \ 2))}
             PointsR = {New Point(4, 0), New Point(4, ArrowRight.Height), New Point(12, (ArrowRight.Height \ 2))}
-            MLabel.Show()
-            ArrowLeft.Show()
-            ArrowRight.Show()
         End Sub
         Private Sub PaintLeftArrow(Sender As Object, e As PaintEventArgs) Handles ArrowLeft.Paint
-            Dim SenderX As PictureBox = DirectCast(Sender, PictureBox)
             e.Graphics.FillPolygon(BrushL, PointsL)
         End Sub
         Private Sub PaintRightArrow(Sender As Object, e As PaintEventArgs) Handles ArrowRight.Paint
-            Dim SenderX As PictureBox = DirectCast(Sender, PictureBox)
             e.Graphics.FillPolygon(BrushR, PointsR)
         End Sub
         Private Sub EnterLeft() Handles ArrowLeft.MouseEnter
             BrushL.Dispose()
             BrushL = New SolidBrush(CArrowHover)
-            ArrowLeft.Invalidate()
+            ArrowLeft.Refresh()
         End Sub
         Private Sub LeaveLeft() Handles ArrowLeft.MouseLeave
             BrushL.Dispose()
             BrushL = New SolidBrush(CArrowDefault)
-            ArrowLeft.Invalidate()
+            ArrowLeft.Refresh()
         End Sub
         Private Sub EnterRight() Handles ArrowRight.MouseEnter
             BrushR.Dispose()
             BrushR = New SolidBrush(CArrowHover)
-            ArrowRight.Invalidate()
+            ArrowRight.Refresh()
         End Sub
         Private Sub LeaveRight() Handles ArrowRight.MouseLeave
             BrushR.Dispose()
             BrushR = New SolidBrush(CArrowDefault)
-            ArrowRight.Invalidate()
+            ArrowRight.Refresh()
         End Sub
         Private Sub ClickLeft() Handles ArrowLeft.MouseDown
             RaiseEvent ArrowClicked(MonthArrow.Left)
@@ -234,9 +272,22 @@ Public NotInheritable Class CustomCalendar
         Private LabWeek As New Label
         Private GB As LinearGradientBrush
         Private myDate As Date
-        Private DrawGrad As Boolean = True
-        Private DrawShad As Boolean
+        Private DrawGrad As Boolean
         Public Area As CalendarArea = CalendarArea.Undefined
+        Public Sub SetColors(ByRef Style As CalendarDayStyle)
+            If DrawGrad Then
+                If GB IsNot Nothing Then
+                    GB.Dispose()
+                End If
+                GB = New LinearGradientBrush(DisplayRectangle, Color.FromArgb(70, ColorHelper.FillRemainingRGB(Style.BackgroundColor, 0.7)), Color.Transparent, LinearGradientMode.Vertical)
+            End If
+            With Style
+                MyBase.BackColor = .BackgroundColor
+                LabWeek.BackColor = .BackgroundColor
+                LabWeek.ForeColor = .DayOfWeekColor
+                ForeColor = .DayColor
+            End With
+        End Sub
         Public Shadows Property Parent As CustomCalendar
             Get
                 Return DirectCast(MyBase.Parent, CustomCalendar)
@@ -245,19 +296,6 @@ Public NotInheritable Class CustomCalendar
                 MyBase.Parent = Parent
             End Set
         End Property
-        'Public Property WeekDayNames As String()
-        '    Get
-        '        Return WeekDays
-        '    End Get
-        '    Set(value As String())
-        '        'If Not value.Length = 7 Then
-        '        '    Throw New Exception("The array of week day names must contain 7 elements.")
-        '        'Else
-        '        WeekDays = value
-        '        LabWeek.Text = WeekDays(myDate.DayOfWeek).ToUpper
-        '        'End If
-        '    End Set
-        'End Property
         Public Property Day As Date
             Get
                 Return myDate
@@ -265,7 +303,10 @@ Public NotInheritable Class CustomCalendar
             Set(value As Date)
                 myDate = value
                 Text = CStr(value.Day)
-                LabWeek.Text = Parent.DaysOfWeek(value.DayOfWeek).ToUpper
+                Dim DayToUpper As String = Parent.DaysOfWeek(value.DayOfWeek).ToUpper
+                If LabWeek.Text <> DayToUpper Then
+                    LabWeek.Text = DayToUpper
+                End If
             End Set
         End Property
         Public Overrides Property BackColor As Color
@@ -273,11 +314,16 @@ Public NotInheritable Class CustomCalendar
                 Return MyBase.BackColor
             End Get
             Set(value As Color)
-                If GB IsNot Nothing Then
-                    GB.Dispose()
+                If MyBase.BackColor <> value Then
+                    If DrawGrad Then
+                        If GB IsNot Nothing Then
+                            GB.Dispose()
+                        End If
+                        GB = New LinearGradientBrush(DisplayRectangle, Color.FromArgb(70, ColorHelper.FillRemainingRGB(value, 0.7)), Color.Transparent, LinearGradientMode.Vertical)
+                    End If
+                    MyBase.BackColor = value
+                    LabWeek.BackColor = BackColor
                 End If
-                GB = New LinearGradientBrush(DisplayRectangle, Color.FromArgb(70, ColorHelper.FillRemainingRGB(value, 0.7)), Color.Transparent, LinearGradientMode.Vertical)
-                MyBase.BackColor = value
             End Set
         End Property
         Public Property DayOfWeekColor As Color
@@ -285,7 +331,9 @@ Public NotInheritable Class CustomCalendar
                 Return LabWeek.ForeColor
             End Get
             Set(value As Color)
-                LabWeek.ForeColor = value
+                If LabWeek.ForeColor <> value Then
+                    LabWeek.ForeColor = value
+                End If
             End Set
         End Property
         Public Property DrawGradient As Boolean
@@ -293,33 +341,40 @@ Public NotInheritable Class CustomCalendar
                 Return DrawGrad
             End Get
             Set(value As Boolean)
-                DrawGrad = value
-                Me.Invalidate()
+                If value <> DrawGrad Then
+                    DrawGrad = value
+                    If DrawGrad Then
+                        If GB IsNot Nothing Then
+                            GB.Dispose()
+                        End If
+                        GB = New LinearGradientBrush(DisplayRectangle, Color.FromArgb(70, ColorHelper.FillRemainingRGB(BackColor, 0.7)), Color.Transparent, LinearGradientMode.Vertical)
+                    End If
+                    Invalidate()
+                End If
             End Set
         End Property
         Public Sub New(Width As Integer, Height As Integer)
             SuspendLayout()
+            ResizeRedraw = False
+            SetStyle(ControlStyles.UserPaint, True)
+            SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
             DoubleBuffered = True
             AutoSize = False
             With Me
-                .Width = Width
-                .Height = Height
+                .Size = New Size(Width, Height)
                 .TextAlign = ContentAlignment.MiddleCenter
-                '.ForeColor = Color.White
                 .Font = New Font(.Font.FontFamily, 20, FontStyle.Bold)
             End With
             With LabWeek
                 .Parent = Me
-                '.ForeColor = Color.White
-                .BackColor = Color.Transparent
+                .BackColor = BackColor
                 .AutoSize = False
-                .Width = Width
-                .Height = Height \ 4
+                .Size = New Size(Width, Height \ 4)
                 .TextAlign = ContentAlignment.MiddleCenter
-                .BringToFront()
                 .Font = New Font(.Font.FontFamily, 6, FontStyle.Bold)
+                .BringToFront()
             End With
-            GB = New LinearGradientBrush(DisplayRectangle, Color.FromArgb(70, ColorHelper.FillRemainingRGB(BackColor, 0.6)), Color.Transparent, LinearGradientMode.Vertical)
             ResumeLayout()
         End Sub
         Protected Overrides Sub OnPaint(e As PaintEventArgs)
@@ -330,7 +385,9 @@ Public NotInheritable Class CustomCalendar
         End Sub
         Protected Overloads Overrides Sub Dispose(disposing As Boolean)
             LabWeek.Dispose()
-            GB.Dispose()
+            If GB IsNot Nothing Then
+                GB.Dispose()
+            End If
             MyBase.Dispose(disposing)
         End Sub
     End Class
@@ -340,29 +397,6 @@ Public NotInheritable Class CustomCalendar
         CurrentMonth = 2
         NextMonth = 3
     End Enum
-    Public NotInheritable Class CalendarCustomState
-
-    End Class
-#Region "Fields"
-    Private WHeader As WeekHeader
-    Private MHeader As MonthHeader
-    Private Const MaxSquares As Integer = 42
-    Private M As Integer = DateTime.Now.Month
-    ' Private SquareList As New List(Of CalendarDay)(36)
-    Private SquareArr(41) As CalendarDay
-    Protected Friend DaysOfWeek(), MonthNames() As String
-    Private LocationPoint As New Point()
-    Private RHeight, CWidth, varSpacingX, varSpacingY, varMargins(3) As Integer
-    Private ParentContainer As Control
-    Private AutoColors As Boolean = True
-    Private varAutoShrink As Boolean
-    Private varHideEmptyRows As Boolean = True
-    Private DictCustomStates As Dictionary(Of Integer, CalendarCustomState)
-    Private PrevStyle, CurrStyle, NextStyle As CalendarDayStyle
-    Private DrawShad As Boolean
-    Public Shadows Event MouseEnter(Sender As CalendarDay)
-    Public Shadows Event MouseLeave(Sender As CalendarDay)
-    Public Shadows Event Click(Sender As CalendarDay)
     Public Class CalendarDayStyle
         Private DColor, BGColor, WColor As Color
         Public Sub New(ByVal DayColor As Color, ByVal BackgroundColor As Color, ByVal DayOfWeekColor As Color)
@@ -397,24 +431,123 @@ Public NotInheritable Class CustomCalendar
         End Property
     End Class
 #End Region
-    Public Enum CalendarElement
-        DayOfWeek = 0
-        DayOfMonth = 1
-        Month = 2
-        Background = 3
-    End Enum
-    Public Enum CalendarState
-        Enabled = 0
-        Disabled = 1
-        Marked = 2
-    End Enum
-    Public Sub SetDayNames(Names() As String)
+    ''' <summary>
+    ''' Replaces the default names for Monday through Sunday with the specified string array.
+    ''' </summary>
+    ''' <param name="Names">An array of string representing the days of the week, starting with Sunday and ending with Saturday.</param>
+    ''' <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+    Public Sub SetDayNames(Names() As String, Optional Refresh As Boolean = True)
         DaysOfWeek = Names
-        RefreshCalendar()
+        If Refresh Then
+            RefreshCalendar()
+        End If
     End Sub
+    ''' <summary>
+    ''' Applies the specified custom style (that has been added using the 
+    ''' </summary>
+    ''' <param name="Dates"></param>
+    ''' <param name="StyleKey"></param>
+    ''' <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+    Public Sub ApplyCustomStyle(Dates() As Date, StyleKey As Integer, Optional Refresh As Boolean = True)
+        For Each D As Date In Dates
+            AppliedStylesList.Add(New DateStylePair(D, StyleKey))
+        Next
+        If Refresh Then
+            RefreshCalendar()
+        End If
+    End Sub
+    ''' <summary>
+    ''' Use this method if all dates with a given custom style should be reset to the default style.
+    ''' </summary>
+    ''' <param name="StyleKey"></param>
+    ''' <param name="RemoveFromDictionary">If true, removes the custom style from the dictionary. If the style is to be used again, it must be added again.</param>
+    ''' <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+    Public Overloads Sub RemoveCustomStyle(StyleKey As Integer, Optional RemoveFromDictionary As Boolean = False, Optional Refresh As Boolean = True)
+        Dim iLast As Integer = AppliedStylesList.Count - 1
+        For i As Integer = iLast To 0 Step -1
+            With AppliedStylesList(i)
+                If .StyleKey = StyleKey Then
+                    AppliedStylesList.RemoveAt(i)
+                End If
+            End With
+        Next
+        If RemoveFromDictionary Then
+            DictCustomStates.Remove(StyleKey)
+        End If
+        If Refresh Then
+            RefreshCalendar()
+        End If
+    End Sub
+    ''' <summary>
+    ''' Use this (slow) method if only some dates with a given style should be reset to the default style.
+    ''' </summary>
+    ''' <param name="Dates">The dates that have a custom style applied to them that should be removed.</param>
+    '''   ''' <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify False if several methods with this optional parameter are called in succession</param>
+    Public Overloads Sub RemoveCustomStyle(Dates() As Date, Optional Refresh As Boolean = True)
+        Dim DatesList As List(Of Date) = Dates.ToList
+        DatesList.Capacity = Dates.Length
+        Dim Matches As List(Of DateStylePair) = AppliedStylesList.FindAll(Function(Pair As DateStylePair) As Boolean
+                                                                              Dim iLast As Integer = DatesList.Count - 1
+                                                                              For i As Integer = 0 To iLast
+                                                                                  With Pair
+                                                                                      If .MyDate.Date = DatesList(i).Date Then
+                                                                                          DatesList.RemoveAt(i)
+                                                                                          Return True
+                                                                                          Exit For
+                                                                                      End If
+                                                                                  End With
+                                                                              Next
+                                                                              Return False
+                                                                          End Function)
+        If Matches IsNot Nothing Then
+            For Each Match As DateStylePair In Matches
+                Match = Nothing
+            Next
+        End If
+        Dim nLast As Integer = AppliedStylesList.Count - 1
+        If nLast >= 0 Then
+            For n As Integer = nLast To 0 Step -1
+                If AppliedStylesList(n) Is Nothing Then
+                    AppliedStylesList.RemoveAt(n)
+                End If
+            Next
+        End If
+        If Refresh Then
+            RefreshCalendar()
+        End If
+    End Sub
+    ''' <summary>
+    ''' Shows the calendar without calling the Display method. Stylistic changes to the calendar only get applied if the Display method has been shown.
+    ''' </summary>
+    ''' <param name="Refresh">Specifies whether or not to call the RefreshCalendar method. Specify True if stylistic changes have been made to the calendar while it was hidden.</param>
+    ''' <param name="SuppressDisplay">Specifies whether or not to display the form if it has not already been displayed (not recommended).</param>
+    Public Shadows Sub Show(Refresh As Boolean, Optional SuppressDisplay As Boolean = False)
+        If IsDisplayed Then
+            If Refresh Then
+                RefreshCalendar()
+            End If
+            MyBase.Show()
+        ElseIf Not SuppressDisplay Then
+            Display()
+        End If
+    End Sub
+    ''' <summary>
+    ''' If the Display method has not yet been called, displays the calendar. If the Display method has been called, shows the calendar without calling RefreshCalendar.
+    ''' </summary>
+    Public Shadows Sub Show()
+        If IsDisplayed Then
+            MyBase.Show()
+        Else
+            Display()
+        End If
+    End Sub
+    ''' <summary>
+    ''' Applies changes and displays the calendar. Call this method the first time the calendar is shown. Changes to the calendar may not display correctly unless this method has been called.
+    ''' </summary>
     Public Sub Display()
-        SizeToContent()
-        Show()
+        IsDisplayed = True
+        RefreshCalendar()
+        MyBase.Show()
     End Sub
     Private Shadows Sub OnMouseEnter(Sender As Object, e As EventArgs)
         RaiseEvent MouseEnter(DirectCast(Sender, CalendarDay))
@@ -425,6 +558,9 @@ Public NotInheritable Class CustomCalendar
     Private Shadows Sub OnClick(Sender As Object, e As EventArgs)
         RaiseEvent Click(DirectCast(Sender, CalendarDay))
     End Sub
+    ''' <summary>
+    ''' Gets or sets the color of the next and previous buttons when they are not hovered.
+    ''' </summary>
     Public Property ArrowColorDefault As Color
         Get
             Return MHeader.ArrowColorDefault
@@ -433,6 +569,9 @@ Public NotInheritable Class CustomCalendar
             MHeader.ArrowColorDefault = value
         End Set
     End Property
+    ''' <summary>
+    ''' Gets or sets the color of the next and previous buttons when they are hovered.
+    ''' </summary>
     Public Property ArrowColorHover As Color
         Get
             Return MHeader.ArrowColorHover
@@ -442,51 +581,9 @@ Public NotInheritable Class CustomCalendar
         End Set
     End Property
     ''' <summary>
-    ''' 
+    ''' Gets the number of the currently displaying month, or sets which month to display.
     ''' </summary>
-    ''' <param name="Element"></param>
-    ''' <param name="DefaultColor"></param>
-    ''' <returns>Color on hover, color on disabled, color on mouse down, color on </returns>
-    Private Function AutoGenerateColor(ByVal Element As CalendarElement, DefaultColor As Color) As Color()
-        Dim ColorHover As Color
-        Dim ColorDisabled As Color
-        Dim ColorMouseDown As Color
-        Select Case Element
-            Case CalendarElement.Background
-                ColorHover = ColorHelper.Multiply(DefaultColor, -0.3)
-                ColorDisabled = Color.FromArgb(100, DefaultColor)
-                ColorMouseDown = ColorHelper.Multiply(DefaultColor, -0.5)
-            Case CalendarElement.DayOfMonth
-            Case CalendarElement.DayOfWeek
-            Case CalendarElement.Month
-        End Select
-        Return {ColorHover, ColorDisabled, ColorMouseDown}
-    End Function
-    'Public Property ColorCurrentMonth As Color
-    '    Get
-    '        Return BGCurrentMonth
-    '    End Get
-    '    Set(value As Color)
-    '        BGCurrentMonth = value
-    '        Refresh()
-    '    End Set
-    'End Property
-    Public Shadows Property Left As Integer
-        Get
-            Return LocationPoint.X
-        End Get
-        Set(value As Integer)
-            LocationPoint.X = value
-        End Set
-    End Property
-    Public Shadows Property Top As Integer
-        Get
-            Return LocationPoint.Y
-        End Get
-        Set(value As Integer)
-            LocationPoint.Y = value
-        End Set
-    End Property
+    ''' <returns>An integer value between 1 and 12 (inclusive).</returns>
     Public Property CurrentMonth As Integer
         Get
             Return M
@@ -498,12 +595,14 @@ Public NotInheritable Class CustomCalendar
             End If
         End Set
     End Property
+
     Public Sub New(PreviousMonthStyle As CalendarDayStyle, CurrentMonthStyle As CalendarDayStyle, NextMonthStyle As CalendarDayStyle, Left As Integer, ByVal Top As Integer, Optional ByVal ColumnWidth As Integer = 100, Optional ByVal RowHeight As Integer = 100, Optional ByVal SpacingX As Integer = 20, Optional ByVal SpacingY As Integer = 20, Optional ByVal HeaderMarginBottom As Integer = 10, Optional ByVal HeaderHeight As Integer = 30, Optional WeekDays() As String = Nothing, Optional Months() As String = Nothing)
         Hide()
         Dim StylesArr(2) As CalendarDayStyle
         StylesArr(0) = PreviousMonthStyle
         StylesArr(1) = CurrentMonthStyle
         StylesArr(2) = NextMonthStyle
+        Location = New Point(Left, Top)
         CommonNew(ColumnWidth, SpacingX, SpacingY, RowHeight, HeaderHeight, StylesArr, WeekDays, Months)
     End Sub
     Public Sub New(Left As Integer, ByVal Top As Integer, Optional ByVal ColumnWidth As Integer = 100, Optional ByVal RowHeight As Integer = 100, Optional ByVal SpacingX As Integer = 20, Optional ByVal SpacingY As Integer = 20, Optional ByVal HeaderMarginBottom As Integer = 10, Optional ByVal HeaderHeight As Integer = 30, Optional WeekDays() As String = Nothing, Optional Months() As String = Nothing)
@@ -512,25 +611,28 @@ Public NotInheritable Class CustomCalendar
         StylesArr(0) = New CalendarDayStyle(Color.White, Color.LightGray, Color.White)
         StylesArr(1) = New CalendarDayStyle(Color.White, Color.FromArgb(0, 173, 185), Color.White)
         StylesArr(2) = New CalendarDayStyle(Color.White, Color.LightGray, Color.White)
+        Location = New Point(Left, Top)
         CommonNew(ColumnWidth, SpacingX, SpacingY, RowHeight, HeaderHeight, StylesArr, WeekDays, Months)
     End Sub
     Private Sub CommonNew(ByVal ColumnWidth As Integer, ByVal SpacingX As Integer, ByVal SpacingY As Integer, ByVal RowHeight As Integer, ByVal HeaderHeight As Integer, Styles() As CalendarDayStyle, WeekDays() As String, Months() As String)
+        SetStyle(ControlStyles.UserPaint, True)
+        SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+        SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+        DoubleBuffered = True
+        ResizeRedraw = False
+
         If WeekDays Is Nothing Then
             WeekDays = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
         End If
         If Months Is Nothing Then
             Months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
         End If
-
         PrevStyle = Styles(0)
         CurrStyle = Styles(1)
         NextStyle = Styles(2)
-
         DaysOfWeek = WeekDays
         MonthNames = Months
 
-        'BGCurrentMonth = Color.Navy
-        LocationPoint = New Point(Left, Top)
         MHeader = New MonthHeader(Me, Left, Top, (ColumnWidth * 7) + (SpacingX * 6), 50)
         AddHandler MHeader.ArrowClicked, AddressOf OnArrowClicked
         WHeader = New WeekHeader(Me, Left, Top + 50, SpacingX, ColumnWidth, HeaderHeight) ' Legg til alle de andre parameterne også
@@ -540,15 +642,23 @@ Public NotInheritable Class CustomCalendar
         varSpacingY = SpacingY
         BuildSquares()
     End Sub
+    ''' <summary>
+    ''' Specifies whether or not the SizeToContent method should be automatically called as necessary.
+    ''' </summary>
     Public Property AutoShrink As Boolean
         Get
             Return varAutoShrink
         End Get
         Set(value As Boolean)
             varAutoShrink = value
-            SizeToContent()
+            If value Then
+                SizeToContent()
+            End If
         End Set
     End Property
+    ''' <summary>
+    ''' Sets the width and height of the calendar to the right and bottom edges of its elements.
+    ''' </summary>
     Public Sub SizeToContent()
         Dim CalcHeight As Integer
         If varAutoShrink Then
@@ -575,87 +685,116 @@ Public NotInheritable Class CustomCalendar
                 NextMonth()
         End Select
     End Sub
+    ''' <summary>
+    ''' Applies changes to the calendar. Call this method only if exceptional circumstances causes the calendar to display incorrectly.
+    ''' </summary>
     Public Sub RefreshCalendar()
-        SuspendLayout()
-        MHeader.MonthString = MonthNames(M - 1)
-        Dim D As New Date(Date.Now.Year, M, 1)
-        Dim DInt As Integer = D.DayOfWeek
-        If DInt = 0 Then
-            DInt = 7
-        End If
-        'Dim SquareListCount As Integer = SquareList.Count
-        Dim Day As Integer
-
-        Dim DaysInMonthPrevious As Integer
-        If D.Month > 1 Then
-            DaysInMonthPrevious = Date.DaysInMonth(D.Year, D.Month - 1)
-        Else
-            DaysInMonthPrevious = Date.DaysInMonth(D.Year - 1, 12)
-        End If
-        Dim DaysInMonthPreviousYear As Integer = Date.DaysInMonth(D.Year - 1, 12)
-        Dim DaysInMonthCurrent As Integer = Date.DaysInMonth(D.Year, M)
-        Dim DYear As Integer = D.Year
-        Dim DMonth As Integer = D.Month
-
-        For i As Integer = 1 To MaxSquares
-            If i < DInt Then
-                With SquareArr(i - 1)
-                    .Area = CalendarArea.PreviousMonth
-                    If D.Month > 1 Then
-                        Day = DaysInMonthPrevious - DInt + i + 1
-                        .Day = New Date(DYear, DMonth - 1, Day)
-                    Else
-                        Day = DaysInMonthPreviousYear - DInt + i + 1
-                        .Day = New Date(DYear - 1, 12, Day)
-                    End If
-                    .BackColor = PrevStyle.BackgroundColor
-                    .ForeColor = PrevStyle.DayColor
-                    .DayOfWeekColor = PrevStyle.DayOfWeekColor
-                End With
-            ElseIf i - DInt < DaysInMonthCurrent Then
-                Day = i - DInt + 1
-                With SquareArr(i - 1)
-                    .Area = CalendarArea.CurrentMonth
-                    .Day = New Date(DYear, DMonth, Day)
-                    .BackColor = CurrStyle.BackgroundColor
-                    .ForeColor = CurrStyle.DayColor
-                    .DayOfWeekColor = CurrStyle.DayOfWeekColor
-                End With
-            Else
-                Day = i - (DaysInMonthCurrent + DInt) + 1
-                With SquareArr(i - 1)
-                    .Area = CalendarArea.NextMonth
-                    If D.Month < 12 Then
-                        .Day = New Date(DYear, DMonth + 1, Day)
-                    Else
-                        .Day = New Date(DYear + 1, 1, Day)
-                    End If
-                    .BackColor = NextStyle.BackgroundColor
-                    .ForeColor = NextStyle.DayColor
-                    .DayOfWeekColor = NextStyle.DayOfWeekColor
-                End With
+        If IsDisplayed Then
+            SuspendLayout()
+            Hide()
+            MHeader.MonthString = MonthNames(M - 1)
+            Dim D As New Date(Date.Now.Year, M, 1)
+            Dim DInt As Integer = D.DayOfWeek
+            If DInt = 0 Then
+                DInt = 7
             End If
-        Next
-        Dim LastRowStart As Integer = 7 * 5
-        Dim LastDayIndex As Integer = DInt + DaysInMonthCurrent - 2
-        If Not SquareArr(0).Visible Then
-            For i As Integer = 0 To LastRowStart - 1
-                SquareArr(i).Show()
+            Dim DaysInMonthPrevious As Integer
+            If D.Month > 1 Then
+                DaysInMonthPrevious = Date.DaysInMonth(D.Year, D.Month - 1)
+            Else
+                DaysInMonthPrevious = Date.DaysInMonth(D.Year - 1, 12)
+            End If
+            Dim DaysInMonthPreviousYear As Integer = Date.DaysInMonth(D.Year - 1, 12)
+            Dim DaysInMonthCurrent As Integer = Date.DaysInMonth(D.Year, M)
+            Dim DYear As Integer = D.Year
+            Dim DMonth As Integer = D.Month
+            Dim Day As Integer
+            For i As Integer = 1 To MaxSquares
+                If i < DInt Then
+                    With SquareArr(i - 1)
+                        .Area = CalendarArea.PreviousMonth
+                        If D.Month > 1 Then
+                            Day = DaysInMonthPrevious - DInt + i + 1
+                            .Day = New Date(DYear, DMonth - 1, Day)
+                        Else
+                            Day = DaysInMonthPreviousYear - DInt + i + 1
+                            .Day = New Date(DYear - 1, 12, Day)
+                        End If
+                    End With
+                ElseIf i - DInt < DaysInMonthCurrent Then
+                    Day = i - DInt + 1
+                    With SquareArr(i - 1)
+                        .Area = CalendarArea.CurrentMonth
+                        .Day = New Date(DYear, DMonth, Day)
+                    End With
+                Else
+                    Day = i - (DaysInMonthCurrent + DInt) + 1
+                    With SquareArr(i - 1)
+                        .Area = CalendarArea.NextMonth
+                        If D.Month < 12 Then
+                            .Day = New Date(DYear, DMonth + 1, Day)
+                        Else
+                            .Day = New Date(DYear + 1, 1, Day)
+                        End If
+                    End With
+                End If
             Next
+            Dim LastRowStart As Integer = 7 * 5
+            Dim LastDayIndex As Integer = DInt + DaysInMonthCurrent - 2
+            If Not SquareArr(0).Visible Then
+                For i As Integer = 0 To LastRowStart - 1
+                    SquareArr(i).Show()
+                Next
+            End If
+            If LastDayIndex < LastRowStart AndAlso varHideEmptyRows Then
+                For i As Integer = LastRowStart To MaxSquares - 1
+                    SquareArr(i).Hide()
+                Next
+            ElseIf Not SquareArr(MaxSquares - 1).Visible Then
+                For i As Integer = LastRowStart To MaxSquares - 1
+                    SquareArr(i).Show()
+                Next
+            End If
+            For i As Integer = 0 To 41
+                With SquareArr(i)
+                    Select Case .Area
+                        Case CalendarArea.CurrentMonth
+                            .SetColors(CurrStyle)
+                        Case CalendarArea.PreviousMonth
+                            .SetColors(PrevStyle)
+                        Case CalendarArea.NextMonth
+                            .SetColors(NextStyle)
+                    End Select
+                End With
+            Next
+            For i As Integer = 0 To 41
+                With SquareArr(i)
+                    Dim SquareDate As Date = .Day
+                    Dim Match As DateStylePair = AppliedStylesList.Find(Function(Pair As DateStylePair) As Boolean
+                                                                            With Pair.MyDate
+                                                                                If .Date = SquareDate.Date Then
+                                                                                    Return True
+                                                                                Else
+                                                                                    Return False
+                                                                                End If
+                                                                            End With
+                                                                        End Function)
+                    If Match IsNot Nothing Then
+                        Dim Style As CalendarDayStyle = DictCustomStates(Match.StyleKey)
+                        If Style IsNot Nothing Then
+                            .SetColors(Style)
+                        End If
+                    End If
+                End With
+            Next
+            WHeader.SetDayNames()
+            If varAutoShrink Then
+                SizeToContent()
+            End If
+            ResumeLayout(True)
+            Show()
+            Refresh()
         End If
-        If LastDayIndex < LastRowStart AndAlso varHideEmptyRows Then
-            For i As Integer = LastRowStart To MaxSquares - 1
-                SquareArr(i).Hide()
-            Next
-        ElseIf Not SquareArr(MaxSquares - 1).Visible Then
-            For i As Integer = LastRowStart To MaxSquares - 1
-                SquareArr(i).Show()
-            Next
-        End If
-        WHeader.SetDayNames()
-        SizeToContent()
-        ResumeLayout()
-        PerformLayout()
     End Sub
     Private Sub BuildSquares()
         SuspendLayout()
@@ -665,9 +804,7 @@ Public NotInheritable Class CustomCalendar
             For i As Integer = 0 To 6
                 Dim Square As New CalendarDay(CWidth, RHeight)
                 With Square
-                    .Hide()
-                    .Left = Left + i * (varSpacingX + CWidth)
-                    .Top = WHeight + Top + n * (varSpacingY + RHeight) + 50
+                    .Location = New Point(Left + i * (varSpacingX + CWidth), WHeight + Top + n * (varSpacingY + RHeight) + 50)
                     .Tag = (n + 1) * (i + 1)
                     .Parent = Me
                 End With
@@ -678,14 +815,67 @@ Public NotInheritable Class CustomCalendar
                 Counter += 1
             Next
         Next
-        RefreshCalendar()
-        ResumeLayout()
+        'RefreshCalendar()
+        ResumeLayout(True)
     End Sub
+    ''' <summary>
+    ''' Specifies whether or not to draw subtle gradients on the Calendar's days. The initial and final color are determined by the CalendarDay's BackColor property. Default = False.
+    ''' </summary>
+    Public WriteOnly Property DrawGradient As Boolean
+        Set(value As Boolean)
+            For i As Integer = 0 To 41
+                SquareArr(i).DrawGradient = value
+            Next
+        End Set
+    End Property
     Private Sub NextMonth()
         CurrentMonth += 1
     End Sub
     Private Sub PreviousMonth()
         CurrentMonth -= 1
+    End Sub
+    ''' <summary>
+    ''' Gets the CalendarDay control currently representing the specified date.
+    ''' </summary>
+    ''' <returns>The CalendarDay displaying the specified date, or Nothing if the date is not included in the current view.</returns>
+    Public Overloads ReadOnly Property Day(ByVal DayDate As Date) As CalendarDay
+        Get
+            For i As Integer = 0 To 41
+                With SquareArr(i).Day
+                    If .Date = DayDate.Date Then
+                        Return SquareArr(i)
+                    End If
+                End With
+            Next
+            Return Nothing
+        End Get
+    End Property
+    ''' <summary>
+    ''' Gets the CalendarDay at the specified index (going left to right, including days in the previous and next month's area, if any).
+    ''' </summary>
+    ''' <param name="Index">An integer value between 0 and 41 inclusive.</param>
+    ''' <returns>The CalendarDay at the specified index (going left to right, including days in the previous and next month's area, if any).</returns>
+    Public Overloads ReadOnly Property Day(ByVal Index As Integer) As CalendarDay
+        Get
+            Return SquareArr(Index)
+        End Get
+    End Property
+    ''' <summary>
+    ''' Gets an array of all 42 CalendarDay controls, which include both visible and hidden days.
+    ''' </summary>
+    ''' <returns></returns>
+    Public ReadOnly Property Days As CalendarDay()
+        Get
+            Return SquareArr
+        End Get
+    End Property
+    ''' <summary>
+    ''' Adds the specified custom style to a dictionary, so that it can be applied with the specified key using the ApplyCustomStyle method.
+    ''' </summary>
+    ''' <param name="Key">A unique key that can be used to identify the style when it is applied.</param>
+    ''' <param name="Style">The style to be applied to specific dates.</param>
+    Public Sub AddCustomStyle(Key As Integer, Style As CalendarDayStyle)
+        DictCustomStates.Add(Key, Style)
     End Sub
 #Region "IDisposable Support"
     Private disposedValue As Boolean
@@ -701,8 +891,8 @@ Public NotInheritable Class CustomCalendar
                     RemoveHandler SquareArr(i).Click, AddressOf OnClick
                     SquareArr(i).Dispose()
                 Next
+                SquareArr = Nothing
             End If
-            SquareArr = Nothing
         End If
         disposedValue = True
         MyBase.Dispose(disposing)
