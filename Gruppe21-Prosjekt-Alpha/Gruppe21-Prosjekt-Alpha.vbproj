@@ -211,6 +211,9 @@
     <Compile Include="Unlock.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="UserNotifications.vb">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BlodgiverDashboard.resx">
@@ -275,12 +278,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Logo_Blodbank.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Full_beholder.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Tom_beholder.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\HemoLogo.png" />
@@ -365,6 +362,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\bekreftelseImg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\LoadingLogoFinal.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SettingsIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\infoTekstDashboard.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Full_beholder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Tom_beholder.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -5,6 +5,7 @@ Module Globals
     Public CurrentLogin As UserInfo
     Public Windows As MultiTabWindow
     Public WithEvents HentTimer_DBC As DatabaseClient
+    Public WithEvents HentEgenerklæring_DBC As DatabaseClient
     Public TimeListe As New DatabaseTimeListe
     Public EventManager As New BloodBankEventManager
     ' Regex
@@ -45,6 +46,22 @@ Module Globals
                 TimeListe.Add(New DatabaseTimeElement(CInt(R.Item(0)), NewDate))
             Next
             DirectCast(Windows.Tab(7), TimebestillingTab).SetAppointment()
+            Dim AppointmentTodayID As Integer = -1
+            For Each T As DatabaseTimeElement In TimeListe.TimeListe
+                If T.DatoOgTid.Date = Date.Now.Date Then
+                    AppointmentTodayID = T.TimeID
+                End If
+            Next
+            If AppointmentTodayID >= 0 Then
+                With HentEgenerklæring_DBC
+                    .SQLQuery = "SELECT godkjent, svar FROM Egenerklæring WHERE time_id = @id;"
+                    .Execute({"@id"}, {CStr(AppointmentTodayID)})
+                    Dashboard.NotificationList.Spin()
+                End With
+            Else
+                ' TODO: Recommend new appointment 4 months after last one
+                Dashboard.NotificationList.DisplayEmptyLabel = True
+            End If
         Else
             ' TODO: Logg bruker ut med feilmelding
             MsgBox("Error: " & e.ErrorMessage)
@@ -53,6 +70,38 @@ Module Globals
     Private Sub DBC_Failed() Handles HentTimer_DBC.ExecutionFailed
         MsgBox("Failed")
         ' TODO: Logg ut bruker med feilmelding
+    End Sub
+    Private Sub Egenerklæring_Hentet(Sender As Object, e As DatabaseListEventArgs) Handles HentEgenerklæring_DBC.ListLoaded
+        With e.Data.Rows
+            If .Count > 0 Then
+                CurrentLogin.FormSent = True
+                With .Item(0)
+                    CurrentLogin.FormAccepted = DirectCast(.Item(0), Boolean)
+                    If Not IsDBNull(.Item(1)) Then
+                        CurrentLogin.FormAnswer = DirectCast(.Item(1), String)
+                        Dashboard.NotificationList.AddNotification("Du har fått svar på din egenerklæring. Klikk her for mer informasjon.", 0, AddressOf NotificationClick, Color.LimeGreen)
+                    Else
+                        CurrentLogin.FormAnswer = Nothing
+                        Dashboard.NotificationList.AddNotification("Vi behandler din egenerklæring.", 1, AddressOf NotificationClick, Color.FromArgb(0, 99, 157))
+                        Dashboard.NotificationList.AddNotification("Vi behandler din egenerklæring.", 3, AddressOf NotificationClick, Color.FromArgb(0, 99, 157))
+                        Dashboard.NotificationList.AddNotification("Vi behandler din egenerklæring.", 4, AddressOf NotificationClick, Color.FromArgb(0, 99, 157))
+                    End If
+                End With
+            Else
+                Dashboard.NotificationList.AddNotification("Du har ikke sendt egenerklæring for dagens time. Klikk her for å gå til skjemaet.", 2, AddressOf NotificationClick, Color.Red)
+                CurrentLogin.FormSent = False
+            End If
+        End With
+    End Sub
+    Public Sub NotificationClick(Sender As Object, e As UserNotificationEventArgs)
+        Select Case DirectCast(e.ID, Integer)
+            Case 0
+                MsgBox("Godkjent: " & CurrentLogin.FormAccepted.ToString & ", begrunnelse: " & CurrentLogin.FormAnswer)
+            Case 1
+                Beep()
+            Case 2
+                Windows.Index = 6
+        End Select
     End Sub
 End Module
 
@@ -113,7 +162,32 @@ Public Class DatabaseTimeElement
 End Class
 
 Public Class UserInfo
-    Private Number, varFirstName, varLastName As String
+    Private Number, varFirstName, varLastName, varFormAnswer As String
+    Private varFormSent, varFormAccepted As Boolean
+    Public Property FormSent As Boolean
+        Get
+            Return varFormSent
+        End Get
+        Set(value As Boolean)
+            varFormSent = value
+        End Set
+    End Property
+    Public Property FormAccepted As Boolean
+        Get
+            Return varFormAccepted
+        End Get
+        Set(value As Boolean)
+            varFormAccepted = value
+        End Set
+    End Property
+    Public Property FormAnswer As String
+        Get
+            Return varFormAnswer
+        End Get
+        Set(value As String)
+            varFormAnswer = value
+        End Set
+    End Property
     Public ReadOnly Property FullName As String
         Get
             Return varFirstName & " " & varLastName

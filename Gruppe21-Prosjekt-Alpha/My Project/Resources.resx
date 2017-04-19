@@ -121,20 +121,8 @@
   <data name="EgenerklaeringIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\EgenerklaeringIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Firmalogo2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Firmalogo2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Full_beholder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Full_beholder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="HemoLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Firmalogo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="HjemIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\HjemIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="loadingLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\loadingLogo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="LoggUtIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LoggUtIcon2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -147,12 +135,6 @@
   </data>
   <data name="TimeBestillingIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TimeBestillingIcon2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Tom_beholder" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Tom_beholder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="LOADING" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\LOADING.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="AvbrytIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\AvbrytIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -195,5 +177,20 @@
   </data>
   <data name="TimeTabellInfo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TimeTabellInfo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Full_beholder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Full_beholder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="infoTekstDashboard" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\infoTekstDashboard.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="LOADING" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\LoadingLogoFinal.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SettingsIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SettingsIcon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Tom_beholder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Tom_beholder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

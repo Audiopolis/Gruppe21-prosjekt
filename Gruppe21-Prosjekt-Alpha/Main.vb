@@ -1208,10 +1208,11 @@ End Class
 
 Public Class LoggInnNy
     Inherits Tab
+
     Private LoginForm As New FlatForm(243, 100, 3, New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.FromArgb(80, 80, 80), Color.White, Color.Black, {True, True, True, True}, 20))
     Private WithEvents TopBar As New TopBar(Me)
     Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
-    Private PicSideInfo, PicInfoAbove, RightSide As New PictureBox
+    Private PicSideInfo, PicInfoAbove, RightSide, Gear As New PictureBox
     Private FormInfo As New Label
     Private InfoLab As New InfoLabel
     Private WithEvents LoggInnKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Logg inn", New Size(0, 36))
@@ -1230,11 +1231,18 @@ Public Class LoggInnNy
         Parent.Index = 5
         Egenerklæring.InitiateForm()
         LoginForm.ClearAll()
+        If HentTimer_DBC IsNot Nothing Then
+            HentTimer_DBC.Dispose()
+        End If
         HentTimer_DBC = New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
         With HentTimer_DBC
             .SQLQuery = "SELECT time_id, t_dato, t_klokkeslett FROM Time WHERE b_fodselsnr = @nr;"
             .Execute({"@nr"}, {PersonalNumber})
         End With
+        If HentEgenerklæring_DBC IsNot Nothing Then
+            HentEgenerklæring_DBC.Dispose()
+        End If
+        HentEgenerklæring_DBC = New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
         If ErrorOccurred Then
@@ -1363,6 +1371,12 @@ Public Class LoggInnNy
             .Hide()
             '.MakeDashed(Color.Red)
         End With
+        With Gear
+            .BackgroundImage = My.Resources.SettingsIcon
+            .Size = .BackgroundImage.Size
+            .Parent = FormHeader
+            .Location = New Point(FormHeader.Width - .Width - 5, FormHeader.Height \ 2 - .Height \ 2)
+        End With
         FormPanel.Show()
         ResumeLayout()
     End Sub
@@ -1450,13 +1464,16 @@ End Class
 
 Public Class DashboardTab
     Inherits Tab
+    ' TODO: Lag tannhjulklasse
+    Public NotificationList As New UserNotificationContainer(Color.FromArgb(210, 210, 210))
     Private Header As New TopBar(Me)
-    Dim ScrollList As New Donasjoner(Me)
-    Dim WithEvents Beholder As New BlodBeholder(My.Resources.Tom_beholder, My.Resources.Full_beholder)
+    'Dim ScrollList As New Donasjoner(Me)
+    Private WithEvents Beholder As New BlodBeholder(My.Resources.Tom_beholder, My.Resources.Full_beholder)
     Private WelcomeLabel As New InfoLabel(True, Direction.Right)
-    Dim current As Integer
-    Dim increment As Boolean = True
-    Dim IsLoaded As Boolean
+    Private current As Integer
+    Private OrganDonorInfo As New PictureBox
+    Private increment As Boolean = True
+    Private IsLoaded As Boolean
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private Sub TopBarButtonClick(sender As Object, e As EventArgs)
         Dim SenderButton As TopBarButton = DirectCast(sender, TopBarButton)
@@ -1484,28 +1501,6 @@ Public Class DashboardTab
                 .AddLogout("Logg ut", New Size(135, 36))
                 AddHandler .ButtonClick, AddressOf TopBarButtonClick
             End With
-            With ScrollList
-                .Parent = Me
-                .Location = New Point(20, Header.Bottom + 20)
-                With .List
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                    .AddItem()
-                End With
-                .Size = New Size(300, 300)
-            End With
             With Beholder
                 .Parent = Me
                 .Location = New Point(ClientSize.Width - .Width - 20, Header.Bottom + 20)
@@ -1516,6 +1511,15 @@ Public Class DashboardTab
                 .Top = Header.Height \ 2 - .Height \ 2
                 .Text = "Du er logget inn som..."
                 .Height = Header.LogoutButton.Height - 3
+            End With
+            With NotificationList
+                .Parent = Me
+                .Location = New Point(20, Header.Bottom + 20)
+            End With
+            With OrganDonorInfo
+                .BackgroundImage = My.Resources.infoTekstDashboard
+                .Size = .BackgroundImage.Size
+                .Parent = Me
             End With
             IsLoaded = True
         End If
@@ -1555,12 +1559,18 @@ Public Class DashboardTab
         SuspendLayout()
         MyBase.OnResize(e)
         If IsLoaded Then
-            With Beholder
-                .Location = New Point(ClientSize.Width - .Width - 20, Header.Bottom + 20)
-            End With
             With WelcomeLabel
                 .Location = New Point(Width - 430, Header.LogoutButton.Top)
                 .Size = New Size(300, Header.LogoutButton.Height - 3)
+            End With
+            With NotificationList
+                .Top = (ClientSize.Height - .Height + Header.Bottom) \ 2
+            End With
+            With OrganDonorInfo
+                .Location = New Point(ClientSize.Width - .Width - 20, NotificationList.Top)
+            End With
+            With Beholder
+                .Location = New Point((NotificationList.Right + OrganDonorInfo.Left - .Width) \ 2, (ClientSize.Height - .Height + Header.Bottom) \ 2)
             End With
         End If
         ResumeLayout(True)
