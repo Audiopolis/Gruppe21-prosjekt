@@ -6,8 +6,9 @@ Imports AudiopoLib
 
 Public Class TimebestillingTab
     Inherits Tab
+    Private WelcomeLabel As New InfoLabel(True, Direction.Right)
     Private RightForm, TimeForm As New BorderControl(Color.Red)
-    Private TopBar As New TopBar(Me)
+    Private WithEvents TopBar As New TopBar(Me)
     Private Footer As New Footer(Me)
     Private WithEvents BestillTimeKnapp, AvbestillTimeKnapp As TopBarButton
     Private WithEvents Calendar As CustomCalendar
@@ -16,6 +17,14 @@ Public Class TimebestillingTab
     Private TimeInfo As New PictureBox
     Private Tabell As New Timetabell
     Private WithEvents DBC, DBC_GetRules As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
+        If Sender.IsLogout Then
+            Parent.Index = 4
+            Logout()
+        Else
+            Parent.Index = 5
+        End If
+    End Sub
     Public Sub SetAppointment()
         Dim iLast As Integer = TimeListe.Count - 1
         Dim Dates(iLast) As Date
@@ -29,11 +38,19 @@ Public Class TimebestillingTab
             End With
         Next
         Calendar.ApplyCustomStyle(Dates, 0)
+
+
         ' TODO: Uncomment later
         'If TimeToday IsNot Nothing Then
         '    HentTimer_DBC.SQLQuery = "SELECT * FROM Egenerklæring WHERE time_id = @id;"
         '    HentTimer_DBC.Execute({"@id"}, {CStr(TimeToday.TimeID)})
         'End If
+    End Sub
+    Private Sub NameSet() Handles TopBar.NameSet
+        With WelcomeLabel
+            .Text = "Du er logget inn som " & CurrentLogin.FullName
+            .PanIn() 'TODO: Add optional method to skip the panning
+        End With
     End Sub
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
@@ -144,6 +161,13 @@ Public Class TimebestillingTab
         With TopBar
             .AddButton(My.Resources.HjemIcon, "Hjem", New Size(136, 36))
             .AddLogout("Logg ut", New Size(136, 36))
+        End With
+        With WelcomeLabel
+            .ForeColor = Color.White
+            .Parent = TopBar
+            .Top = TopBar.Height \ 2 - .Height \ 2
+            .Text = "Du er logget inn som..."
+            .Height = TopBar.LogoutButton.Height - 3
         End With
         DBC.SQLQuery = "INSERT INTO Time (t_dato, t_klokkeslett, b_fodselsnr) VALUES (@dato, @tid, @nr);"
         DBC_GetRules.SQLQuery = "SELECT Serie FROM Ukeregler;"

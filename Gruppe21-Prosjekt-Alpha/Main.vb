@@ -9,7 +9,6 @@ Imports AudiopoLib
 
 Public Class Main
     Private IsLoaded As Boolean = False
-
     Public Sub New()
         InitializeComponent()
         MyBase.OnLoad(New EventArgs)
@@ -265,9 +264,9 @@ Public Class SecondTab
     Protected Overrides Sub OnClosing(e As TabClosingEventArgs)
         Dim Result As MsgBoxResult = MsgBox("Vil du logge ut?", MsgBoxStyle.YesNo, "Er du sikker?")
         If Result = MsgBoxResult.Yes Then
-            If Testspørreskjema IsNot Nothing Then
-                Testspørreskjema.Hide()
-            End If
+            'If Testspørreskjema IsNot Nothing Then
+            '    Testspørreskjema.Hide()
+            'End If
             Hide()
             Testlogginn.Show()
         End If
@@ -1529,7 +1528,10 @@ Public Class DashboardTab
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
         With e.Data
-            WelcomeLabel.Text = "Du er logget inn som " & .Rows(0).Item(0).ToString & " " & .Rows(0).Item(1).ToString
+            CurrentLogin.FirstName = .Rows(0).Item(0).ToString
+            CurrentLogin.LastName = .Rows(0).Item(1).ToString
+            Header.RaiseNameSetEvent()
+            WelcomeLabel.Text = "Du er logget inn som " & CurrentLogin.FirstName & " " & CurrentLogin.LastName
             WelcomeLabel.PanIn()
         End With
     End Sub

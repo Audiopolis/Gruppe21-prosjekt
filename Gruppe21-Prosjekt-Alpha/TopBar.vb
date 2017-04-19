@@ -7,8 +7,9 @@ Public Class TopBar
     Private BorderPen As New Pen(Color.FromArgb(72, 78, 83))
     Private HighlightPen As New Pen(Color.FromArgb(247, 247, 247))
     Public Event ButtonClick(Sender As TopBarButton, e As EventArgs)
-    Protected Overridable Sub Test()
-        MsgBox("Hei")
+    Public Shared Event NameSet()
+    Public Shared Sub RaiseNameSetEvent()
+        RaiseEvent NameSet()
     End Sub
     Public ReadOnly Property ButtonList As List(Of TopBarButton)
         Get
