@@ -6,64 +6,105 @@ Imports AudiopoLib
 
 Public Class TimebestillingTab
     Inherits Tab
-    Private RightForm As New BorderControl(Color.Red)
-    Private WithEvents BestillTimeKnapp As TopBarButton
+    Private RightForm, TimeForm As New BorderControl(Color.Red)
+    Private TopBar As New TopBar(Me)
+    Private Footer As New Footer(Me)
+    Private WithEvents BestillTimeKnapp, AvbestillTimeKnapp As TopBarButton
     Private WithEvents Calendar As CustomCalendar
     Private varSelectedDay As Date
-    Private HeaderLab As New Label
-    Private TimeLab As New Label
+    Private HeaderLab, TimeHeaderLab, TimeLab, AktuellTimeLab, AvbestillInfoLab As New Label
     Private TimeInfo As New PictureBox
     Private Tabell As New Timetabell
     Private WithEvents DBC, DBC_GetRules As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Public Sub SetAppointment()
+        Dim iLast As Integer = TimeListe.Count - 1
+        Dim Dates(iLast) As Date
+        Dim TimeToday As DatabaseTimeElement = Nothing
+        For i As Integer = 0 To iLast
+            With TimeListe.Time(i).DatoOgTid
+                Dates(i) = .Date
+                If .Date = Date.Now.Date Then
+                    TimeToday = TimeListe.Time(i)
+                End If
+            End With
+        Next
+        Calendar.ApplyCustomStyle(Dates, 0)
+        ' TODO: Uncomment later
+        'If TimeToday IsNot Nothing Then
+        '    HentTimer_DBC.SQLQuery = "SELECT * FROM Egenerklæring WHERE time_id = @id;"
+        '    HentTimer_DBC.Execute({"@id"}, {CStr(TimeToday.TimeID)})
+        'End If
+    End Sub
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
         Dim PrevStyle As New CustomCalendar.CalendarDayStyle(Color.FromArgb(160, 160, 160), Color.FromArgb(195, 195, 195), Color.FromArgb(160, 160, 160))
-        Dim CurrentStyle As New CustomCalendar.CalendarDayStyle(Color.White, Color.FromArgb(174, 57, 61), Color.FromArgb(225, 111, 111))
+        Dim CurrentStyle As New CustomCalendar.CalendarDayStyle(Color.White, Color.FromArgb(162, 25, 51), Color.FromArgb(225, 111, 111))
         Dim NextStyle As New CustomCalendar.CalendarDayStyle(Color.FromArgb(160, 160, 160), Color.FromArgb(195, 195, 195), Color.FromArgb(160, 160, 160))
-        Calendar = New CustomCalendar(PrevStyle, CurrentStyle, NextStyle, 40, 20, 80, 80, 5, 5,,,, New String() {"Januar", "Februar", "Mars", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Desember"})
+        Calendar = New CustomCalendar(PrevStyle, CurrentStyle, NextStyle, 0, 0, 80, 80, 5, 5,,,, New String() {"Januar", "Februar", "Mars", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Desember"})
         With Calendar
             .SetDayNames(New String() {"Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"})
             .Parent = Me
-            .Location = New Point(20, 20)
+            .Location = New Point(20, (Height + TopBar.Height - Footer.Height) \ 2 - 20)
             .DrawGradient = False
-            .AddCustomStyle(0, New CustomCalendar.CalendarDayStyle(Color.Blue, Color.Green, Color.Yellow))
-            .ApplyCustomStyle(New Date() {Date.Now, Date.Now.AddDays(1)}, 0)
+            .AddCustomStyle(0, New CustomCalendar.CalendarDayStyle(Color.White, Color.FromArgb(238, 62, 95), Color.White))
             .Display()
+            .ArrowColorDefault = ColorHelper.Multiply(Color.FromArgb(107, 21, 37), 2)
+            .ArrowColorHover = Color.FromArgb(107, 21, 37)
             '.Hide()
+        End With
+        With TimeForm
+            .Parent = Me
+            .Size = New Size(400, 420)
+            .BackColor = Color.FromArgb(245, 245, 245)
+            .Location = New Point(Calendar.Right + 20, Calendar.Top + 80)
+            .MakeDashed(Color.FromArgb(220, 220, 220), RightForm.BackColor)
+            .Hide()
         End With
         With RightForm
             .Parent = Me
             .Size = New Size(400, 420)
             .BackColor = Color.FromArgb(245, 245, 245)
-            .Location = New Point(Calendar.Right + 20, 120)
-            .MakeDashed(Color.FromArgb(220, 220, 220), BackColor)
-        End With
-        BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36))
-        With BestillTimeKnapp
-            .BackColor = Color.LimeGreen
-            .ForeColor = Color.White
-            .Location = New Point(20, 420 - .Height - 20)
+            .Location = New Point(Calendar.Right + 20, Calendar.Top + 80)
+            .MakeDashed(Color.FromArgb(220, 220, 220), RightForm.BackColor)
         End With
         With HeaderLab
             .Parent = RightForm
             .AutoSize = False
-            .Width = RightForm.Width - 40
-            .Height = 30
+            .Size = New Size(RightForm.Width - 40, 30)
             .Location = New Point(20, 20)
             .BackColor = RightForm.BackColor
             .ForeColor = Color.FromArgb(60, 60, 60)
             .Text = "Når på dagen passer det best for deg?"
             .Font = New Font(.Font.FontFamily, 10)
         End With
+        With TimeHeaderLab
+            .Parent = TimeForm
+            .AutoSize = False
+            .Size = New Size(RightForm.Width - 40, 30)
+            .Location = New Point(20, 20)
+            .BackColor = RightForm.BackColor
+            .ForeColor = Color.FromArgb(60, 60, 60)
+            .Text = "Du har en time på den valgte dagen."
+            .Font = New Font(.Font.FontFamily, 12)
+        End With
         With TimeLab
             .Parent = RightForm
             .AutoSize = False
-            .Width = RightForm.Width - 40
-            .Height = 40
+            .Size = New Size(RightForm.Width - 40, 40)
             .Location = New Point(20, HeaderLab.Bottom + 15)
             .BackColor = RightForm.BackColor
             .ForeColor = Color.FromArgb(60, 60, 60)
             .Text = "PS: Vi kan ikke garantere at vi har kapasitet på det ønskede tidspunktet. Les derfor nøye gjennom innkallingen før du godkjenner timen."
+        End With
+        With AktuellTimeLab
+            .Parent = TimeForm
+            .AutoSize = False
+            .Size = New Size(RightForm.Width - 40, 40)
+            .Location = New Point(20, HeaderLab.Bottom + 15)
+            .BackColor = RightForm.BackColor
+            .ForeColor = Color.FromArgb(60, 60, 60)
+            .Text = "Tidspunkt:"
+            .Font = New Font(.Font.FontFamily, 10)
         End With
         With Tabell
             .Parent = RightForm
@@ -71,12 +112,38 @@ Public Class TimebestillingTab
             .AddSpecialDayRules(Date.Now, New Timetabell.DayStateSeries({0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}))
             .Location = New Point(20, TimeLab.Bottom + 20)
         End With
+        AvbestillTimeKnapp = New TopBarButton(TimeForm, My.Resources.AvbrytIcon, "Kanseller denne timen", New Size(136, 36))
+        BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36),, AvbestillTimeKnapp.Width)
+        With BestillTimeKnapp
+            .BackColor = Color.LimeGreen
+            .ForeColor = Color.White
+            .Location = New Point(20, RightForm.Height - .Height - 20)
+        End With
+        With AvbestillTimeKnapp
+            .Location = New Point(20, TimeForm.Height - .Height - 20)
+            .BackColor = Color.FromArgb(162, 25, 51)
+            .ForeColor = Color.White
+        End With
+        With AvbestillInfoLab
+            .Parent = TimeForm
+            .AutoSize = False
+            .Location = New Point(AvbestillTimeKnapp.Right + 10, AvbestillTimeKnapp.Top)
+            .Size = New Size(TimeForm.Width - .Left - 10, 32)
+            .TextAlign = ContentAlignment.MiddleLeft
+            .Text = "Elektronisk kansellering må skje minst 24 timer i forveien."
+            .Font = New Font(.Font.FontFamily, 8)
+            .ForeColor = Color.FromArgb(70, 70, 70)
+        End With
         With TimeInfo
             .Parent = RightForm
             .BackgroundImage = My.Resources.TimeTabellInfo
             .Size = New Size(.BackgroundImage.Width, .BackgroundImage.Height)
             .Left = Tabell.Right + 15
             .Top = Tabell.Top + Tabell.Height \ 2 - .Height \ 2
+        End With
+        With TopBar
+            .AddButton(My.Resources.HjemIcon, "Hjem", New Size(136, 36))
+            .AddLogout("Logg ut", New Size(136, 36))
         End With
         DBC.SQLQuery = "INSERT INTO Time (t_dato, t_klokkeslett, b_fodselsnr) VALUES (@dato, @tid, @nr);"
         DBC_GetRules.SQLQuery = "SELECT Serie FROM Ukeregler;"
@@ -112,6 +179,27 @@ Public Class TimebestillingTab
             MsgBox("Ja")
         End If
     End Sub
+    Protected Overrides Sub OnResize(e As EventArgs)
+        MyBase.OnResize(e)
+        If Calendar IsNot Nothing Then
+            Dim AlignRect As New Rectangle()
+            With AlignRect
+                .Width = Calendar.Width + RightForm.Width + 20
+                .Height = Calendar.Height
+                .X = Width \ 2 - .Width \ 2
+                .Y = (Height - .Height + TopBar.Height - Footer.Height) \ 2 - 20
+            End With
+            With Calendar
+                .Location = New Point(AlignRect.Left, AlignRect.Top)
+            End With
+            With RightForm
+                .Location = New Point(AlignRect.Right - .Width, Calendar.Top + 80)
+            End With
+            With TimeForm
+                .Location = New Point(AlignRect.Right - .Width, Calendar.Top + 80)
+            End With
+        End If
+    End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
         MsgBox("Failed")
     End Sub
@@ -128,18 +216,38 @@ Public Class TimebestillingTab
     Private Sub DayClick(sender As CustomCalendar.CalendarDay) Handles Calendar.Click
         Dim PreviouslySelected As CustomCalendar.CalendarDay = Calendar.Day(varSelectedDay)
         If PreviouslySelected IsNot Nothing Then
-            Select Case PreviouslySelected.Area
-                Case CustomCalendar.CalendarArea.CurrentMonth
-                    PreviouslySelected.BackColor = Color.FromArgb(174, 57, 61)
-                Case Else
-                    PreviouslySelected.BackColor = Color.FromArgb(195, 195, 195)
-            End Select
+            PreviouslySelected.SetColors(PreviouslySelected.LastStyleApplied)
         End If
         With sender
-            .BackColor = Color.Red
+            .BackColor = Color.FromArgb(132, 20, 41)
             varSelectedDay = .Day
         End With
         Tabell.CurrentDate = varSelectedDay
+        Dim iLast As Integer = TimeListe.Count - 1
+        If iLast >= 0 Then
+            Dim MatchFound As Boolean
+            Dim MatchAt As Integer
+            For i As Integer = 0 To iLast
+                If TimeListe.Time(i).DatoOgTid.Date = varSelectedDay.Date Then
+                    MatchFound = True
+                    MatchAt = i
+                    Exit For
+                End If
+            Next
+            If MatchFound Then
+                With TimeListe.Time(MatchAt).DatoOgTid
+                    AktuellTimeLab.Text = "Dato: " & vbTab & vbTab & .ToString("d/M/yyyy") & vbNewLine & "Klokkeslett: " & .ToString("HH:mm") & vbNewLine & vbNewLine & "Lorem ipsum"
+                End With
+                RightForm.Hide()
+                TimeForm.Show()
+            Else
+                TimeForm.Hide()
+                RightForm.Show()
+            End If
+        Else
+            TimeForm.Hide()
+            RightForm.Show()
+        End If
     End Sub
 End Class
 
@@ -185,7 +293,8 @@ Public Class Timetabell
         RefreshStates()
     End Sub
     Public Sub Build()
-        Dim Tid As New DateTime(1, 1, 1, 7, 0, 0)
+        Dim Tid As Date = Date.Now.Date
+        Tid = Tid.AddHours(7)
         For i As Integer = 0 To 24
             Tid = Tid.AddMinutes(30)
             Dim T As New TimeElement(Tid, Me)
@@ -216,30 +325,36 @@ Public Class Timetabell
 #End Region
 #Region "Private methods"
     Private Sub RefreshStates()
-        Dim Match As SpecialDayRule = varSpecialRules.Find(Function(Rule As SpecialDayRule)
-                                                               With Rule.SpecialDate
-                                                                   If .Day = varCurrentDate.Day AndAlso .Month = varCurrentDate.Month AndAlso .Year = varCurrentDate.Year Then
-                                                                       Return True
-                                                                   Else
-                                                                       Return False
-                                                                   End If
-                                                               End With
-                                                           End Function)
-        If Match Is Nothing Then
-            If varRuleSet IsNot Nothing Then
-                Dim Series As DayState() = varRuleSet.Rule(varCurrentDate.DayOfWeek).Series
+        If varCurrentDate.Date.CompareTo(Date.Now.Date) > 0 Then
+            Dim Match As SpecialDayRule = varSpecialRules.Find(Function(Rule As SpecialDayRule)
+                                                                   With Rule.SpecialDate
+                                                                       If .Day = varCurrentDate.Day AndAlso .Month = varCurrentDate.Month AndAlso .Year = varCurrentDate.Year Then
+                                                                           Return True
+                                                                       Else
+                                                                           Return False
+                                                                       End If
+                                                                   End With
+                                                               End Function)
+            If Match Is Nothing Then
+                If varRuleSet IsNot Nothing Then
+                    Dim Series As DayState() = varRuleSet.Rule(varCurrentDate.DayOfWeek).Series
+                    For i As Integer = 0 To 24
+                        Timeliste(i).SetState(Series(i))
+                    Next
+                Else
+                    For i As Integer = 0 To 24
+                        Timeliste(i).SetState(DayState.Enabled)
+                    Next
+                End If
+            Else
+                Dim Series As DayState() = Match.Series.Series
                 For i As Integer = 0 To 24
                     Timeliste(i).SetState(Series(i))
                 Next
-            Else
-                For i As Integer = 0 To 24
-                    Timeliste(i).SetState(DayState.Enabled)
-                Next
             End If
         Else
-            Dim Series As DayState() = Match.Series.Series
             For i As Integer = 0 To 24
-                Timeliste(i).SetState(Series(i))
+                Timeliste(i).SetState(DayState.Disabled)
             Next
         End If
     End Sub
@@ -441,23 +556,4 @@ Public Class Timetabell
             varSeries = SpecialSeries
         End Sub
     End Class
-End Class
-
-
-Public Class Example
-    Public Shared Sub Main()
-
-        ' Create an array of Point structures. 
-        Dim points() As Point = {New Point(100, 200), New Point(150, 250),
-                                New Point(250, 375), New Point(275, 395),
-                                New Point(295, 450)}
-
-        ' Find the first Point structure for which X times Y  
-        ' is greater than 100000. 
-        Dim first As Point = Array.Find(points,
-                                 Function(x) x.X * x.Y > 100000)
-
-        ' Display the first structure found.
-        Console.WriteLine("Found: X = {0}, Y = {1}", first.X, first.Y)
-    End Sub
 End Class

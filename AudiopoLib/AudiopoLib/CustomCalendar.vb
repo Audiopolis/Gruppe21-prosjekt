@@ -273,8 +273,18 @@ Public NotInheritable Class CustomCalendar
         Private GB As LinearGradientBrush
         Private myDate As Date
         Private DrawGrad As Boolean
+        Private varAppliedStyle As CalendarDayStyle
         Public Area As CalendarArea = CalendarArea.Undefined
+        Public Property LastStyleApplied As CalendarDayStyle
+            Get
+                Return varAppliedStyle
+            End Get
+            Set(value As CalendarDayStyle)
+                varAppliedStyle = value
+            End Set
+        End Property
         Public Sub SetColors(ByRef Style As CalendarDayStyle)
+            varAppliedStyle = Style
             If DrawGrad Then
                 If GB IsNot Nothing Then
                     GB.Dispose()
