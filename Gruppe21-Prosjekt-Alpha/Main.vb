@@ -9,7 +9,6 @@ Imports AudiopoLib
 
 Public Class Main
     Private IsLoaded As Boolean = False
-    Protected Friend Windows As MultiTabWindow
 
     Public Sub New()
         InitializeComponent()
@@ -423,7 +422,7 @@ Public Class Personopplysninger
     Private NeiTakkKnapp As New TopBarButton(FormPanel, My.Resources.NeiTakkIcon, "Nei takk", New Size(0, 36))
     Private PasswordFormVisible As Boolean = False
     Private LayoutTool As New FormLayoutTools(Me)
-    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    Private Footer As New Footer(Me)
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private FirstHeader As New FullWidthControl(FormPanel)
     Private FormResult() As String
@@ -1213,20 +1212,18 @@ Public Class LoggInnNy
     Private LoginForm As New FlatForm(243, 100, 3, New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.FromArgb(80, 80, 80), Color.White, Color.Black, {True, True, True, True}, 20))
     Private WithEvents TopBar As New TopBar(Me)
     Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
-    Private PicSideInfo As New PictureBox
-    Private PicInfoAbove As New PictureBox
+    Private PicSideInfo, PicInfoAbove, RightSide As New PictureBox
     Private FormInfo As New Label
     Private InfoLab As New InfoLabel
     Private WithEvents LoggInnKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Logg inn", New Size(0, 36))
     Private OpprettBrukerKnapp As New TopBarButton(FormPanel, My.Resources.RedigerProfilIcon, "Opprett bruker", New Size(0, 36))
     Private LayoutTool As New FormLayoutTools(Me)
-    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    Private Footer As New Footer(Me)
     'Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private WithEvents UserLogin As New MySqlUserLogin(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private FormHeader As New FullWidthControl(FormPanel)
     Private NotifManager As New NotificationManager(FormHeader)
     Private LeftSide As New BorderControl(Color.FromArgb(210, 210, 210))
-    Private RightSide As New PictureBox
     Private PersonalNumber As String
     Private Sub LoginValid()
         CurrentLogin = New UserInfo(PersonalNumber)
@@ -1234,6 +1231,11 @@ Public Class LoggInnNy
         Parent.Index = 5
         Egenerklæring.InitiateForm()
         LoginForm.ClearAll()
+        HentTimer_DBC = New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+        With HentTimer_DBC
+            .SQLQuery = "SELECT time_id, t_dato, t_klokkeslett FROM Time WHERE b_fodselsnr = @nr;"
+            .Execute({"@nr"}, {PersonalNumber})
+        End With
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
         If ErrorOccurred Then

@@ -29,7 +29,7 @@ Public Class EgenerklæringTab
     Private Tekst As New EgenerklæringTekst
     Private BorderControl As New BorderControl(Color.FromArgb(109, 109, 109))
     Private WithEvents TopBar As New TopBar(Me)
-    Private Footer As New Footer(Me, Color.FromArgb(54, 68, 78), 40)
+    Private Footer As New Footer(Me)
     Private LoadingSurface As New PictureBox
     Private LG As LoadingGraphics(Of PictureBox)
     Private NotificationArea As FullWidthControl

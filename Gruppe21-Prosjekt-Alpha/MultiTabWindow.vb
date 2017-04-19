@@ -47,6 +47,11 @@ Public NotInheritable Class MultiTabWindow
             End Select
         End Set
     End Property
+    Public ReadOnly Property Tab(ByVal Index As Integer) As Tab
+        Get
+            Return TabList(Index)
+        End Get
+    End Property
     Public ReadOnly Property Tabs As List(Of Tab)
         Get
             Return TabList
