@@ -16,6 +16,10 @@ Public Class TimebestillingTab
     Private HeaderLab, TimeHeaderLab, TimeLab, AktuellTimeLab, AvbestillInfoLab As New Label
     Private TimeInfo As New PictureBox
     Private Tabell As New Timetabell
+    Private NotifManager As New NotificationManager(RightForm)
+    Private LoadingSurface As New PictureBox
+    Private LG As New LoadingGraphics(Of PictureBox)(LoadingSurface)
+    Private Bekreftelse As New PictureBox
     Private WithEvents DBC, DBC_GetRules As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
         If Sender.IsLogout Then
@@ -128,6 +132,7 @@ Public Class TimebestillingTab
             .Build()
             .AddSpecialDayRules(Date.Now, New Timetabell.DayStateSeries({0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}))
             .Location = New Point(20, TimeLab.Bottom + 20)
+            .AddSpecialDayRules(Date.Now.AddDays(4), New Timetabell.DayStateSeries({0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}))
         End With
         AvbestillTimeKnapp = New TopBarButton(TimeForm, My.Resources.AvbrytIcon, "Kanseller denne timen", New Size(136, 36))
         BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36),, AvbestillTimeKnapp.Width)
@@ -169,12 +174,28 @@ Public Class TimebestillingTab
             .Text = "Du er logget inn som..."
             .Height = TopBar.LogoutButton.Height - 3
         End With
+        With LoadingSurface
+            .Hide()
+            .Parent = Me
+            .SendToBack()
+            .Size = New Size(100, 50)
+        End With
+        With Bekreftelse
+            .Hide()
+            .BackgroundImage = My.Resources.bekreftelseImg
+            .Size = .BackgroundImage.Size
+            .Parent = Me
+        End With
         DBC.SQLQuery = "INSERT INTO Time (t_dato, t_klokkeslett, b_fodselsnr) VALUES (@dato, @tid, @nr);"
         DBC_GetRules.SQLQuery = "SELECT Serie FROM Ukeregler;"
         DBC_GetRules.Execute()
     End Sub
     Private Sub BestillClick() Handles BestillTimeKnapp.Click
         DBC.Execute({"@dato", "@tid", "@nr"}, {varSelectedDay.ToString("yyyy-MM-dd"), Tabell.SelectedTime.ToString("HH:mm"), CurrentLogin.PersonalNumber})
+        RightForm.Hide()
+        TimeForm.Hide()
+        Calendar.Hide()
+        LG.Spin(30, 10)
     End Sub
     Private Sub DBC_GetRules_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC_GetRules.ListLoaded
         With e
@@ -201,7 +222,9 @@ Public Class TimebestillingTab
             MsgBox("Error: " & e.ErrorMessage)
         Else
             MsgBox("Ja")
+            Bekreftelse.Show()
         End If
+        LG.StopSpin()
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
@@ -226,9 +249,16 @@ Public Class TimebestillingTab
                 .Location = New Point(Width - 430, TopBar.LogoutButton.Top)
                 .Size = New Size(300, TopBar.LogoutButton.Height - 3)
             End With
+            With LoadingSurface
+                .Location = New Point(Width \ 2 - .Width \ 2, Height \ 2 - .Height \ 2)
+            End With
+            With Bekreftelse
+                .Location = New Point(Width \ 2 - .Width \ 2, Height \ 2 - .Height \ 2)
+            End With
         End If
     End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
+        LG.StopSpin()
         MsgBox("Failed")
     End Sub
     Private Sub DayEnter(sender As CustomCalendar.CalendarDay) Handles Calendar.MouseEnter
