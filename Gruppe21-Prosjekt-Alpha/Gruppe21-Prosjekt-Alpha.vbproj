@@ -114,9 +114,7 @@
     <Compile Include="blodgiverDashboard2.Designer.vb">
       <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
     </Compile>
-    <Compile Include="blodgiverDashboard2.vb">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="blodgiverDashboard2.vb" />
     <Compile Include="BorderControl.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -179,12 +177,6 @@
     <Compile Include="PersonaliaDisplay.vb" />
     <Compile Include="PieChart.vb" />
     <Compile Include="CryptoServiceProvider.vb" />
-    <Compile Include="Skjema.Designer.vb">
-      <DependentUpon>Skjema.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Skjema.vb">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Splash.Designer.vb">
       <DependentUpon>Splash.vb</DependentUpon>
     </Compile>
@@ -241,9 +233,6 @@
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Skjema.resx">
-      <DependentUpon>Skjema.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Splash.resx">
       <DependentUpon>Splash.vb</DependentUpon>
@@ -360,9 +349,6 @@
     <None Include="Resources\NyLogo.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\PicLoggInn.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\ForrigeIcon.png" />
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +359,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\TimeTabellInfo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PicLoggInn.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

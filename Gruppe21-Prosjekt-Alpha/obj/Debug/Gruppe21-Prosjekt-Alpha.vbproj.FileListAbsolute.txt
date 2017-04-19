@@ -12,7 +12,6 @@ C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Pr
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.BlodgiverDashboard.resources
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.Timeoversikt.resources
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.Splash.resources
-C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.Skjema.resources
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\obj\Debug\Gruppe21_Prosjekt_Alpha.Main.resources
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\Gruppe21-Prosjekt-Alpha.exe.CodeAnalysisLog.xml
 C:\Users\Magnus\Documents\GitHub\Gruppe21-prosjekt\Gruppe21-prosjekt\Gruppe21-Prosjekt-Alpha\bin\Debug\Gruppe21-Prosjekt-Alpha.exe.lastcodeanalysissucceeded
