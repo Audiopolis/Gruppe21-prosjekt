@@ -24,9 +24,19 @@ Public Class TimebestillingTab
     Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
         If Sender.IsLogout Then
             Parent.Index = 4
+            Bekreftelse.Hide()
+            LG.StopSpin()
+            RightForm.Show()
+            TimeForm.Hide()
+            Calendar.Show()
             Logout()
         Else
             Parent.Index = 5
+            Bekreftelse.Hide()
+            LG.StopSpin()
+            RightForm.Show()
+            TimeForm.Hide()
+            Calendar.Show()
         End If
     End Sub
     Public Sub SetAppointment()
