@@ -7,8 +7,11 @@ Partial Class Splash
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
+                If GB IsNot Nothing Then
+                    GB.Dispose()
+                End If
                 components.Dispose()
-            End If
+                End If
         Finally
             MyBase.Dispose(disposing)
         End Try

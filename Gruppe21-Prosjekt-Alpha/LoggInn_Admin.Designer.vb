@@ -7,6 +7,8 @@ Partial Class LoggInn_Admin
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
+                NotifManager.Dispose()
+                LayoutTool.Dispose()
                 components.Dispose()
             End If
         Finally

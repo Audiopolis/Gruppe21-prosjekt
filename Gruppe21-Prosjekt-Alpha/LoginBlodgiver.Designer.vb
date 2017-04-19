@@ -7,6 +7,8 @@ Partial Class LoginBlodgiver
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
+                LayoutHelper.Dispose()
+                NotifManager.Dispose()
                 components.Dispose()
             End If
         Finally

@@ -10,7 +10,9 @@ Public Class TimebestillingTab
     Private WithEvents BestillTimeKnapp As TopBarButton
     Private WithEvents Calendar As CustomCalendar
     Private varSelectedDay As Date
+    Private HeaderLab As New Label
     Private TimeLab As New Label
+    Private TimeInfo As New PictureBox
     Private Tabell As New Timetabell
     Private WithEvents DBC, DBC_GetRules As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Public Sub New(ParentWindow As MultiTabWindow)
@@ -27,27 +29,41 @@ Public Class TimebestillingTab
             .AddCustomStyle(0, New CustomCalendar.CalendarDayStyle(Color.Blue, Color.Green, Color.Yellow))
             .ApplyCustomStyle(New Date() {Date.Now, Date.Now.AddDays(1)}, 0)
             .Display()
-            .Hide()
+            '.Hide()
         End With
         With RightForm
             .Parent = Me
-            .Size = New Size(400, 500)
+            .Size = New Size(400, 420)
             .BackColor = Color.FromArgb(245, 245, 245)
-            .Location = New Point(Calendar.Right + 20, 20)
+            .Location = New Point(Calendar.Right + 20, 120)
             .MakeDashed(Color.FromArgb(220, 220, 220), BackColor)
         End With
-        BestillTimeKnapp = New TopBarButton(RightForm, Nothing, "Send timeforespørsel", New Size(136, 36))
+        BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36))
         With BestillTimeKnapp
-            .Location = New Point(20, 500 - (36 + 20))
+            .BackColor = Color.LimeGreen
+            .ForeColor = Color.White
+            .Location = New Point(20, 420 - .Height - 20)
+        End With
+        With HeaderLab
+            .Parent = RightForm
+            .AutoSize = False
+            .Width = RightForm.Width - 40
+            .Height = 30
+            .Location = New Point(20, 20)
+            .BackColor = RightForm.BackColor
+            .ForeColor = Color.FromArgb(60, 60, 60)
+            .Text = "Når på dagen passer det best for deg?"
+            .Font = New Font(.Font.FontFamily, 10)
         End With
         With TimeLab
             .Parent = RightForm
             .AutoSize = False
             .Width = RightForm.Width - 40
-            .Height = 60
-            .Location = New Point(20, 20)
-            .BackColor = Color.Red
-            .Text = "Når på dagen passer det best for deg?" & vbNewLine & vbNewLine & "PS: Vi kan ikke garantere at vi har kapasitet på det ønskede tidspunktet. Les derfor nøye gjennom innkallingen før du godkjenner timen."
+            .Height = 40
+            .Location = New Point(20, HeaderLab.Bottom + 15)
+            .BackColor = RightForm.BackColor
+            .ForeColor = Color.FromArgb(60, 60, 60)
+            .Text = "PS: Vi kan ikke garantere at vi har kapasitet på det ønskede tidspunktet. Les derfor nøye gjennom innkallingen før du godkjenner timen."
         End With
         With Tabell
             .Parent = RightForm
@@ -55,20 +71,19 @@ Public Class TimebestillingTab
             .AddSpecialDayRules(Date.Now, New Timetabell.DayStateSeries({0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}))
             .Location = New Point(20, TimeLab.Bottom + 20)
         End With
-        DBC.SQLQuery = "INSERT INTO Time (t_dato, b_fodselsnr) VALUES (@dato, @nr);"
+        With TimeInfo
+            .Parent = RightForm
+            .BackgroundImage = My.Resources.TimeTabellInfo
+            .Size = New Size(.BackgroundImage.Width, .BackgroundImage.Height)
+            .Left = Tabell.Right + 15
+            .Top = Tabell.Top + Tabell.Height \ 2 - .Height \ 2
+        End With
+        DBC.SQLQuery = "INSERT INTO Time (t_dato, t_klokkeslett, b_fodselsnr) VALUES (@dato, @tid, @nr);"
         DBC_GetRules.SQLQuery = "SELECT Serie FROM Ukeregler;"
         DBC_GetRules.Execute()
     End Sub
-    Protected Overrides Sub OnDoubleClick(e As EventArgs)
-        MyBase.OnDoubleClick(e)
-        If Not Calendar.Visible Then
-            Calendar.Show()
-        Else
-            Calendar.Hide()
-        End If
-    End Sub
     Private Sub BestillClick() Handles BestillTimeKnapp.Click
-        DBC.Execute({"@dato", "@nr"}, {varSelectedDay.ToString("yyyy-MM-dd"), CurrentLogin.PersonalNumber})
+        DBC.Execute({"@dato", "@tid", "@nr"}, {varSelectedDay.ToString("yyyy-MM-dd"), Tabell.SelectedTime.ToString("HH:mm"), CurrentLogin.PersonalNumber})
     End Sub
     Private Sub DBC_GetRules_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC_GetRules.ListLoaded
         With e
@@ -134,7 +149,13 @@ Public Class Timetabell
     Private varCurrentDate As Date = Date.Now
     Private varRuleSet As WeekRules = Nothing
     Private varSpecialRules As New List(Of SpecialDayRule)
+    Private varSelected As TimeElement = Nothing
 #Region "Properties"
+    Public ReadOnly Property SelectedTime As Date
+        Get
+            Return varSelected.Tid
+        End Get
+    End Property
     Public Property CurrentDate As Date
         Get
             Return varCurrentDate
@@ -167,7 +188,7 @@ Public Class Timetabell
         Dim Tid As New DateTime(1, 1, 1, 7, 0, 0)
         For i As Integer = 0 To 24
             Tid = Tid.AddMinutes(30)
-            Dim T As New TimeElement(Tid)
+            Dim T As New TimeElement(Tid, Me)
             With T
                 If Timeliste.Count > 0 Then
                     Dim LastRight As Integer = Timeliste.Last.Right
@@ -181,10 +202,16 @@ Public Class Timetabell
                 End If
             End With
             Timeliste.Add(T)
-            T.Parent = Me
         Next
         Width = Timeliste.Last.Right
         Height = Timeliste.Last.Bottom
+    End Sub
+    Protected Sub OnTimeElementClick(Sender As TimeElement)
+        RefreshStates()
+        varSelected = Sender
+        MsgBox(varSelected.Tid.ToString("HH:mm"))
+        varSelected.BackColor = Color.LimeGreen
+        varSelected.ForeColor = Color.White
     End Sub
 #End Region
 #Region "Private methods"
@@ -220,14 +247,89 @@ Public Class Timetabell
     Protected Class TimeElement
         Inherits Control
         Private varTid As Date
-        Private TidLabel As New Label
+        Private varState As DayState
+        Private WithEvents TidLabel As New Label
+        Public Shadows Property ForeColor As Color
+            Get
+                Return TidLabel.ForeColor
+            End Get
+            Set(value As Color)
+                TidLabel.ForeColor = value
+            End Set
+        End Property
+        Public Shadows Property BackColor As Color
+            Get
+                Return TidLabel.BackColor
+            End Get
+            Set(value As Color)
+                TidLabel.BackColor = value
+            End Set
+        End Property
+        Public Property BorderColor As Color
+            Get
+                Return MyBase.BackColor
+            End Get
+            Set(value As Color)
+                MyBase.BackColor = value
+            End Set
+        End Property
+        Protected Overrides Sub OnMouseEnter(e As EventArgs)
+            If varState = DayState.Enabled Then
+                MyBase.OnMouseEnter(e)
+                With TidLabel
+                    .BackColor = ColorHelper.Add(.BackColor, -15)
+                End With
+            End If
+        End Sub
+        Protected Overrides Sub OnMouseLeave(e As EventArgs)
+            If varState = DayState.Enabled Then
+                MyBase.OnMouseLeave(e)
+                With TidLabel
+                    .BackColor = ColorHelper.Add(.BackColor, 15)
+                End With
+            End If
+        End Sub
+        Protected Overrides Sub OnMouseDown(e As MouseEventArgs)
+            If varState = DayState.Enabled Then
+                MyBase.OnMouseDown(e)
+                With TidLabel
+                    .BackColor = ColorHelper.Add(.BackColor, -20)
+                End With
+            End If
+        End Sub
+        Protected Overrides Sub OnMouseUp(e As MouseEventArgs)
+            If varState = DayState.Enabled Then
+                MyBase.OnMouseUp(e)
+                With TidLabel
+                    .BackColor = ColorHelper.Add(.BackColor, 20)
+                End With
+                Parent.OnTimeElementClick(Me)
+            End If
+        End Sub
+        Private Sub LabelMouseDown(sender As Object, e As MouseEventArgs) Handles TidLabel.MouseDown
+            OnMouseDown(e)
+        End Sub
+        Private Sub LabelMouseUp(sender As Object, e As MouseEventArgs) Handles TidLabel.MouseUp
+            OnMouseUp(e)
+        End Sub
+        Private Sub LabelEnter(sender As Object, e As EventArgs) Handles TidLabel.MouseEnter
+            OnMouseEnter(e)
+        End Sub
+        Private Sub LabelLeave(sender As Object, e As EventArgs) Handles TidLabel.MouseLeave
+            OnMouseLeave(e)
+        End Sub
         Public Sub SetState(ByVal State As DayState)
-            Select Case State
-                Case DayState.Disabled
-                    TidLabel.BackColor = Color.Gray
-                Case DayState.Enabled
-                    TidLabel.BackColor = Color.White
-            End Select
+            varState = State
+            With TidLabel
+                Select Case State
+                    Case DayState.Disabled
+                        .BackColor = Color.FromArgb(230, 230, 230)
+                        .ForeColor = Color.FromArgb(210, 210, 210)
+                    Case DayState.Enabled
+                        .BackColor = Color.White
+                        .ForeColor = Color.FromArgb(60, 60, 60)
+                End Select
+            End With
         End Sub
         Public Shadows Property Parent As Timetabell
             Get
@@ -246,16 +348,16 @@ Public Class Timetabell
                 TidLabel.Text = value.ToString("HH:mm")
             End Set
         End Property
-        Protected Friend Sub New(ByVal Tid As Date)
+        Protected Friend Sub New(ByVal Tid As Date, ParentTabell As Timetabell)
+            Parent = ParentTabell
             Size = New Size(47, 30)
-            BackColor = Color.FromArgb(220, 220, 220)
+            MyBase.BackColor = Color.FromArgb(220, 220, 220)
             With TidLabel
                 .Parent = Me
                 .Location = New Point(1, 1)
                 .Size = New Size(Width - 2, Height - 2)
                 .TextAlign = ContentAlignment.MiddleCenter
                 .Font = New Font(.Font.FontFamily, 7)
-                .BackColor = Color.White
             End With
             Me.Tid = Tid
         End Sub
