@@ -8,7 +8,7 @@ Public Class TopBar
     Private HighlightPen As New Pen(Color.FromArgb(247, 247, 247))
     Public Event ButtonClick(Sender As TopBarButton, e As EventArgs)
     Public Shared Event NameSet()
-    Public Shared Sub RaiseNameSetEvent()
+    Public Sub RaiseNameSetEvent()
         RaiseEvent NameSet()
     End Sub
     Public ReadOnly Property ButtonList As List(Of TopBarButton)

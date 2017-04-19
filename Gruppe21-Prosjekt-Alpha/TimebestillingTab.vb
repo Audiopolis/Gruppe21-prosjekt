@@ -222,6 +222,10 @@ Public Class TimebestillingTab
             With TimeForm
                 .Location = New Point(AlignRect.Right - .Width, Calendar.Top + 80)
             End With
+            With WelcomeLabel
+                .Location = New Point(Width - 430, TopBar.LogoutButton.Top)
+                .Size = New Size(300, TopBar.LogoutButton.Height - 3)
+            End With
         End If
     End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
