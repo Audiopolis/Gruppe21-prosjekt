@@ -1,23 +1,27 @@
-﻿Imports AudiopoLib
+﻿Imports System.Text.RegularExpressions
+Imports AudiopoLib
 
 Module Globals
     Public CurrentLogin As UserInfo
     Public Windows As MultiTabWindow
     Public WithEvents HentTimer_DBC As DatabaseClient
     Public TimeListe As New DatabaseTimeListe
+    Public EventManager As New BloodBankEventManager
+    ' Regex
+    Public RegExEmail As New Regex("([\w-+]+(?:\.[\w-+]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7})")
+
 
     ' ALPHA
 
     Public Testoversikt As Timeoversikt
     Public Testdashbord As BlodgiverDashboard
     Public Testlogginn As LoggInn_Admin
-    Public Testspørreskjema As Skjema
+    'Public Testspørreskjema As Skjema
     Public BlodgiverApning As LoginBlodgiver
     Public FirstTabTest As FirstTab
     Public SecondTabTest As SecondTab
     Public ThirdTabTest As ThirdTab
     Public PersonaliaTest As Personopplysninger
-
 
     ' BETA
     Public MainWindow As Main
@@ -26,7 +30,6 @@ Module Globals
     Public Dashboard As DashboardTab
     Public Egenerklæring As EgenerklæringTab
     Public Timebestilling As TimebestillingTab
-
     Public TimerHentet As Boolean
 
     Public Sub Logout()
@@ -34,29 +37,17 @@ Module Globals
     End Sub
 
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles HentTimer_DBC.ListLoaded
-        If Not TimerHentet Then
-            If Not e.ErrorOccurred Then
-                For Each R As DataRow In e.Data.Rows
-                    Dim NewDate As Date = DirectCast(R.Item(1), Date)
-                    Dim TimeComponent As TimeSpan = DirectCast(R.Item(2), TimeSpan)
-                    NewDate = NewDate.Add(TimeComponent)
-                    TimeListe.Add(New DatabaseTimeElement(CInt(R.Item(0)), NewDate))
-                Next
-                DirectCast(Windows.Tab(7), TimebestillingTab).SetAppointment()
-                TimerHentet = True
-            Else
-                ' TODO: Logg bruker ut med feilmelding
-                MsgBox("Error: " & e.ErrorMessage)
-            End If
+        If Not e.ErrorOccurred Then
+            For Each R As DataRow In e.Data.Rows
+                Dim NewDate As Date = DirectCast(R.Item(1), Date)
+                Dim TimeComponent As TimeSpan = DirectCast(R.Item(2), TimeSpan)
+                NewDate = NewDate.Add(TimeComponent)
+                TimeListe.Add(New DatabaseTimeElement(CInt(R.Item(0)), NewDate))
+            Next
+            DirectCast(Windows.Tab(7), TimebestillingTab).SetAppointment()
         Else
-            If Not e.ErrorOccurred Then
-                For Each R As DataRow In e.Data.Rows
-
-                Next
-            Else
-                MsgBox("Error: " & e.ErrorMessage)
-            End If
-            TimerHentet = False
+            ' TODO: Logg bruker ut med feilmelding
+            MsgBox("Error: " & e.ErrorMessage)
         End If
     End Sub
     Private Sub DBC_Failed() Handles HentTimer_DBC.ExecutionFailed
@@ -64,6 +55,15 @@ Module Globals
         ' TODO: Logg ut bruker med feilmelding
     End Sub
 End Module
+
+Public Class BloodBankEventManager
+    Public Event LoggedIn()
+    Public Event LoggedOut()
+
+    Public Sub New()
+
+    End Sub
+End Class
 
 Public Class DatabaseTimeListe
     Private varTimer As New List(Of DatabaseTimeElement)
@@ -112,10 +112,33 @@ Public Class DatabaseTimeElement
     End Sub
 End Class
 
-Public Structure UserInfo
-    Private Number As String
+Public Class UserInfo
+    Private Number, varFirstName, varLastName As String
+    Public ReadOnly Property FullName As String
+        Get
+            Return varFirstName & " " & varLastName
+        End Get
+    End Property
+    Public Property FirstName As String
+        Get
+            Return varFirstName
+        End Get
+        Set(value As String)
+            varFirstName = value
+        End Set
+    End Property
+    Public Property LastName As String
+        Get
+            Return varLastName
+        End Get
+        Set(value As String)
+            varLastName = value
+        End Set
+    End Property
     Public Sub New(PersonalNumber As String)
         Number = PersonalNumber
+        varFirstName = "Undefined"
+        varLastName = "Undefined"
     End Sub
     Public Property PersonalNumber As String
         Get
@@ -129,4 +152,4 @@ Public Structure UserInfo
         Dim Chars() As Char = Number.ToCharArray
         Return (Convert.ToInt32(Chars(8)) Mod 2 = 1)
     End Function
-End Structure
+End Class
