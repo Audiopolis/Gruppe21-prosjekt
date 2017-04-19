@@ -7,7 +7,7 @@ Imports System.ComponentModel
 Public NotInheritable Class Splash
     Dim GB As LinearGradientBrush
     Private SC As SynchronizationContext = SynchronizationContext.Current
-    Private WithEvents DelayTimer As New Timers.Timer(1000)
+    Private WithEvents DelayTimer As New Timers.Timer(100)
     'TODO: This form can easily be set as the splash screen for the application by going to the "Application" tab
     '  of the Project Designer ("Properties" under the "Project" menu).
     Protected Overrides Sub OnPaintBackground(e As PaintEventArgs)
@@ -34,15 +34,19 @@ Public NotInheritable Class Splash
 
         Hide()
         'BlodgiverApning.Show()
-
-        GB.Dispose()
         Close()
 
         'TODO: Dispose Splash on end
-
         'Dispose()
     End Sub
-
+    Protected Overrides Sub OnClosed(e As EventArgs)
+        Try
+            DelayTimer.Dispose()
+            GB.Dispose()
+        Finally
+            MyBase.OnClosed(e)
+        End Try
+    End Sub
     Private Sub DelayTimer_Elapsed(Sender As Object, e As ElapsedEventArgs) Handles DelayTimer.Elapsed
         SC.Post(AddressOf InitializeStuff, Nothing)
     End Sub
@@ -50,13 +54,11 @@ Public NotInheritable Class Splash
         Hide()
         DoubleBuffered = True
         GB = New LinearGradientBrush(ClientRectangle, Color.FromArgb(120, Color.LightYellow), Color.FromArgb(0, Color.LightYellow), LinearGradientMode.Vertical)
-        DelayTimer.AutoReset = False
         Version.Text = String.Format(Version.Text, My.Application.Info.Version.Major, My.Application.Info.Version.Minor)
         Copyright.TextAlign = ContentAlignment.MiddleCenter
         Copyright.Text = ("This application is subject to international copyright laws. " & Chr(169) & " 2017 Magnus Bakke, Andreas Ore Larssen, Ahsan Azim, Eskil Uhlving Larsen; AudiopoLib " & Chr(169) & " 2017 Magnus Bakke")
+        DelayTimer.AutoReset = False
         Show()
         DelayTimer.Start()
     End Sub
-
-
 End Class
