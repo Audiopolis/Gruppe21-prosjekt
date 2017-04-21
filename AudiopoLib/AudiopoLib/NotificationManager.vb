@@ -13,13 +13,20 @@ Public Class NotificationManager
     Private SC As SynchronizationContext = SynchronizationContext.Current
     Private ParentControl As Control
     Private LinkedLayoutTools As FormLayoutTools
-    Private IsReady As Boolean
+    Private varIsReady As Boolean
     Private AdjustReservedSpace As Boolean = True
     Private QueueList As List(Of QueuedNotification)
     Public Event NotificationClosed(sender As Notification)
+    Public Event NotificationOpened(sender As Notification)
+
     Public Event Click(sender As Notification)
     Public Event MouseEnter(sender As Notification)
     Public Event MouseLeave(sender As Notification)
+    Public ReadOnly Property IsReady As Boolean
+        Get
+            Return varIsReady
+        End Get
+    End Property
     ''' <summary>
     ''' (Advanced) Gets or sets the FormLayoutTools instance associated with this NotificationManager, that will respond to the displaying of notifications and automatically resize the top 'reserved area' correspondingly.
     ''' </summary>
@@ -50,7 +57,7 @@ Public Class NotificationManager
     Public Sub New(Parent As Control)
         QueueList = New List(Of QueuedNotification)
         ParentControl = Parent
-        IsReady = True
+        varIsReady = True
     End Sub
     ''' <summary>
     ''' Displays the notification in the parent.
@@ -59,13 +66,14 @@ Public Class NotificationManager
     ''' <param name="Duration">The notification's duration in seconds before fading out. 0 means no time limit (must be closed by the user).</param>
     Public Overloads Sub Display(ByVal Message As String, ByVal Appearance As NotificationAppearance, Optional ByVal Duration As Double = 5, Optional ByVal AlignmentX As FloatX = FloatX.FillWidth, Optional ByVal AlignmentY As FloatY = FloatY.Top)
         'AddHandler NewNotification.NotificationFinished, AddressOf DisplayNext
-        If IsReady Then
-            IsReady = False
+        If varIsReady Then
+            varIsReady = False
             Dim NewNotification As New Notification(Parent, Appearance, Message, Duration, AddressOf onNotificationFinished, AlignmentX, AlignmentY)
             AddHandler NewNotification.Click, AddressOf onClick
             AddHandler NewNotification.MouseEnter, AddressOf onMouseEnter
             AddHandler NewNotification.MouseLeave, AddressOf onMouseLeave
             NewNotification.Display()
+            RaiseEvent NotificationOpened(NewNotification)
             If LinkedLayoutTools IsNot Nothing Then
                 LinkedLayoutTools.SlideToHeight(NewNotification.Top + NewNotification.Height)
             End If
@@ -114,7 +122,7 @@ Public Class NotificationManager
                 If LinkedLayoutTools IsNot Nothing Then
                     LinkedLayoutTools.SlideToDefault()
                 End If
-                IsReady = True
+                varIsReady = True
             Else
                 Dim Temp As QueuedNotification = QueueList(0)
                 Dim NewNotification As New Notification(Temp.vParent, Temp.vAppearance, Temp.vMessage, Temp.vDuration, Temp.vWhenDone, Temp.vFloatX, Temp.vFloatY)
@@ -124,6 +132,7 @@ Public Class NotificationManager
                 Temp.Clear()
                 QueueList.RemoveAt(0)
                 NewNotification.Display()
+                RaiseEvent NotificationOpened(NewNotification)
             End If
         End If
         RaiseEvent NotificationClosed(sender)

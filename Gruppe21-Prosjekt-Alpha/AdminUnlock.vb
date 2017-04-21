@@ -83,6 +83,9 @@ Public Class AdminUnlockWrapper
     Private Sub LoggInn_Click(Sender As Object, e As EventArgs)
         SuspendLayout()
         LoggInn.Enabled = False
+        If TSL IsNot Nothing Then
+            TSL.Dispose()
+        End If
         TSL = New ThreadStarterLight(AddressOf CredManager_Decode)
         TSL.WhenFinished = AddressOf CredManager_Finished
         TSL.Start(New String() {CPath, FName, TB.Text})
@@ -116,6 +119,9 @@ Public Class AdminUnlockWrapper
     Private Sub OnDecodeFinished(ByVal CorrectKey As Boolean, Data() As String)
         If CorrectKey Then
             Credentials = New DatabaseCredentials(Data(0), Data(1), Data(2), Data(3))
+            If ValidityChecker IsNot Nothing Then
+                ValidityChecker.Dispose()
+            End If
             ValidityChecker = New MySqlAdminLogin(Data(0), Data(1))
             ValidityChecker.WhenFinished = AddressOf OnCheckFinished
             ValidityChecker.LoginAsync(Data(2), Data(3))

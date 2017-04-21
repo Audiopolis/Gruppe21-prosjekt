@@ -4,7 +4,7 @@ Imports System.Threading
 Public NotInheritable Class UserNotificationContainer
     Inherits BorderControl
     Private SC As SynchronizationContext = SynchronizationContext.Current
-    Private WithEvents CloseTimer, TopTimer As New Timers.Timer(1000 \ 60)
+    Private WithEvents CloseTimer, TopTimer As New Timers.Timer(16)
     Private NotificationList As New List(Of UserNotification)
     Private WithEvents NotificationCounter As New Label
     Private LoadingSurface As New PictureBox
@@ -13,11 +13,12 @@ Public NotInheritable Class UserNotificationContainer
     Private EmptyLabel As New Label
     Private varDisplayEmptyLabel As Boolean
     Private ClosingNotifications As New List(Of UserNotification)
+
     Private Sub CloseTimer_Tick() Handles CloseTimer.Elapsed
-        SC.Send(AddressOf AdjustWidth, Nothing)
+        SC.Post(AddressOf AdjustWidth, Nothing)
     End Sub
     Private Sub TopTimer_Tick() Handles TopTimer.Elapsed
-        SC.Send(AddressOf AdjustTop, Nothing)
+        SC.Post(AddressOf AdjustTop, Nothing)
     End Sub
     Private Sub RemoveAt(Index As Integer)
         With NotificationList
@@ -30,9 +31,9 @@ Public NotInheritable Class UserNotificationContainer
         Dim iLast As Integer = NotificationList.Count - 1
         Dim ProblemFound As Boolean
         With NotificationList(0)
-            If .Top >= Header.Bottom + 50 Then
+            If .Top >= Header.Bottom + 30 Then
                 ProblemFound = True
-                .Top -= 30
+                .Top -= 10
             Else
                 .Top = Header.Bottom + 20
             End If
@@ -40,8 +41,8 @@ Public NotInheritable Class UserNotificationContainer
         If iLast > 0 Then
             For i As Integer = 1 To iLast
                 With NotificationList(i)
-                    If .Top > NotificationList(i - 1).Bottom + 40 Then
-                        .Top -= 20
+                    If .Top >= NotificationList(i - 1).Bottom + 30 Then
+                        .Top -= 10
                         ProblemFound = True
                     Else
                         .Top = NotificationList(i - 1).Bottom + 20
@@ -177,12 +178,12 @@ Public NotInheritable Class UserNotificationContainer
         varDisplayEmptyLabel = True
         LG.StopSpin()
     End Sub
-    Protected Friend Sub CloseNotification(ID As Object)
+    Protected Friend Sub CloseNotification(Sender As UserNotification)
         With NotificationList
             Dim iLast As Integer = .Count - 1
             Dim MatchFound As Boolean
             For i As Integer = 0 To iLast
-                If NotificationList(i).ID.Equals(ID) Then
+                If NotificationList(i) Is Sender Then
                     ClosingNotifications.Add(NotificationList(i))
                     MatchFound = True
                     Exit For
@@ -310,7 +311,7 @@ Public Class UserNotification
         If varClickAction IsNot Nothing Then
             varClickAction.Invoke(Me, New UserNotificationEventArgs(varID))
         End If
-        Parent.CloseNotification(ID)
+        Parent.CloseNotification(Me)
     End Sub
     Protected Overrides Sub OnMouseDown(e As MouseEventArgs)
         MyBase.OnMouseDown(e)
@@ -338,5 +339,108 @@ Public Class UserNotificationEventArgs
     End Property
     Public Sub New(ID As Object)
         varID = ID
+    End Sub
+End Class
+
+Public Class MessageNotification
+    Inherits Control
+    Private SC As SynchronizationContext = SynchronizationContext.Current
+    Private WithEvents JumpTimer As New Timers.Timer(16)
+    Private varMessageCount As Integer = -1
+    Private varLabelIn As Boolean
+
+    Private Const NumberOfFramesIn As Integer = 20
+    Private Const NumberOfFramesJump As Integer = 13
+    Private CurrentFrame As Integer
+    Private LoadingSurface As New PictureBox
+    Private LG As LoadingGraphics(Of PictureBox)
+    Private WithEvents ActualLabel As New PictureBox
+
+    Public Sub Start()
+        JumpTimer.Start()
+    End Sub
+    ' Function in: 4(x-0.75x^2)
+    ' Function jump: 1+x-x^2
+    Private Sub JumpTimer_Tick() Handles JumpTimer.Elapsed
+        SC.Post(AddressOf AdjustHeight, Nothing)
+    End Sub
+    Private Sub AdjustHeight(State As Object)
+        If Not varLabelIn Then
+            CurrentFrame += 1
+            Dim NewCurrentFrame As Double = CurrentFrame / NumberOfFramesIn
+            Dim Multiplier As Double = 4 * (NewCurrentFrame - 0.75 * NewCurrentFrame * NewCurrentFrame)
+            With ActualLabel
+                .Top = Height - CInt(Multiplier * .Height)
+            End With
+            If CurrentFrame = NumberOfFramesIn Then
+                CurrentFrame = 0
+                varLabelIn = True
+
+                LG.Spin(30, 10)
+                LoadingSurface.SendToBack()
+                Height += 10
+                Top -= 5
+
+                JumpTimer.Interval = 10000
+            End If
+        Else
+            CurrentFrame += 1
+            Dim NewCurrentFrame As Double = CurrentFrame / NumberOfFramesJump
+            Dim Multiplier As Double = 1 + 0.8 * (NewCurrentFrame - NewCurrentFrame * NewCurrentFrame)
+            With ActualLabel
+                .Top = Height - CInt(Multiplier * .Height)
+            End With
+            If CurrentFrame = NumberOfFramesJump Then
+                CurrentFrame = 0
+                JumpTimer.Interval = 10000
+            ElseIf CurrentFrame = 1 Then
+                JumpTimer.Interval = 16
+            End If
+        End If
+        JumpTimer.Start()
+    End Sub
+    Public Property MessageCount As Integer
+        Get
+            Return varMessageCount
+        End Get
+        Set(value As Integer)
+            varMessageCount = value
+            ActualLabel.Text = CStr(value)
+        End Set
+    End Property
+    Public Sub New(ParentControl As Control)
+        Parent = ParentControl
+        DoubleBuffered = True
+        Dim Bmp As Bitmap = My.Resources.Meldingsboks
+        Size = New Size(Bmp.Width + 20, 40)
+        Top = (Parent.Height - Height) \ 2
+        With ActualLabel
+            .AutoSize = False
+            .BackgroundImage = Bmp
+            .BackgroundImageLayout = ImageLayout.None
+            .Size = Bmp.Size
+            .Left = (Width - .Width) \ 2
+            '.TextAlign = ContentAlignment.MiddleCenter
+            .Text = " 1"
+            '.Padding = Padding.Empty
+            .Parent = Me
+            .Top = Height
+        End With
+        With JumpTimer
+            .AutoReset = False
+        End With
+        With LoadingSurface
+            .Hide()
+            .Parent = ActualLabel
+            .Size = New Size(ActualLabel.Width, ActualLabel.Width \ 4)
+            .Top = Height - .Height
+            .BackColor = Color.Transparent
+        End With
+        LG = New LoadingGraphics(Of PictureBox)(LoadingSurface)
+        LG.Stroke = 3
+        LoadingSurface.SendToBack()
+    End Sub
+    Private Sub OnLabelResize() Handles ActualLabel.Resize
+        LoadingSurface.Top = ActualLabel.Height - LoadingSurface.Height
     End Sub
 End Class
