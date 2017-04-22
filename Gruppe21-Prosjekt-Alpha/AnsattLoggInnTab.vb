@@ -9,11 +9,16 @@ Public Class AnsattLoggInnTab
     Private WithEvents LoggInnKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Logg inn", New Size(0, 36))
     Private WithEvents OpprettBrukerKnapp As New TopBarButton(FormPanel, My.Resources.RedigerProfilIcon, "Opprett bruker", New Size(0, 36))
     Private LayoutTool As New FormLayoutTools(Me)
+
+    ' TODO: Implement loading graphics
+    Private LoadingSurface As New PictureBox
+    Private LG As LoadingGraphics(Of PictureBox)
+
     Private Footer As New Footer(Me)
     Private WithEvents AnsattLogin As New MySqlUserLogin(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private FormHeader As New FullWidthControl(FormPanel)
     Private WithEvents NotifManager As New NotificationManager(FormHeader)
-    Private UsernameString As String
+    Private WithEvents DBC_GetInfo As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
         With AnsattLogin
@@ -102,15 +107,18 @@ Public Class AnsattLoggInnTab
             .Top = LoginForm.Bottom + 10
             AddHandler .Click, AddressOf LoggInn_Click
         End With
+        With DBC_GetInfo
+            .SQLQuery = "SELECT a_id, a_fornavn, a_etternavn FROM Ansatt WHERE a_brukernavn = @brukernavn;"
+        End With
         FormPanel.Show()
         ResumeLayout()
     End Sub
     Private Sub LoggInn_Click(sender As Object, e As EventArgs)
-        UsernameString = LoginForm.Field(0, 0).Value.ToString
         AnsattLogin.LoginAsync(LoginForm.Field(0, 0).Value.ToString, LoginForm.Field(1, 0).Value.ToString, "Ansatt", "a_brukernavn", "a_passord")
+        ' TODO: LoadingGraphics
     End Sub
     Private Sub Opprett_Click(sender As Object, e As EventArgs)
-        Parent.Index = 9
+        Parent.Index = 6
     End Sub
     Private Sub NotificationOpened() Handles NotifManager.NotificationOpened
         BackButton.Hide()
@@ -142,13 +150,33 @@ Public Class AnsattLoggInnTab
         BackButton.BackgroundImage = My.Resources.OKIcon
     End Sub
     Private Sub Back_Click() Handles BackButton.Click
-        UsernameString = Nothing
-        Parent.Index = 4
+        Parent.Index = 1
     End Sub
     Private Sub LoginValid()
-        CurrentLogin = New UserInfo(UsernameString)
-        MsgBox("Ja")
+        ' TODO: Sett session
+        CurrentStaff = New StaffInfo(DirectCast(LoginForm.Field(0, 0).Value, String))
+        DBC_GetInfo.Execute({"@brukernavn"}, {CurrentStaff.Username})
         LoginForm.ClearAll()
+    End Sub
+    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetInfo.ListLoaded
+        If e.ErrorOccurred OrElse e.Data.Rows.Count = 0 Then
+            CurrentStaff.EraseInfo()
+            CurrentStaff = Nothing
+            MsgBox("Error: " & e.ErrorMessage)
+        Else
+            With e.Data.Rows(0)
+                CurrentStaff.ID = DirectCast(.Item(0), Integer)
+                CurrentStaff.FirstName = DirectCast(.Item(1), String)
+                CurrentStaff.LastName = DirectCast(.Item(2), String)
+                Parent.Index = 7
+                AnsattDashboard.GetData()
+            End With
+        End If
+    End Sub
+    Private Sub DBC_Failed() Handles DBC_GetInfo.ExecutionFailed
+        CurrentStaff.EraseInfo()
+        CurrentStaff = Nothing
+        MsgBox("Uventet feil")
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
         If ErrorOccurred Then

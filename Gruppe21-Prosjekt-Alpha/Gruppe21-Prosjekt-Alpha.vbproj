@@ -104,20 +104,15 @@
     <Compile Include="AdminUnlock.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="AnsattDashboardTab.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="AnsattLoggInnTab.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="BlodBeholder.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="BlodgiverDashboard.Designer.vb">
-      <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
-    </Compile>
-    <Compile Include="BlodgiverDashboard.vb" />
-    <Compile Include="blodgiverDashboard2.Designer.vb">
-      <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
-    </Compile>
-    <Compile Include="blodgiverDashboard2.vb" />
     <Compile Include="BorderControl.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -125,32 +120,17 @@
     <Compile Include="EgenerklæringTab.vb">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="FlatList.vb">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="FlatList.vb" />
     <Compile Include="Footer.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="GlobalControl.vb" />
     <Compile Include="Globals.vb" />
-    <Compile Include="GridMenu.vb">
+    <Compile Include="HemoGlobeLogo.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="InfoLabel.vb">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="LoggInn_Admin.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LoggInn_Admin.Designer.vb">
-      <DependentUpon>LoggInn_Admin.vb</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LoginBlodgiver.Designer.vb">
-      <DependentUpon>LoginBlodgiver.vb</DependentUpon>
-    </Compile>
-    <Compile Include="LoginBlodgiver.vb">
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Main.Designer.vb">
       <DependentUpon>Main.vb</DependentUpon>
@@ -176,11 +156,11 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="NotifQueueTest.vb" />
     <Compile Include="OpprettAnsattTab.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PaintMessageHelper.vb" />
-    <Compile Include="PersonaliaDisplay.vb" />
     <Compile Include="PieChart.vb" />
     <Compile Include="CryptoServiceProvider.vb" />
     <Compile Include="Splash.Designer.vb">
@@ -189,23 +169,7 @@
     <Compile Include="Splash.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="TestCalendar.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="TestFlatForm.vb" />
     <Compile Include="TimebestillingTab.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="TimeInformasjon.vb">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Timeoversikt.Designer.vb">
-      <DependentUpon>Timeoversikt.vb</DependentUpon>
-    </Compile>
-    <Compile Include="Timeoversikt.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LoginField.vb">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="TopBar.vb">
@@ -222,18 +186,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="BlodgiverDashboard.resx">
-      <DependentUpon>BlodgiverDashboard.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="blodgiverDashboard2.resx">
-      <DependentUpon>blodgiverDashboard2.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LoggInn_Admin.resx">
-      <DependentUpon>LoggInn_Admin.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LoginBlodgiver.resx">
-      <DependentUpon>LoginBlodgiver.vb</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Main.resx">
       <DependentUpon>Main.vb</DependentUpon>
     </EmbeddedResource>
@@ -245,9 +197,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Splash.resx">
       <DependentUpon>Splash.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Timeoversikt.resx">
-      <DependentUpon>Timeoversikt.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Unlock.resx">
       <DependentUpon>Unlock.vb</DependentUpon>
@@ -386,6 +335,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\SettingsIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Refresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RefreshHover.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

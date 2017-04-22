@@ -186,14 +186,19 @@ Public Class OpprettAnsattTab
             .Hide()
             .Parent = FormPanel
             .BackgroundImage = My.Resources.bekreftelseImg
-            .Size = BackgroundImage.Size
+            .Size = .BackgroundImage.Size
             .Location = New Point((FormPanel.Width - Width) \ 2, (FirstHeader.Bottom + Height - .Height) \ 2)
         End With
         FormPanel.Show()
         ResumeLayout()
     End Sub
     Private Sub TopBar_ButtonClick(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
-        a
+        Select Case CInt(Sender.Tag)
+            Case 0
+                LG.StopSpin()
+                Parent.Index = 1
+                ResetForm()
+        End Select
     End Sub
     Private Sub PasswordChanged(Sender As FormField, Value As Object)
         PasswordForm.Field(2, 0).RequireSpecificValue(PasswordForm.Field(1, 0).Value.ToString)
@@ -312,7 +317,7 @@ Public Class OpprettAnsattTab
         ResetForm()
         LG.StopSpin()
         DBC.SQLQuery = ""
-        Parent.Index = 4
+        Parent.Index = 5
     End Sub
     Private Sub ResetForm()
         FormPanel.Hide()
@@ -328,10 +333,10 @@ Public Class OpprettAnsattTab
             .Label.Font = New Font(.Font, FontStyle.Regular)
             .Text = "Videre"
         End With
+        SuccessPic.Hide()
         PasswordFormVisible = False
         DBC.SQLQuery = ""
         DBC.Password = ""
-
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
         If disposing Then

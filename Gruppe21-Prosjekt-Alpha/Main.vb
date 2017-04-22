@@ -24,386 +24,42 @@ Public Class Main
             Windows = New MultiTabWindow(Me)
 
             ' ALPHA
-            FirstTabTest = New FirstTab(Windows) ' Index = 0
-            SecondTabTest = New SecondTab(Windows) ' Index = 1
-            ThirdTabTest = New ThirdTab(Windows) ' Index = 2
+            'FirstTabTest = New FirstTab(Windows) ' Index = 0
+            'SecondTabTest = New SecondTab(Windows) ' Index = 1
+            'ThirdTabTest = New ThirdTab(Windows) ' Index = 2
 
             ' MÅ GJØRES FERDIG
-            PersonaliaTest = New Personopplysninger(Windows) ' Index = 3
+            PersonaliaTest = New Personopplysninger(Windows) ' Index = 0
 
             ' BETA
-            LoggInnTab = New LoggInnNy(Windows) ' Index = 4
-            Dashboard = New DashboardTab(Windows) ' Index = 5
-            Egenerklæring = New EgenerklæringTab(Windows) ' Index = 6
-            Timebestilling = New TimebestillingTab(Windows) ' Index = 7
-            AnsattLoggInn = New AnsattLoggInnTab(Windows) ' Index 8
-            OpprettAnsatt = New OpprettAnsattTab(Windows) ' Index 9
-
+            LoggInnTab = New LoggInnNy(Windows) ' Index = 1
+            Dashboard = New DashboardTab(Windows) ' Index = 2
+            Egenerklæring = New EgenerklæringTab(Windows) ' Index = 3
+            Timebestilling = New TimebestillingTab(Windows) ' Index = 4
+            AnsattLoggInn = New AnsattLoggInnTab(Windows) ' Index 5
+            OpprettAnsatt = New OpprettAnsattTab(Windows) ' Index 6
+            AnsattDashboard = New AnsattDashboardTab(Windows) ' Index = 7
             With Windows
                 .BackColor = Color.FromArgb(240, 240, 240)
-                .Index = 4
+                .Index = 1
             End With
-
-            WindowState = FormWindowState.Maximized
-            'Width = 800
-            'Height = 500
             IsLoaded = True
+
+
+            '
+            ' TODO: Remove:
+            ControlBox = True
+            MaximizeBox = True
+            FormBorderStyle = FormBorderStyle.SizableToolWindow
+            ShowInTaskbar = True
+            SizeGripStyle = SizeGripStyle.Show
+            TopMost = False
         End If
     End Sub
 
     Private Sub Main_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
         'TODO: Dispose
         End
-    End Sub
-End Class
-
-Public Class FirstTab
-    Inherits Tab
-    Dim GroupLoggInn As GroupBox
-    Dim WithEvents UserLogin As MySqlUserLogin
-    Dim LoadingGraphics As LoadingGraphics(Of Control)
-    Dim WithEvents FWButton, BliMedButton As FullWidthControl
-    Dim PicLoadingSurface As Control
-    Dim NotifManager As NotificationManager
-    Dim txtBrukernavn, txtPassord As TextBox
-    Dim GroupHeader As FullWidthControl
-    Dim LabBrukernavn, LabPassord As Label
-    Dim LayoutHelper As New FormLayoutTools(Me)
-    Dim IsLoaded As Boolean
-    Public Sub New(ParentWindow As MultiTabWindow)
-        MyBase.New(ParentWindow)
-        Hide()
-        GroupLoggInn = New GroupBox
-        LabBrukernavn = New Label
-        LabPassord = New Label
-        txtBrukernavn = New TextBox
-        txtPassord = New TextBox
-        With GroupLoggInn
-            .Size = New Size(230, 151)
-            .Text = "Logg inn"
-            With .Controls
-                .Add(LabBrukernavn)
-                .Add(LabPassord)
-                .Add(txtBrukernavn)
-                .Add(txtPassord)
-            End With
-            .Parent = Me
-        End With
-        Dim TextBoxSize As New Size(145, 20)
-        With txtBrukernavn
-            .Size = TextBoxSize
-            .Location = New Point(74, 33)
-            .TabIndex = 1
-            .BringToFront()
-        End With
-        With txtPassord
-            .Size = TextBoxSize
-            .UseSystemPasswordChar = True
-            .Location = New Point(74, 59)
-            .TabIndex = 2
-            .BringToFront()
-        End With
-        With LabBrukernavn
-            .AutoSize = False
-            .Text = "Bruker-ID"
-            .Top = txtBrukernavn.Top
-            .Left = 5
-            .Width = txtBrukernavn.Left - 15
-            .Height = txtBrukernavn.Height
-            .TextAlign = ContentAlignment.MiddleRight
-        End With
-        With LabPassord
-            .AutoSize = False
-            .Text = "Passord"
-            .Top = txtPassord.Top
-            .Left = 5
-            .Size = LabBrukernavn.Size
-            .TextAlign = ContentAlignment.MiddleRight
-        End With
-        ' TEMPORARY; TODO: Switch to secure class
-
-        NotifManager = New NotificationManager(Me)
-        NotifManager.AssignedLayoutManager = LayoutHelper
-
-        PicLoadingSurface = New PictureBox
-        With PicLoadingSurface
-            .Hide()
-            .Size = New Size(32, 32)
-            .Parent = Me
-        End With
-        LoadingGraphics = New LoadingGraphics(Of Control)(PicLoadingSurface)
-        With LoadingGraphics
-            .Stroke = 2
-            .Pen.Color = Color.LimeGreen
-        End With
-        BliMedButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom)
-        With BliMedButton
-            .Text = "Opprett bruker"
-            .TabIndex = 4
-            .BackColorSelected = ColorHelper.Multiply(Color.LimeGreen, 0.7)
-            .BackColorNormal = Color.LimeGreen
-        End With
-        FWButton = New FullWidthControl(GroupLoggInn, True, FullWidthControl.SnapType.Bottom, -BliMedButton.Height)
-        With FWButton
-            .Text = "Logg inn"
-            .TabIndex = 3
-        End With
-        GroupHeader = New FullWidthControl(GroupLoggInn, False, FullWidthControl.SnapType.Top)
-        With GroupHeader
-            .Height = 20
-            .BackColor = Color.FromArgb(230, 230, 230)
-            .ForeColor = Color.FromArgb(100, 100, 100)
-            .TextAlign = ContentAlignment.MiddleLeft
-            .Padding = New Padding(5, 0, 0, 0)
-            .Text = "Logg inn"
-        End With
-        With Credentials
-            UserLogin = New MySqlUserLogin(.Server, .Database, .UserID, .Password)
-        End With
-        With UserLogin
-            .IfValid = AddressOf LoginValid
-            .IfInvalid = AddressOf LoginInvalid
-        End With
-        With LayoutHelper
-            .CenterSurface(GroupLoggInn, Me)
-            .CenterSurface(PicLoadingSurface, GroupLoggInn, 0, 10)
-        End With
-        IsLoaded = True
-    End Sub
-    Protected Overrides Sub OnResize(e As EventArgs)
-        MyBase.OnResize(e)
-        If LayoutHelper IsNot Nothing Then
-            With LayoutHelper
-                .CenterSurface(GroupLoggInn, Me)
-                .CenterSurface(PicLoadingSurface, GroupLoggInn, 0, 10)
-            End With
-        End If
-    End Sub
-    Private Sub LoginValid()
-        Hide()
-        LoadingGraphics.StopSpin()
-        For Each C As Control In GroupLoggInn.Controls
-            'If Not .GetType = GetType(FullWidthControl) Then
-            C.Show()
-            'End If
-        Next
-        FWButton.Enabled = True
-        BliMedButton.Enabled = True
-        Parent.Index = 1
-        'Testdashbord.Show()
-        txtBrukernavn.Clear()
-        txtPassord.Clear()
-    End Sub
-    Private Sub LoginInvalid(ByVal ErrorOccurred As Boolean, ErrorMessage As String)
-        LoadingGraphics.StopSpin()
-        SuspendLayout()
-        For Each C As Control In GroupLoggInn.Controls
-            'If Not C.GetType = GetType(FullWidthControl) Then
-            C.Show()
-            'End If
-        Next
-        'FWButton.Show()
-        FWButton.Enabled = True
-        BliMedButton.Enabled = True
-        ResumeLayout()
-        txtBrukernavn.Clear()
-        txtPassord.Clear()
-        txtBrukernavn.Focus()
-        LayoutHelper.SlideToHeight(40)
-        If ErrorOccurred Then
-            NotifManager.Display("Tilkoblingen mislyktes. Vennligst prøv igjen senere, og verifiser at du har internettilgang.", NotificationPreset.RedAlert)
-        Else
-            NotifManager.Display("Brukernavnet eller passordet er feil", NotificationPreset.RedAlert)
-        End If
-    End Sub
-    Protected Overrides Sub OnClosed(e As TabClosingEventArgs)
-        MyBase.OnClosed(e)
-        End
-    End Sub
-    Private Sub FWButton_Click(sender As Object, e As EventArgs) Handles FWButton.Click
-        SuspendLayout()
-        For Each C As Control In GroupLoggInn.Controls
-            C.Hide()
-        Next
-        GroupHeader.Show()
-        FWButton.Enabled = False
-        BliMedButton.Enabled = False
-        UserLogin.LoginAsync(txtBrukernavn.Text, txtPassord.Text, "DonorKonti", "bruker_ID", "passord")
-        RefreshLayout()
-        LoadingGraphics.Spin(30, 10)
-        ResumeLayout()
-    End Sub
-    Private Sub BliMedButton_Click(Sender As Object, e As EventArgs) Handles BliMedButton.Click
-        Parent.Index = 3
-    End Sub
-End Class
-
-Public Class SecondTab
-    Inherits Tab
-    Dim WithEvents GM As GridMenu(Of Label)
-    Dim LayoutHelper As New FormLayoutTools(Me)
-    Public Sub New(Window As MultiTabWindow)
-        MyBase.New(Window)
-        Hide()
-        GM = New GridMenu(Of Label)(3, 3, 200, 100, 20)
-        GM.Parent = Me
-        Dim TextArr() As String = {"Mine timer", "Forny egenerklæring", "Personopplysninger", "Hjelp", "Kontaktskjema", "Test6", "Test7", "Test8", "Test9"}
-        Dim iLast As Integer = GM.Count - 1
-        For i As Integer = 0 To iLast
-            With GM.Item(i)
-                .BackColor = Color.FromArgb(0, 80, 110)
-                .TextAlign = ContentAlignment.MiddleCenter
-                .ForeColor = Color.White
-                .Font = New Font(.Font.FontFamily, 12)
-                .Text = TextArr(i)
-            End With
-        Next
-        LayoutHelper.CenterOnForm(GM)
-        GM.DrawGradient = True
-        GM.Display()
-    End Sub
-    Protected Overrides Sub OnClosing(e As TabClosingEventArgs)
-        Dim Result As MsgBoxResult = MsgBox("Vil du logge ut?", MsgBoxStyle.YesNo, "Er du sikker?")
-        If Result = MsgBoxResult.Yes Then
-            'If Testspørreskjema IsNot Nothing Then
-            '    Testspørreskjema.Hide()
-            'End If
-            Hide()
-            Testlogginn.Show()
-        End If
-        e.Cancel = True
-        MyBase.OnClosing(e)
-    End Sub
-    Protected Overrides Sub OnResize(e As EventArgs)
-        If LayoutHelper IsNot Nothing Then
-            LayoutHelper.CenterOnForm(GM)
-        End If
-    End Sub
-    Protected Overrides Function ProcessCmdKey(ByRef msg As Message, keyData As Keys) As Boolean
-        Select Case keyData
-            Case Keys.Up
-                GM.SelectDirection(GridSelectDirection.Up)
-                Return True
-            Case Keys.Right
-                GM.SelectDirection(GridSelectDirection.Right)
-                Return True
-            Case Keys.Down
-                GM.SelectDirection(GridSelectDirection.Down)
-                Return True
-            Case Keys.Left
-                GM.SelectDirection(GridSelectDirection.Left)
-                Return True
-        End Select
-        Return MyBase.ProcessCmdKey(msg, keyData)
-    End Function
-    Private Sub OnGridSelectionChanged(Sender As Label, Selected As Boolean, ItemIndex As Integer) Handles GM.SelectionChanged
-        Select Case Selected
-            Case True
-                Sender.BackColor = ColorHelper.Multiply(Color.FromArgb(0, 80, 110), 1.33)
-            Case Else
-                Sender.BackColor = Color.FromArgb(0, 80, 110)
-        End Select
-    End Sub
-    Private Sub OnGridClick(Sender As Label, ItemIndex As Integer) Handles GM.ItemClicked
-        Select Case ItemIndex
-            Case 0
-                'Testoversikt.Show()
-                'Hide()
-            Case 1
-                Parent.Index = 2
-            Case 2
-                Parent.Index = 3
-        End Select
-    End Sub
-End Class
-
-Public Class ThirdTab
-    Inherits Tab
-    Dim Spørreskjema As Questionnaire
-    Dim LayoutTool As New FormLayoutTools(Me)
-    Protected Overrides Sub OnResize(e As EventArgs)
-        MyBase.OnResize(e)
-        If LayoutTool IsNot Nothing Then
-            LayoutTool.CenterSurfaceH(Spørreskjema, Me)
-        End If
-    End Sub
-    Public Sub New(Parent As MultiTabWindow)
-        MyBase.New(Parent)
-        ByggSkjema()
-        LayoutTool.CenterSurfaceH(Spørreskjema, Me)
-    End Sub
-    Private Sub ByggSkjema()
-        Dim TestForm1 As New FlatForm(400, 300, 10)
-        With TestForm1
-            .SuspendLayout()
-            .AddField(FormElementType.CheckBox, 120)
-            .AddField(FormElementType.Label)
-            .AddField(FormElementType.CheckBox, 120)
-            .AddField(FormElementType.CheckBox, 160)
-            .AddField(FormElementType.CheckBox)
-            .AddField(FormElementType.TextField)
-            .AddField(FormElementType.Radio, 120, True)
-            .AddField(FormElementType.Radio)
-            .AddRadioContext(True)
-            .AddField(FormElementType.Radio, 120, True)
-            .AddField(FormElementType.Radio)
-            .Field(1, 2).Extrude(FieldExtrudeSide.Left, 10)
-            .Field(0, 1).Value = "Dette er et eksempel på både vertikal og horisontal sammensmelting." & vbNewLine & " "
-            .Field(1, 2).SecondaryValue = "Test"
-            .MergeWithAbove(1, 1)
-            .MergeWithAbove(1, 2, -1)
-            With .Field(2, 0)
-                .Value = "Hei"
-                .Header.Text = "Har du noen ekstra kommentarer?"
-            End With
-            .ResumeLayout()
-            '.HeightToContent()
-        End With
-        Dim TestForm2 As New FlatForm(400, 300, 10)
-        With TestForm2
-            .SuspendLayout()
-            .AddField(FormElementType.Label, 260)
-            .AddField(FormElementType.CheckBox)
-            .AddField(FormElementType.CheckBox, 100)
-            .AddField(FormElementType.CheckBox, 150)
-            .AddField(FormElementType.Radio)
-            .AddField(FormElementType.Label)
-            .AddField(FormElementType.Label)
-            .AddField(FormElementType.Radio)
-            .AddField(FormElementType.Radio, 120)
-            .AddField(FormElementType.Radio)
-            .Field(1, 1).Extrude(FieldExtrudeSide.Left, 10)
-            .Field(0, 0).Value = "Vi kan lage helt vilkårlige skjema med stor stilistisk frihet." & vbNewLine & " "
-            With .Field(0, 1)
-                With .Header
-                    .BackColor = Color.DeepPink
-                    .Text = "Eksempel"
-                    .ForeColor = ColorHelper.Multiply(.ForeColor, 0.4)
-                End With
-                .SecondaryValue = "Stilistisk frihet"
-                .BackColor = Color.HotPink
-                .Value = True
-            End With
-            .MergeWithAbove(1, 0)
-            .MergeWithAbove(1, 1, -1)
-            With .Field(2, 0)
-                .Value = "Ayy"
-                .Header.Text = "Faktisk skjema kommer snart"
-            End With
-            .ResumeLayout()
-            '.HeightToContent()
-        End With
-
-        Spørreskjema = New Questionnaire(Me)
-        'PaintMessageHelper.SuspendDrawing(Spørreskjema)
-        With Spørreskjema
-            .Width = 500
-            .Height = 500
-            .Top = 0
-            .Add(TestForm1)
-            .Add(TestForm2)
-            .Display()
-        End With
     End Sub
 End Class
 
@@ -434,7 +90,7 @@ Public Class Personopplysninger
         Select Case CInt(Sender.Tag)
             Case 0
                 ResetForm()
-                Parent.Index = 4
+                Parent.Index = 1
         End Select
     End Sub
     Private Sub SendClick() Handles SendKnapp.Click
@@ -788,7 +444,7 @@ Public Class Personopplysninger
     End Sub
     Private Sub AvbrytKnapp_Klikk(Sender As Object, e As EventArgs)
         ResetForm()
-        Parent.Index = 4
+        Parent.Index = 1
     End Sub
     Private Sub ResetForm()
         FormPanel.Hide()
@@ -882,12 +538,12 @@ Public Class LoggInnNy
     End Sub
     Private Sub Gear_Click() Handles Gear.Click
         ' TODO: Vis logintab
-        Parent.Index = 8
+        Parent.Index = 5
     End Sub
     Private Sub LoginValid()
         CurrentLogin = New UserInfo(PersonalNumber)
         Dashboard.Initiate()
-        Parent.Index = 5
+        Parent.Index = 2
         Egenerklæring.InitiateForm()
         LoginForm.ClearAll()
         If HentTimer_DBC IsNot Nothing Then
@@ -895,7 +551,7 @@ Public Class LoggInnNy
         End If
         HentTimer_DBC = New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
         With HentTimer_DBC
-            .SQLQuery = "SELECT time_id, t_dato, t_klokkeslett FROM Time WHERE b_fodselsnr = @nr;"
+            .SQLQuery = "SELECT time_id, t_dato, t_klokkeslett FROM Time WHERE b_fodselsnr = @nr AND NOT (a_id IS NOT NULL AND ansatt_godkjent = 0);"
             .Execute({"@nr"}, {PersonalNumber})
         End With
         If HentEgenerklæring_DBC IsNot Nothing Then
@@ -1041,7 +697,7 @@ Public Class LoggInnNy
         ResumeLayout()
     End Sub
     Private Sub OpprettBruker_Click(sender As Object, e As EventArgs)
-        Parent.Index = 3
+        Parent.Index = 0
     End Sub
     Private Sub LoggInn_Click(sender As Object, e As EventArgs)
         PersonalNumber = LoginForm.Field(0, 0).Value.ToString
@@ -1159,65 +815,33 @@ Public Class GearIcon
     End Function
 End Class
 
-Public Class LoggInn
-    Inherits Tab
-    Private LayoutHelper As New FormLayoutTools(Me)
-    Private NotifManager As New NotificationManager(Me)
-    Private logo As HemoGlobeLogo
-    Private WithEvents LoginBox As LoginForm
-    Public Sub New(ParentWindow As MultiTabWindow)
-        MyBase.New(ParentWindow)
-        BackColor = Color.FromArgb(240, 238, 235)
-        Size = New Size(1280, 720)
-        logo = New HemoGlobeLogo
-        logo.Parent = Me
-        LoginBox = New LoginForm
-        LoginBox.Parent = Me
-        LayoutHelper.CenterOnForm(LoginBox)
-    End Sub
-    Protected Overrides Sub OnResize(e As EventArgs)
-        MyBase.OnResize(e)
-        If LoginBox IsNot Nothing Then
-            LayoutHelper.CenterOnForm(LoginBox)
-        End If
-    End Sub
-    Private Sub LoginFinished(Sender As Object, Success As Boolean) Handles LoginBox.CheckFinished
-        If Success Then
-            MsgBox("Success")
-        Else
-            NotifManager.Display("Fødselsnummeret eller passordet er feil.", NotificationPreset.RedAlert)
-        End If
-    End Sub
-    Private Sub BliMedClicked(Sender As Object, e As EventArgs) Handles LoginBox.BliMedClicked
-        Parent.Index = 3
-    End Sub
-End Class
-
 Public Class DashboardTab
     Inherits Tab
-    ' TODO: Lag tannhjulklasse
     Public NotificationList As New UserNotificationContainer(Color.FromArgb(210, 210, 210))
     Private Header As New TopBar(Me)
     'Dim ScrollList As New Donasjoner(Me)
     Private WithEvents Beholder As New BlodBeholder(My.Resources.Tom_beholder, My.Resources.Full_beholder)
     Private WelcomeLabel As New InfoLabel(True, Direction.Right)
+
+    ' TODO: Remove
     Private current As Integer
-    Private OrganDonorInfo As New PictureBox
     Private increment As Boolean = True
+
+    Private OrganDonorInfo As New PictureBox
     Private IsLoaded As Boolean
     Private Messages As New MessageNotification(Header)
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private Sub TopBarButtonClick(sender As Object, e As EventArgs)
         Dim SenderButton As TopBarButton = DirectCast(sender, TopBarButton)
         If SenderButton.IsLogout Then
-            Parent.Index = 4
+            Parent.Index = 1
             Logout()
         Else
             Select Case CInt(SenderButton.Tag)
                 Case 0
-                    Parent.Index = 7
+                    Parent.Index = 4
                 Case 1
-                    Parent.Index = 6
+                    Parent.Index = 3
                 Case 2
                     Messages.Start()
             End Select

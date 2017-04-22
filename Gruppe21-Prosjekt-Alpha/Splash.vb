@@ -16,12 +16,6 @@ Public NotInheritable Class Splash
     End Sub
     Private Sub InitializeStuff(State As Object)
         DelayTimer.Dispose()
-
-        BlodgiverApning = New LoginBlodgiver
-
-
-
-
         'Testoversikt = New Timeoversikt
         'Testdashbord = New BlodgiverDashboard
         'Testlogginn = New LoggInn_Admin
