@@ -104,6 +104,9 @@
     <Compile Include="AdminUnlock.vb">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="AnsattLoggInnTab.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="BlodBeholder.vb">
       <SubType>Component</SubType>
     </Compile>
@@ -172,6 +175,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="OpprettAnsattTab.vb">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="PaintMessageHelper.vb" />
     <Compile Include="PersonaliaDisplay.vb" />
@@ -367,9 +373,6 @@
     <None Include="Resources\LoadingLogoFinal.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\SettingsIcon.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\infoTekstDashboard.png" />
   </ItemGroup>
   <ItemGroup>
@@ -377,6 +380,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Tom_beholder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Meldingsboks.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SettingsIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -31,6 +31,9 @@ Module Globals
     Public Dashboard As DashboardTab
     Public Egenerklæring As EgenerklæringTab
     Public Timebestilling As TimebestillingTab
+    Public AnsattLoggInn As AnsattLoggInnTab
+    Public OpprettAnsatt As OpprettAnsattTab
+
     Public TimerHentet As Boolean
 
     Public Sub Logout()

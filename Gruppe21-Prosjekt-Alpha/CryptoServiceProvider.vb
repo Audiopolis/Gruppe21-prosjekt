@@ -1,7 +1,6 @@
 ﻿Imports System.Security.Cryptography
 Public NotInheritable Class CryptoServiceProvider
     Implements IDisposable
-
     Private TripleDes As New TripleDESCryptoServiceProvider
     Sub New(ByVal key As String)
         TripleDes.Key = TruncateHash(key, TripleDes.KeySize \ 8)

@@ -107,22 +107,13 @@ Public Class FormLayoutTools
         End With
     End Sub
     Public Overloads Sub CenterSurfaceV(Target As Control, AlignWith As Control, Optional ByVal OffsetY As Integer = 0)
-        Dim SW As New Stopwatch
-        SW.Start()
         Dim AlignWithY As Integer
-        If Target.Parent Is AlignWith Then
-            AlignWithY = 0
-        Else
+        If ReferenceEquals(ParentForm, AlignWith) Then
             AlignWithY = AlignWith.Top
         End If
-        SW.Stop()
-        Debug.Print("Time to check if parent = alignwith: " & SW.ElapsedTicks)
-        SW.Restart()
         With Target
             .Top = AlignWithY + AlignWith.Height \ 2 - .Height \ 2 + OffsetY
         End With
-        SW.Stop()
-            Debug.Print("Time to set Target top: " & SW.ElapsedTicks)
     End Sub
     Public Overloads Sub CenterSurfaceV(Target As Control, AlignWith As Rectangle, Optional ByVal OffsetY As Integer = 0)
         With Target
@@ -130,8 +121,16 @@ Public Class FormLayoutTools
         End With
     End Sub
     Public Overloads Sub CenterSurface(Target As Control, AlignWith As Control, Optional ByVal OffsetX As Integer = 0, Optional ByVal OffsetY As Integer = 0)
-        CenterSurfaceH(Target, AlignWith, OffsetX)
-        CenterSurfaceV(Target, AlignWith, OffsetY)
+        Dim AlignWithXY As Point
+        If Not ReferenceEquals(ParentForm, AlignWith) Then
+            AlignWithXY = AlignWith.Location
+        End If
+        With Target
+            .Top = AlignWithXY.Y + AlignWith.Height \ 2 - .Height \ 2 + OffsetY
+            .Left = AlignWithXY.X + AlignWith.Width \ 2 - .Width \ 2 + OffsetX
+        End With
+        'CenterSurfaceH(Target, AlignWith, OffsetX)
+        'CenterSurfaceV(Target, AlignWith, OffsetY)
     End Sub
     Public Overloads Sub CenterSurface(Target As Control, AlignWith As Rectangle, Optional ByVal OffsetX As Integer = 0, Optional ByVal OffsetY As Integer = 0)
         'CenterSurfaceH(Target, AlignWith, OffsetX)

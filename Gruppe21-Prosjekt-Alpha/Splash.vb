@@ -7,7 +7,7 @@ Imports System.ComponentModel
 Public NotInheritable Class Splash
     Dim GB As LinearGradientBrush
     Private SC As SynchronizationContext = SynchronizationContext.Current
-    Private WithEvents DelayTimer As New Timers.Timer(100)
+    Private WithEvents DelayTimer As New Timers.Timer(500)
     'TODO: This form can easily be set as the splash screen for the application by going to the "Application" tab
     '  of the Project Designer ("Properties" under the "Project" menu).
     Protected Overrides Sub OnPaintBackground(e As PaintEventArgs)
@@ -30,11 +30,10 @@ Public NotInheritable Class Splash
         'blodgiverDashboard2.Show()
         'Testlogginn.Show()
         MainWindow = New Main
-        MainWindow.Show()
-
         Hide()
+
+        MainWindow.Show()
         'BlodgiverApning.Show()
-        Close()
 
         'TODO: Dispose Splash on end
         'Dispose()

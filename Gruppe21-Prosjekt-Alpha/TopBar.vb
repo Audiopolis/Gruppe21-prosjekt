@@ -71,8 +71,6 @@ Public Class TopBar
         With LogoutButton
             .Top = (Height - .Height) \ 2 + 1
             .Left = Width - .Width - .Top
-            .BackColor = Color.FromArgb(162, 25, 51)
-            .ForeColor = Color.White
             AddHandler .Click, AddressOf OnButtonClick
         End With
     End Sub
@@ -109,6 +107,7 @@ Public Class TopBarButton
     'Private LinePen As New Pen(Color.FromArgb(220, 220, 220))
     Private DrawRect, ShadowRect As Rectangle
     Private TextPoint As Point
+    Private varDefaultBG As Color
     Private varMinWidth As Integer = 0
     Public Property MinimumWidth As Integer
         Get
@@ -163,10 +162,10 @@ Public Class TopBarButton
     Protected Friend Sub New(ParentTopBar As TopBar, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False, Optional MinWidth As Integer = 0)
         varIsLogout = IsLogout
         Hide()
+        SuspendLayout()
         varMinWidth = MinWidth
         ResizeRedraw = True
         DoubleBuffered = True
-        BackColor = Color.FromArgb(235, 235, 235)
         'BackColor = Color.FromArgb(247, 247, 247)
         'ForeColor = Color.FromArgb(30, 30, 30)
         Me.Size = Size
@@ -182,9 +181,15 @@ Public Class TopBarButton
         End With
         If varIsLogout Then
             'HighlightBrush.Dispose()
-            BorderPen.Color = ColorHelper.Multiply(Color.FromArgb(162, 25, 51), 0.7)
+            varDefaultBG = Color.FromArgb(162, 25, 51)
+            ForeColor = Color.White
             TextBrush.Color = Color.White
+        Else
+            varDefaultBG = Color.FromArgb(235, 235, 235)
         End If
+        BackColor = varDefaultBG
+        BorderPen.Color = ColorHelper.Multiply(varDefaultBG, 0.7)
+        ResumeLayout(True)
         Show()
     End Sub
     Public Shadows Property ForeColor As Color
@@ -197,11 +202,11 @@ Public Class TopBarButton
         End Set
     End Property
     Protected Friend Sub New(ParentControl As Control, BMP As Bitmap, LabTxt As String, Size As Size, Optional IsLogout As Boolean = False, Optional MinWidth As Integer = 0)
+        SuspendLayout()
         varIsLogout = IsLogout
         Hide()
         varMinWidth = MinWidth
         DoubleBuffered = True
-        BackColor = Color.FromArgb(235, 235, 235)
         'BackColor = Color.FromArgb(247, 247, 247)
         'ForeColor = Color.FromArgb(30, 30, 30)
         Me.Size = Size
@@ -217,9 +222,15 @@ Public Class TopBarButton
         End With
         If varIsLogout Then
             'HighlightBrush.Dispose()
-            BorderPen.Color = ColorHelper.Multiply(Color.FromArgb(162, 25, 51), 0.7)
+            varDefaultBG = Color.FromArgb(162, 25, 51)
+            ForeColor = Color.White
             TextBrush.Color = Color.White
+        Else
+            varDefaultBG = Color.FromArgb(235, 235, 235)
         End If
+        BackColor = varDefaultBG
+        BorderPen.Color = ColorHelper.Multiply(varDefaultBG, 0.7)
+        ResumeLayout(True)
         Show()
     End Sub
     Protected Overrides Sub OnBackColorChanged(e As EventArgs)
@@ -227,11 +238,12 @@ Public Class TopBarButton
         If varIsLogout Then
             HighlightBrush.Color = ColorHelper.Multiply(BackColor, 1.1)
         End If
-        BorderPen.Color = ColorHelper.Multiply(BackColor, 0.5)
+        BorderPen.Color = ColorHelper.Multiply(BackColor, 0.7)
     End Sub
     Protected Overrides Sub OnPaint(e As PaintEventArgs)
         MyBase.OnPaint(e)
         With e.Graphics
+            .TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
             '.FillRectangle(HighlightBrush, New Rectangle(Point.Empty, New Size(Width, Height \ 2)))
             If varDrawTextHighlight Then
                 '.DrawLine(LinePen, New Point(Icon.Right, 0), New Point(Icon.Right, Icon.Bottom))
@@ -240,6 +252,9 @@ Public Class TopBarButton
             .DrawString(TBButtonLabel.Text, Label.Font, TextBrush, New Point(TextPoint.X - 1, TextPoint.Y + 1))
             .DrawRectangle(BorderPen, DrawRect)
             .FillRectangle(ShadowBrush, ShadowRect)
+            Using NB As New SolidBrush(Color.FromArgb(20, Color.Black))
+                .FillRectangle(NB, New Rectangle(New Point(0, Height \ 2), New Size(Width, (Height \ 2))))
+            End Using
         End With
     End Sub
     Protected Overrides Sub OnMouseEnter(e As EventArgs)
@@ -248,19 +263,15 @@ Public Class TopBarButton
     End Sub
     Protected Overrides Sub OnMouseLeave(e As EventArgs)
         MyBase.OnMouseLeave(e)
-        SelectButton(False)
+        If Not varIcon.ClientRectangle.Contains(varIcon.PointToClient(MousePosition)) Then
+            SelectButton(False)
+        End If
     End Sub
     Protected Friend Sub SelectButton(ByVal DoSelect As Boolean)
         If DoSelect Then
-            'Height += 2
-            'Top -= 1
-            'Icon.BackgroundImage.Dispose()
-            'Icon.BackColor = Color.FromArgb(247, 247, 247)
+            BackColor = ColorHelper.Add(varDefaultBG, 10)
         Else
-            'Height -= 2
-            'Top += 1
-            'Icon.BackgroundImage.Dispose()
-            'Icon.BackColor = Color.FromArgb(56, 56, 57)
+            BackColor = varDefaultBG
         End If
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
@@ -274,7 +285,7 @@ Public Class TopBarButton
 
 
     Public Class TopBarButtonIcon
-        Inherits Control
+        Inherits PictureBox
         Public Shadows Property Parent As TopBarButton
             Get
                 Return DirectCast(MyBase.Parent, TopBarButton)
@@ -283,11 +294,13 @@ Public Class TopBarButton
                 MyBase.Parent = value
             End Set
         End Property
-        Protected Overrides Sub OnPaintBackground(pevent As PaintEventArgs)
-            With pevent.Graphics
-                '.FillRectangle(Parent.HighlightBrush, New Rectangle(Point.Empty, New Size(Width, (Height \ 2) + 2)))
+        Protected Overrides Sub OnPaint(e As PaintEventArgs)
+            MyBase.OnPaint(e)
+            With e.Graphics
+                Using NB As New SolidBrush(Color.FromArgb(20, Color.Black))
+                    .FillRectangle(NB, New Rectangle(New Point(0, 2 + Height \ 2), New Size(Width, (Height \ 2) - 1)))
+                End Using
             End With
-            MyBase.OnPaintBackground(pevent)
         End Sub
         Protected Overrides Sub OnMouseEnter(e As EventArgs)
             MyBase.OnMouseEnter(e)
@@ -299,6 +312,7 @@ Public Class TopBarButton
         End Sub
         Public Sub New(ParentButton As TopBarButton, BMP As Bitmap)
             Parent = ParentButton
+            DoubleBuffered = True
             With Parent
                 Size = New Size(.Height - 2, .Height - 5)
             End With

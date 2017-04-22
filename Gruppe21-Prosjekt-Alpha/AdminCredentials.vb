@@ -42,6 +42,9 @@ Public Class AdminCredentials
             Return Nothing
         Catch DirEx As System.IO.DirectoryNotFoundException
             Throw
+            'Finally
+            '    wrapper.Dispose()
+            'TODO: Find out if this is necessary
         End Try
     End Function
 End Class
