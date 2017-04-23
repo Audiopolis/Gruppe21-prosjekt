@@ -7,58 +7,65 @@ Imports AudiopoLib
 Public Class TimebestillingTab
     Inherits Tab
     Private WelcomeLabel As New InfoLabel(True, Direction.Right)
-    Private RightForm, TimeForm As New BorderControl(Color.Red)
+    Private RightForm, TimeForm, EmptyForm As New BorderControl(Color.Red)
     Private WithEvents TopBar As New TopBar(Me)
     Private Footer As New Footer(Me)
     Private WithEvents BestillTimeKnapp, AvbestillTimeKnapp As TopBarButton
     Private WithEvents Calendar As CustomCalendar
     Private varSelectedDay As Date
     Private HeaderLab, TimeHeaderLab, TimeLab, AktuellTimeLab, AvbestillInfoLab As New Label
-    Private TimeInfo As New PictureBox
+    Private TimeInfo, LoadingSurface, Bekreftelse As New PictureBox
+    Private varTimeToday As StaffTimeliste.StaffTime = Nothing
     Private Tabell As New Timetabell
     Private NotifManager As New NotificationManager(RightForm)
-    Private LoadingSurface As New PictureBox
     Private LG As New LoadingGraphics(Of PictureBox)(LoadingSurface)
-    Private Bekreftelse As New PictureBox
     Private WithEvents DBC, DBC_GetRules As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private Property TimeToday As StaffTimeliste.StaffTime
+        Get
+            Return varTimeToday
+        End Get
+        Set(value As StaffTimeliste.StaffTime)
+            varTimeToday = value
+        End Set
+    End Property
     Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
         If Sender.IsLogout Then
-            Parent.Index = 4
-            Bekreftelse.Hide()
-            LG.StopSpin()
-            RightForm.Show()
-            TimeForm.Hide()
-            Calendar.Show()
             Logout()
         Else
-            Parent.Index = 5
-            Bekreftelse.Hide()
-            LG.StopSpin()
-            RightForm.Show()
-            TimeForm.Hide()
-            Calendar.Show()
+            Parent.Index = 2
+            ResetTab()
         End If
+    End Sub
+    Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
+        MyBase.ResetTab(Arguments)
+        Bekreftelse.Hide()
+        LG.StopSpin()
+        RightForm.Show()
+        TimeForm.Hide()
+        Bekreftelse.Hide()
+        With Calendar
+            .CurrentMonth = Date.Now.Month
+            .RemoveCustomStyle(0)
+            .Show()
+        End With
     End Sub
     Public Sub SetAppointment()
         Dim iLast As Integer = TimeListe.Count - 1
-        Dim Dates(iLast) As Date
-        Dim TimeToday As DatabaseTimeElement = Nothing
-        For i As Integer = 0 To iLast
-            With TimeListe.Time(i).DatoOgTid
-                Dates(i) = .Date
-                If .Date = Date.Now.Date Then
-                    TimeToday = TimeListe.Time(i)
-                End If
+        Dim Dates As New List(Of Date)
+        For i As Integer = iLast To 0
+            With TimeListe.TimeAtIndex(i)
+                Select Case .DatoOgTid.Date.CompareTo(Date.Now.Date)
+                    Case 0
+                        TimeToday = TimeListe.TimeAtIndex(i)
+                        Dates.Add(.DatoOgTid)
+                    Case > 0
+                        Dates.Add(.DatoOgTid)
+                    Case Else
+                        TimeListe.RemoveAt(i)
+                End Select
             End With
         Next
-        Calendar.ApplyCustomStyle(Dates, 0)
-
-
-        ' TODO: Uncomment later
-        'If TimeToday IsNot Nothing Then
-        '    HentTimer_DBC.SQLQuery = "SELECT * FROM Egenerklæring WHERE time_id = @id;"
-        '    HentTimer_DBC.Execute({"@id"}, {CStr(TimeToday.TimeID)})
-        'End If
+        Calendar.ApplyCustomStyle(Dates.ToArray, 0)
     End Sub
     Private Sub NameSet() Handles TopBar.NameSet
         With WelcomeLabel
@@ -97,6 +104,24 @@ Public Class TimebestillingTab
             .BackColor = Color.FromArgb(245, 245, 245)
             .Location = New Point(Calendar.Right + 20, Calendar.Top + 80)
             .MakeDashed(Color.FromArgb(220, 220, 220), RightForm.BackColor)
+            .Hide()
+        End With
+        With EmptyForm
+            .Parent = Me
+            .Size = New Size(400, 420)
+            .BackColor = Color.FromArgb(245, 245, 245)
+            .Location = New Point(Calendar.Right + 20, Calendar.Top + 80)
+            .MakeDashed(Color.FromArgb(220, 220, 220), RightForm.BackColor)
+        End With
+        Dim EmptyLab As New Label
+        With EmptyLab
+            .Parent = EmptyLab
+            .AutoSize = False
+            .Size = New Size(80, 20)
+            .TextAlign = ContentAlignment.MiddleCenter
+            .Location = New Point((EmptyForm.Width - .Width) \ 2, (EmptyForm.Height - .Height) \ 2)
+            .ForeColor = Color.FromArgb(80, 80, 80)
+            .Text = "Ingenting valgt"
         End With
         With HeaderLab
             .Parent = RightForm
@@ -146,6 +171,7 @@ Public Class TimebestillingTab
         End With
         AvbestillTimeKnapp = New TopBarButton(TimeForm, My.Resources.AvbrytIcon, "Kanseller denne timen", New Size(136, 36))
         BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36),, AvbestillTimeKnapp.Width)
+
         With BestillTimeKnapp
             .BackColor = Color.LimeGreen
             .ForeColor = Color.White
@@ -223,18 +249,17 @@ Public Class TimebestillingTab
                 End With
                 Tabell.Rules = New Timetabell.WeekRules(TestSeries(0), TestSeries(1), TestSeries(2), TestSeries(3), TestSeries(4), TestSeries(5), TestSeries(6))
             Else
-                MsgBox(.ErrorMessage)
+                NotifManager.Display("Det oppsto en uventet feil ved henting av åpningstider. Vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert, 10)
             End If
         End With
     End Sub
     Private Sub DBC_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        LG.StopSpin()
         If e.ErrorOccurred Then
-            MsgBox("Error: " & e.ErrorMessage)
+            NotifManager.Display("Kunne ikke opprette timeforespørsel på grunn av en uventet feil. Vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert, 10)
         Else
-            MsgBox("Ja")
             Bekreftelse.Show()
         End If
-        LG.StopSpin()
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
@@ -296,14 +321,14 @@ Public Class TimebestillingTab
             Dim MatchFound As Boolean
             Dim MatchAt As Integer
             For i As Integer = 0 To iLast
-                If TimeListe.Time(i).DatoOgTid.Date = varSelectedDay.Date Then
+                If TimeListe.TimeAtIndex(i).DatoOgTid.Date = varSelectedDay.Date Then
                     MatchFound = True
                     MatchAt = i
                     Exit For
                 End If
             Next
             If MatchFound Then
-                With TimeListe.Time(MatchAt).DatoOgTid
+                With TimeListe.TimeAtIndex(MatchAt).DatoOgTid
                     AktuellTimeLab.Text = "Dato: " & vbTab & vbTab & .ToString("d/M/yyyy") & vbNewLine & "Klokkeslett: " & .ToString("HH:mm") & vbNewLine & vbNewLine & "Lorem ipsum"
                 End With
                 RightForm.Hide()
@@ -386,9 +411,10 @@ Public Class Timetabell
     Protected Sub OnTimeElementClick(Sender As TimeElement)
         RefreshStates()
         varSelected = Sender
-        MsgBox(varSelected.Tid.ToString("HH:mm"))
-        varSelected.BackColor = Color.LimeGreen
-        varSelected.ForeColor = Color.White
+        With varSelected
+            .BackColor = Color.LimeGreen
+            .ForeColor = Color.White
+        End With
     End Sub
 #End Region
 #Region "Private methods"

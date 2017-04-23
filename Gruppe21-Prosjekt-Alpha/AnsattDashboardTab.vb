@@ -7,11 +7,12 @@ Public Class AnsattDashboardTab
     Private ViewList As New MultiTabWindow(ViewContainer)
     Private RightViewList As New MultiTabWindow(RightContainer)
     Private T_View As New T_RightView(RightViewList)
+    Private E_View As New E_RightView(RightViewList)
 
     Private Egenerklæringer As New Egenerklæringsliste
     Private Timer As New StaffTimeliste
     Public WithEvents T_NotificationList, E_NotificationList As StaffNotificationContainer
-    Private Header As New TopBar(Me)
+    Private WithEvents Header As New TopBar(Me)
     Private Footer As New Footer(Me)
     'Dim ScrollList As New Donasjoner(Me)
     Private WelcomeLabel As New InfoLabel(True, Direction.Right)
@@ -19,20 +20,39 @@ Public Class AnsattDashboardTab
     Private varTimerHentet, varErklæringerHentet As Boolean
     Private WithEvents DBC_HentEgenerklæringer, DBC_HentTimer As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private Sub NotificationList_Reloaded(Sender As Object, e As EventArgs) Handles T_NotificationList.Reloaded
-        With DBC_HentEgenerklæringer
-            .SQLQuery = "SELECT A.* FROM Egenerklæring A INNER JOIN Time B ON A.time_id = B.time_id WHERE B.a_id = @aid AND A.svar IS NULL ORDER BY A.time_id DESC LIMIT 20;"
-            .Execute({"@aid"}, {CStr(CurrentStaff.ID)})
-        End With
         With DBC_HentTimer
             .SQLQuery = "SELECT * FROM Time WHERE (a_id = @aid AND ansatt_godkjent = 1 OR a_id IS NULL) AND fullført = 0 ORDER BY t_dato ASC LIMIT 20;"
             .Execute({"@aid"}, {CStr(CurrentStaff.ID)})
         End With
     End Sub
+    Private Sub EgenerklæringList_Reloaded(Sender As Object, e As EventArgs) Handles E_NotificationList.Reloaded
+        With DBC_HentEgenerklæringer
+            .SQLQuery = "SELECT A.* FROM Egenerklæring A INNER JOIN Time B ON A.time_id = B.time_id WHERE B.a_id = @aid AND A.svar IS NULL ORDER BY A.time_id DESC LIMIT 20;"
+            .Execute({"@aid"}, {CStr(CurrentStaff.ID)})
+        End With
+    End Sub
+    Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles Header.ButtonClick
+        Logout(True)
+    End Sub
+    Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
+        MyBase.ResetTab(Arguments)
+        Egenerklæringer.Clear()
+        varTimerHentet = False
+        varErklæringerHentet = False
+        WelcomeLabel.Text = ""
+        T_NotificationList.Clear()
+        E_NotificationList.Clear()
+        ViewList.Index = 0
+        RightViewList.Index = 0
+    End Sub
     Public Sub GetData()
         T_NotificationList.Reload()
+        E_NotificationList.Reload()
     End Sub
     Private Sub DBC_HentTimer_Ferdig(sender As Object, e As DatabaseListEventArgs) Handles DBC_HentTimer.ListLoaded
+        T_NotificationList.Spin(False)
         If e.ErrorOccurred Then
+            MsgBox("Error: " & e.ErrorMessage)
             T_NotificationList.ShowMessage("Det oppsto en uventet feil." & vbNewLine & "Sjekk tilkoblingen.", NotificationPreset.OffRedAlert)
         Else
             With e.Data
@@ -47,20 +67,19 @@ Public Class AnsattDashboardTab
                         Dim NewTime As New StaffTimeliste.StaffTime(TimeID, Dato, AnsattGodkjent, Fødselsnummer, AnsattID)
                         Timer.Add(NewTime)
                         If NewTime.AnsattID <> CurrentStaff.ID Then
-                            T_NotificationList.AddNotification("Timeforespørsel fra " & NewTime.Fødselsnummer.ToString, 0, AddressOf Testsub, Color.Blue, NewTime, DatabaseElementType.Time)
+                            T_NotificationList.AddNotification("Timeforespørsel fra " & NewTime.Fødselsnummer.ToString, 0, AddressOf SelectTime, Color.Blue, NewTime, DatabaseElementType.Time)
                         End If
                     Next
-                Else
-                    T_NotificationList.Spin(False)
                 End If
             End With
             varTimerHentet = True
         End If
     End Sub
-    Private Sub Testsub(Sender As StaffNotification, e As StaffNotificationEventArgs)
+    Private Sub SelectTime(Sender As StaffNotification, e As StaffNotificationEventArgs)
         T_View.SelectTime(Sender, e)
     End Sub
     Private Sub DBC_HentEgenerklæringer_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC_HentEgenerklæringer.ListLoaded
+        E_NotificationList.Spin(False)
         If e.ErrorOccurred Then
             T_NotificationList.ShowMessage("Det oppsto en uventet feil." & vbNewLine & "Sjekk tilkoblingen.", NotificationPreset.OffRedAlert)
         Else
@@ -106,10 +125,16 @@ Public Class AnsattDashboardTab
             .BackColor = Color.White
             .Show()
         End With
+        With Header
+            .AddLogout("Logg ut", New Size(0, 36))
+        End With
         T_NotificationList = New StaffNotificationContainer(ViewList, "Timeforespørsler")
         E_NotificationList = New StaffNotificationContainer(ViewList, "Nye egenerklæringer")
         RightViewList.Index = 0
         ViewList.Index = 0
+    End Sub
+    Public Sub SetRightIndex(ByVal Index As Integer)
+        RightViewList.Index = Index
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
@@ -132,6 +157,44 @@ Public Class AnsattDashboardTab
         Private SvarTextBox As New TextBox
         Private WithEvents DBC_Oppdater As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
         Private WithEvents RedigerSkjemaLab, AutoSjekkLab As New Label
+        Private IngentingValgtLab As New Label
+        Public Property SelectedNotification As StaffNotification
+            Get
+                Return varSelectedNotification
+            End Get
+            Set(value As StaffNotification)
+                If varSelectedNotification IsNot Nothing Then
+                    With varSelectedNotification
+                        .BackColor = .DefaultColor
+                        .IsSelected = False
+                    End With
+                End If
+                varSelectedNotification = value
+                If varSelectedNotification Is Nothing Then
+                    SendSvarKnapp.Hide()
+                    RedigerEgenerklæring.Hide()
+                    AutoSjekk.Hide()
+                    AcceptedCheckbox.Hide()
+                    SvarTextBox.Hide()
+                    For Each Lab As Label In DonorInfoLabels
+                        Lab.Text = ""
+                    Next
+                    SkjemaSvar.Text = ""
+                    IngentingValgtLab.Show()
+                Else
+                    With varSelectedNotification
+                        .IsSelected = True
+                        .BackColor = .PressColor
+                    End With
+                    SendSvarKnapp.Show()
+                    RedigerEgenerklæring.Show()
+                    AutoSjekk.Show()
+                    AcceptedCheckbox.Show()
+                    SvarTextBox.Show()
+                    IngentingValgtLab.Hide()
+                End If
+            End Set
+        End Property
         Public Sub New(ParentWindow As MultiTabWindow)
             MyBase.New(ParentWindow)
             With Header
@@ -210,13 +273,23 @@ Public Class AnsattDashboardTab
                 .WordWrap = True
                 .Size = New Size(100, 50)
             End With
+            With IngentingValgtLab
+                .Hide()
+                .ForeColor = Color.FromArgb(80, 80, 80)
+                .Parent = Me
+                .AutoSize = False
+                .Size = New Size(100, 20)
+                .TextAlign = ContentAlignment.MiddleCenter
+                .Text = "Ingenting valgt"
+            End With
+            SelectedNotification = Nothing
         End Sub
         Private Sub DBC_Oppdater_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC_Oppdater.ListLoaded
             If e.ErrorOccurred Then
                 MsgBox("Error")
             Else
-                MsgBox("Success")
                 varSelectedNotification.Close()
+                SelectedNotification = Nothing
             End If
         End Sub
         Private Sub SendSvar_Click() Handles SendSvarKnapp.Click
@@ -259,14 +332,8 @@ Public Class AnsattDashboardTab
             MsgBox("TODO: Vis alternativer for auto-sjekk")
         End Sub
         Public Sub SelectErklæring(Sender As StaffNotification, e As StaffNotificationEventArgs)
-            If varSelectedNotification IsNot Nothing Then
-                varSelectedNotification.BackColor = varSelectedNotification.DefaultColor
-                varSelectedNotification.IsSelected = False
-            End If
-            varSelectedNotification = Sender
+            SelectedNotification = Sender
             With Sender
-                .IsSelected = True
-                .BackColor = .PressColor
                 If .RelatedDonor IsNot Nothing Then
                     With .RelatedDonor
                         DonorInfoLabels(0).Text = "Fødselsnummer: " & .Fødselsnummer.ToString
@@ -297,6 +364,7 @@ Public Class AnsattDashboardTab
                     MsgBox("Donor nothing")
                 End If
             End With
+            Parent.Index = 1
         End Sub
         Protected Overrides Sub OnResize(e As EventArgs)
             MyBase.OnResize(e)
@@ -308,10 +376,11 @@ Public Class AnsattDashboardTab
             With AcceptedCheckbox
                 .Top = SendSvarKnapp.Top
             End With
+            With IngentingValgtLab
+                .Location = New Point((Width - .Width) \ 2, (Height + Header.Bottom - .Height) \ 2)
+            End With
         End Sub
     End Class
-
-
 
     Private Class T_RightView
         Inherits Tab
@@ -321,8 +390,45 @@ Public Class AnsattDashboardTab
         Private Header As New FullWidthControl(Me)
         Private EndreDato, EndreKlokkeslett As New BorderControl(Color.FromArgb(0, 100, 235))
         Private WithEvents DBC_Oppdater As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
-
+        Private IngentingValgtLab As New Label
         Private WithEvents EndreDatoLab, EndreKlokkeslettLab As New Label
+        Public Property SelectedNotification As StaffNotification
+            Get
+                Return varSelectedNotification
+            End Get
+            Set(value As StaffNotification)
+                If varSelectedNotification IsNot Nothing Then
+                    With varSelectedNotification
+                        .BackColor = .DefaultColor
+                        .IsSelected = False
+                    End With
+                End If
+                varSelectedNotification = value
+                If varSelectedNotification Is Nothing Then
+                    GodkjennKnapp.Hide()
+                    AvslåKnapp.Hide()
+                    EndreDato.Hide()
+                    EndreKlokkeslett.Hide()
+                    For Each Lab As Label In DonorInfoLabels
+                        Lab.Text = ""
+                    Next
+                    For Each Lab As Label In TimeInfoLabels
+                        Lab.Text = ""
+                    Next
+                    IngentingValgtLab.Show()
+                Else
+                    GodkjennKnapp.Show()
+                    AvslåKnapp.Show()
+                    EndreDato.Show()
+                    EndreKlokkeslett.Show()
+                    IngentingValgtLab.Hide()
+                    With varSelectedNotification
+                        .IsSelected = True
+                        .BackColor = .PressColor
+                    End With
+                End If
+            End Set
+        End Property
         Public Sub New(ParentWindow As MultiTabWindow)
             MyBase.New(ParentWindow)
             With Header
@@ -394,6 +500,16 @@ Public Class AnsattDashboardTab
                 .BackColorSelected = ColorHelper.Multiply(Color.LimeGreen, 0.7)
                 .Left = AvslåKnapp.Width + 40
             End With
+            With IngentingValgtLab
+                .Hide()
+                .ForeColor = Color.FromArgb(80, 80, 80)
+                .Parent = Me
+                .AutoSize = False
+                .Size = New Size(100, 20)
+                .TextAlign = ContentAlignment.MiddleCenter
+                .Text = "Ingenting valgt"
+            End With
+            SelectedNotification = Nothing
         End Sub
         Private Sub Avslå_Click() Handles AvslåKnapp.Click
             If MsgBox("Hvis det er kapasitet på en nærliggende dag, endre dato og tidspunkt i stedet for å avslå timeforespørselen. Blodgiveren vil bli automatisk informert.", MsgBoxStyle.OkCancel, "Forkast timeforespørsel") = MsgBoxResult.Ok Then
@@ -408,8 +524,8 @@ Public Class AnsattDashboardTab
             If e.ErrorOccurred Then
                 MsgBox("Error")
             Else
-                MsgBox("Success")
                 varSelectedNotification.Close()
+                SelectedNotification = Nothing
             End If
         End Sub
         Private Sub Godkjenn_Click() Handles GodkjennKnapp.Click
@@ -453,16 +569,12 @@ Public Class AnsattDashboardTab
                 MsgBox("Datoen ble skrevet inn feil")
             End Try
         End Sub
-
+        Public Sub SelectNone()
+            SelectedNotification = Nothing
+        End Sub
         Public Sub SelectTime(Sender As StaffNotification, e As StaffNotificationEventArgs)
-            If varSelectedNotification IsNot Nothing Then
-                varSelectedNotification.BackColor = varSelectedNotification.DefaultColor
-                varSelectedNotification.IsSelected = False
-            End If
-            varSelectedNotification = Sender
+            SelectedNotification = Sender
             With Sender
-                .IsSelected = True
-                .BackColor = .PressColor
                 If .RelatedDonor IsNot Nothing Then
                     With .RelatedDonor
                         DonorInfoLabels(0).Text = "Fødselsnummer: " & .Fødselsnummer.ToString
@@ -490,9 +602,10 @@ Public Class AnsattDashboardTab
                         TimeInfoLabels(1).Text = "Klokkeslett: " & .DatoOgTid.ToString("HH:mm")
                     End With
                 Else
-                        ' TODO: Loading graphics
-                        MsgBox("Donor nothing")
+                    ' TODO: Loading graphics
+                    MsgBox("Donor nothing")
                 End If
+                Parent.Index = 0
             End With
         End Sub
         Protected Overrides Sub OnResize(e As EventArgs)
@@ -505,6 +618,9 @@ Public Class AnsattDashboardTab
             With GodkjennKnapp
                 .Top = Height - .Height - 20
             End With
+            With IngentingValgtLab
+                .Location = New Point((Width - .Width) \ 2, (Height + Header.Bottom - .Height) \ 2)
+            End With
         End Sub
     End Class
 End Class
@@ -515,6 +631,14 @@ Public Class Egenerklæringsliste
     Public Sub New()
 
     End Sub
+    Public Sub Clear()
+        Erklæringsliste.Clear()
+    End Sub
+    Public ReadOnly Property Count As Integer
+        Get
+            Return Erklæringsliste.Count
+        End Get
+    End Property
     Public Sub Add(ByRef Egenerklæring As Egenerklæring)
         Erklæringsliste.Add(Egenerklæring)
     End Sub
@@ -678,6 +802,17 @@ Public Class StaffTimeliste
     Public Sub New()
 
     End Sub
+    Public Sub Clear()
+        Timeliste.Clear()
+    End Sub
+    Public Sub RemoveAt(ByVal Index As Integer)
+        Timeliste.RemoveAt(Index)
+    End Sub
+    Public ReadOnly Property Count As Integer
+        Get
+            Return Timeliste.Count
+        End Get
+    End Property
     Public ReadOnly Property Timer As List(Of StaffTime)
         Get
             Return Timeliste

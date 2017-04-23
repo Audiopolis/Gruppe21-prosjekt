@@ -117,6 +117,15 @@ Public Class TopBarButton
             varMinWidth = value
         End Set
     End Property
+    Public Shadows Property BackColor As Color
+        Get
+            Return MyBase.BackColor
+        End Get
+        Set(value As Color)
+            varDefaultBG = value
+            MyBase.BackColor = varDefaultBG
+        End Set
+    End Property
     Public Property IconImage As Image
         Get
             Return varIcon.BackgroundImage
@@ -187,7 +196,7 @@ Public Class TopBarButton
         Else
             varDefaultBG = Color.FromArgb(235, 235, 235)
         End If
-        BackColor = varDefaultBG
+        MyBase.BackColor = varDefaultBG
         BorderPen.Color = ColorHelper.Multiply(varDefaultBG, 0.7)
         ResumeLayout(True)
         Show()
@@ -228,7 +237,7 @@ Public Class TopBarButton
         Else
             varDefaultBG = Color.FromArgb(235, 235, 235)
         End If
-        BackColor = varDefaultBG
+        MyBase.BackColor = varDefaultBG
         BorderPen.Color = ColorHelper.Multiply(varDefaultBG, 0.7)
         ResumeLayout(True)
         Show()
@@ -269,9 +278,9 @@ Public Class TopBarButton
     End Sub
     Protected Friend Sub SelectButton(ByVal DoSelect As Boolean)
         If DoSelect Then
-            BackColor = ColorHelper.Add(varDefaultBG, 10)
+            MyBase.BackColor = ColorHelper.Add(varDefaultBG, 10)
         Else
-            BackColor = varDefaultBG
+            MyBase.BackColor = varDefaultBG
         End If
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)

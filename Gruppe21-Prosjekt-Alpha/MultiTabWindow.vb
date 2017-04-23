@@ -200,17 +200,9 @@ Public Class Tab
     Inherits Control
     'Private Shared ZeroPoint As New Point(0, 0)
     Private varScaleToParent As Boolean = True
-    Private varResetAction As Action(Of Object)
     Protected Friend ListIndex As Integer = -1
     Public Event LayoutRefreshed(Sender As Tab)
-    Public Property ResetAction As Action(Of Object)
-        Get
-            Return varResetAction
-        End Get
-        Set(Action As Action(Of Object))
-            varResetAction = Action
-        End Set
-    End Property
+   
     Public Property ScaleToWindow As Boolean
         Get
             Return varScaleToParent
@@ -233,10 +225,8 @@ Public Class Tab
         RefreshLayout()
         MyBase.Show()
     End Sub
-    Public Sub ResetTab(Optional Arguments As Object = Nothing)
-        If varResetAction IsNot Nothing Then
-            varResetAction.Invoke(Arguments)
-        End If
+    Public Overridable Sub ResetTab(Optional Arguments As Object = Nothing)
+
     End Sub
     Public Shadows Property Parent As MultiTabWindow
         Get

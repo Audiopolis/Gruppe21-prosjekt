@@ -15,36 +15,12 @@ Public NotInheritable Class UserNotificationContainer
     Private varDisplayEmptyLabel As Boolean
     Private ClosingNotifications As New List(Of UserNotification)
     Private NotificationContainer As New Control
-    Private varReloadFunction As Func(Of Object, UserNotification())
     Private WithEvents RefreshButton As New PictureBox
-    Private TSL As ThreadStarterLight
     Public Event Reloaded(Sender As Object, e As EventArgs)
-    Public Property ReloadFunction As Func(Of Object, UserNotification())
-        Get
-            Return varReloadFunction
-        End Get
-        Set(value As Func(Of Object, UserNotification()))
-            varReloadFunction = value
-        End Set
-    End Property
     Public Sub Reload(Optional Args As Object = Nothing)
         Clear()
         Spin()
-        If varReloadFunction IsNot Nothing Then
-            Dim Ret() As UserNotification = varReloadFunction.Invoke(Args)
-        End If
         RaiseEvent Reloaded(Me, EventArgs.Empty)
-    End Sub
-    Public Sub ReloadAsync(Optional Args As Object = Nothing)
-        Clear()
-        If TSL IsNot Nothing Then
-            TSL.Dispose()
-        End If
-        TSL = New ThreadStarterLight(varReloadFunction)
-        With TSL
-            .WhenFinished = AddressOf ReloadAsync_Finished
-            .Start(Args)
-        End With
     End Sub
     Public Sub Clear()
         For Each N As UserNotification In NotificationList
@@ -52,16 +28,6 @@ Public NotInheritable Class UserNotificationContainer
         Next
         NotificationList.Clear()
         NotificationCounter.Text = "0"
-    End Sub
-    Private Sub ReloadAsync_Finished(Result As Object)
-        Dim ResultArr() As UserNotification = DirectCast(Result, UserNotification())
-        For Each UN As UserNotification In ResultArr
-            AddNotification(UN)
-        Next
-        If TSL IsNot Nothing Then
-            TSL.Dispose()
-        End If
-        RaiseEvent Reloaded(Me, EventArgs.Empty)
     End Sub
     Public Property ID As Integer
         Get
@@ -167,7 +133,7 @@ Public NotInheritable Class UserNotificationContainer
             Next
             If ClosingNotifications.Count > 0 Then
                 CloseTimer.Start()
-                End If
+            End If
             If NotificationList.Count > 0 AndAlso StartTimer Then
                 TopTimer.Start()
             End If
@@ -188,9 +154,10 @@ Public NotInheritable Class UserNotificationContainer
         End Get
         Set(value As Boolean)
             varDisplayEmptyLabel = value
+            RefreshLabel()
         End Set
     End Property
-    Private Sub CounterChanged() Handles NotificationCounter.TextChanged
+    Private Sub RefreshLabel()
         If CInt(NotificationCounter.Text) > 0 Then
             NotificationCounter.BackColor = Color.FromArgb(0, 99, 157)
             EmptyLabel.Hide()
@@ -200,6 +167,9 @@ Public NotInheritable Class UserNotificationContainer
                 EmptyLabel.Show()
             End If
         End If
+    End Sub
+    Private Sub CounterChanged() Handles NotificationCounter.TextChanged
+        RefreshLabel()
     End Sub
     Public Sub New(BorderColor As Color)
         MyBase.New(BorderColor)
@@ -225,7 +195,7 @@ Public NotInheritable Class UserNotificationContainer
             .BackgroundImage = My.Resources.Refresh
             .Parent = Header
             .Left = Header.Width - 30
-            .BackColor = Color.Red
+            .BackColor = Header.BackColor
         End With
         With NotificationCounter
             .Parent = Header
@@ -264,8 +234,8 @@ Public NotInheritable Class UserNotificationContainer
         Show()
         ResumeLayout(True)
     End Sub
-    Public Sub AddNotification(Text As String, ID As Object, ClickAction As Action(Of Object, UserNotificationEventArgs), Color As Color)
-        Dim NewNotification As New UserNotification(Me, Text, ID, ClickAction, Color)
+    Public Sub AddNotification(Text As String, ID As Object, ClickAction As Action(Of UserNotification, UserNotificationEventArgs), Color As Color, RelatedElement As Object, ElementType As DatabaseElementType)
+        Dim NewNotification As New UserNotification(Me, Text, ID, ClickAction, Color, RelatedElement, ElementType)
         With NotificationList
             'If .Count > 0 Then
             '    NewNotification.Top = .Last.Bottom + 20
@@ -360,20 +330,27 @@ Public NotInheritable Class UserNotificationContainer
         End Try
     End Sub
 End Class
+
+
 Public Class UserNotification
     Inherits Control
     Private WithEvents Textlab As New Label
     Private varDefaultColor, varHoverColor, varPressColor As Color
     '   Private varColor As Color = Color.Green
-    Private varID As Object
-    Private varIsClosed As Boolean
-    Private varClickAction As Action(Of Object, UserNotificationEventArgs)
-    Private Sub TextLab_MouseDown(Sender As Object, e As MouseEventArgs) Handles Textlab.MouseDown
-        OnMouseDown(e)
-    End Sub
-    Private Sub TextLab_MouseUp(Sender As Object, e As MouseEventArgs) Handles Textlab.MouseUp
-        OnMouseUp(e)
-    End Sub
+    Private varID, varRelatedElement As Object
+    Private varIsClosed, varCloseOnClick, varIsSelected, varInfoLoaded As Boolean
+    Private varClickAction As Action(Of UserNotification, UserNotificationEventArgs)
+    Private varRelatedDonor As Donor
+    Private varElementType As DatabaseElementType
+
+    Public Property IsSelected As Boolean
+        Get
+            Return varIsSelected
+        End Get
+        Set(value As Boolean)
+            varIsSelected = value
+        End Set
+    End Property
     Public Property IsClosed As Boolean
         Get
             Return varIsClosed
@@ -385,6 +362,43 @@ Public Class UserNotification
             End If
         End Set
     End Property
+    Public ReadOnly Property RelatedDonor As Donor
+        Get
+            Return varRelatedDonor
+        End Get
+    End Property
+    Public ReadOnly Property InfoLoaded As Boolean
+        Get
+            Return varInfoLoaded
+        End Get
+    End Property
+    Public ReadOnly Property ElementType As DatabaseElementType
+        Get
+            Return varElementType
+        End Get
+    End Property
+    Public Property RelatedElement As Object
+        Get
+            Return varRelatedElement
+        End Get
+        Set(value As Object)
+            varRelatedElement = value
+        End Set
+    End Property
+    Public Property CloseOnClick As Boolean
+        Get
+            Return varCloseOnClick
+        End Get
+        Set(value As Boolean)
+            varCloseOnClick = value
+        End Set
+    End Property
+    Private Sub TextLab_MouseDown(Sender As Object, e As MouseEventArgs) Handles Textlab.MouseDown
+        OnMouseDown(e)
+    End Sub
+    Private Sub TextLab_MouseUp(Sender As Object, e As MouseEventArgs) Handles Textlab.MouseUp
+        OnMouseUp(e)
+    End Sub
     Public Shadows Property Parent As UserNotificationContainer
         Get
             Return DirectCast(MyBase.Parent, UserNotificationContainer)
@@ -401,8 +415,11 @@ Public Class UserNotification
             varID = value
         End Set
     End Property
-    Public Sub New(ParentContainer As UserNotificationContainer, Message As String, ID As Object, ClickAction As Action(Of Object, UserNotificationEventArgs), Color As Color)
+    Public Sub New(ParentContainer As UserNotificationContainer, Message As String, ID As Object, ClickAction As Action(Of UserNotification, UserNotificationEventArgs), Color As Color, RelatedElement As Object, ElementType As DatabaseElementType)
         Hide()
+        varRelatedElement = RelatedElement
+        varElementType = ElementType
+
         DoubleBuffered = True
         SetStyle(ControlStyles.AllPaintingInWmPaint, True)
         SetStyle(ControlStyles.UserPaint, True)
@@ -440,7 +457,6 @@ Public Class UserNotification
         If varClickAction IsNot Nothing Then
             varClickAction.Invoke(Me, New UserNotificationEventArgs(varID))
         End If
-        Parent.CloseNotification(Me)
     End Sub
     Protected Overrides Sub OnMouseDown(e As MouseEventArgs)
         MyBase.OnMouseDown(e)
@@ -455,6 +471,9 @@ Public Class UserNotification
         If Not Textlab.ClientRectangle.Contains(Textlab.PointToClient(MousePosition)) Then
             BackColor = varDefaultColor
         End If
+    End Sub
+    Public Sub Close()
+        Parent.CloseNotification(Me)
     End Sub
 End Class
 
@@ -591,9 +610,7 @@ Public NotInheritable Class StaffNotificationContainer
     Private varDisplayEmptyLabel As Boolean
     Private ClosingNotifications As New List(Of StaffNotification)
     Private NotificationContainer As New Control
-    Private varReloadFunction As Func(Of Object, StaffNotification())
     Private WithEvents RefreshButton As New PictureBox
-    Private TSL As ThreadStarterLight
     Public Event Reloaded(Sender As Object, e As EventArgs)
     Public Property HeaderText As String
         Get
@@ -603,32 +620,10 @@ Public NotInheritable Class StaffNotificationContainer
             Header.Text = value
         End Set
     End Property
-    Public Property ReloadFunction As Func(Of Object, StaffNotification())
-        Get
-            Return varReloadFunction
-        End Get
-        Set(value As Func(Of Object, StaffNotification()))
-            varReloadFunction = value
-        End Set
-    End Property
     Public Sub Reload(Optional Args As Object = Nothing)
         Clear()
         Spin()
-        If varReloadFunction IsNot Nothing Then
-            Dim Ret() As StaffNotification = varReloadFunction.Invoke(Args)
-        End If
         RaiseEvent Reloaded(Me, EventArgs.Empty)
-    End Sub
-    Public Sub ReloadAsync(Optional Args As Object = Nothing)
-        Clear()
-        If TSL IsNot Nothing Then
-            TSL.Dispose()
-        End If
-        TSL = New ThreadStarterLight(varReloadFunction)
-        With TSL
-            .WhenFinished = AddressOf ReloadAsync_Finished
-            .Start(Args)
-        End With
     End Sub
     Public Sub Clear()
         For Each N As StaffNotification In NotificationList
@@ -636,16 +631,6 @@ Public NotInheritable Class StaffNotificationContainer
         Next
         NotificationList.Clear()
         NotificationCounter.Text = "0"
-    End Sub
-    Private Sub ReloadAsync_Finished(Result As Object)
-        Dim ResultArr() As StaffNotification = DirectCast(Result, StaffNotification())
-        For Each UN As StaffNotification In ResultArr
-            AddNotification(UN)
-        Next
-        If TSL IsNot Nothing Then
-            TSL.Dispose()
-        End If
-        RaiseEvent Reloaded(Me, EventArgs.Empty)
     End Sub
     Public Property ID As Integer
         Get
@@ -686,7 +671,7 @@ Public NotInheritable Class StaffNotificationContainer
     End Sub
     Public Sub ShowMessage(Message As String, Style As NotificationAppearance)
         LG.StopSpin()
-        Dim Notification As New Notification(NotificationContainer, Style, Message, 5, AddressOf NotificationFinished, FloatX.FillWidth, FloatY.FillHeight)
+        Dim Notification As New Notification(Me, Style, Message, 5, AddressOf NotificationFinished, FloatX.FillWidth, FloatY.FillHeight)
         NotificationContainer.Show()
         Notification.Display()
     End Sub
@@ -761,6 +746,7 @@ Public NotInheritable Class StaffNotificationContainer
     End Sub
     Public Sub Spin(Optional SwitchOn As Boolean = True)
         If SwitchOn Then
+            DisplayEmptyLabel = False
             LG.Spin(30, 10)
         Else
             LG.StopSpin()
@@ -774,9 +760,10 @@ Public NotInheritable Class StaffNotificationContainer
         End Get
         Set(value As Boolean)
             varDisplayEmptyLabel = value
+            RefreshLabel()
         End Set
     End Property
-    Private Sub CounterChanged() Handles NotificationCounter.TextChanged
+    Private Sub RefreshLabel()
         If CInt(NotificationCounter.Text) > 0 Then
             NotificationCounter.BackColor = Color.FromArgb(0, 99, 157)
             EmptyLabel.Hide()
@@ -786,6 +773,9 @@ Public NotInheritable Class StaffNotificationContainer
                 EmptyLabel.Show()
             End If
         End If
+    End Sub
+    Private Sub CounterChanged() Handles NotificationCounter.TextChanged
+        RefreshLabel()
     End Sub
     Public Sub New(ParentWindow As MultiTabWindow, HeaderText As String)
         MyBase.New(ParentWindow)

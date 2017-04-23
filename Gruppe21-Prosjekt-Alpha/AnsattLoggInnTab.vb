@@ -68,7 +68,7 @@ Public Class AnsattLoggInnTab
         With LoginForm
             .AddField(FormElementType.TextField)
             With .Last
-                .Header.Text = "Brukernavn (ansatt)"
+                .Header.Text = "Brukernavn (personell)"
                 .Required = True
                 .MinLength = 6
                 .MaxLength = 50

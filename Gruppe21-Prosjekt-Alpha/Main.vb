@@ -69,29 +69,28 @@ Public Class Personopplysninger
     Private PasswordForm As New FlatForm(270, 100, 3, New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.FromArgb(80, 80, 80), Color.White, Color.Black, {True, True, True, True}, 20))
     Private WithEvents TopBar As New TopBar(Me)
     Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
-    Private PicDoktor, PicDoktorPassord As New PictureBox
-    Private PicOpprettKontoInfo As New PictureBox
+    Private PicDoktor, PicDoktorPassord, PicOpprettKontoInfo, PicSuccess As New PictureBox
     Private FormInfo As New Label
     Private InfoLab As New InfoLabel
     Private WithEvents SendKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Neste steg", New Size(0, 36))
     Private AvbrytKnapp As New TopBarButton(FormPanel, My.Resources.AvbrytIcon, "Avbryt", New Size(0, 36), True)
     Private NeiTakkKnapp As New TopBarButton(FormPanel, My.Resources.NeiTakkIcon, "Nei takk", New Size(0, 36))
-    Private PasswordFormVisible As Boolean = False
+    Private PasswordFormVisible As Boolean
     Private LayoutTool As New FormLayoutTools(Me)
     Private Footer As New Footer(Me)
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private FirstHeader As New FullWidthControl(FormPanel)
-    Private FormResult() As String
-    Private PasswordResult() As String
+    Private FormResult(), PasswordResult() As String
     Private NotifManager As New NotificationManager(FirstHeader)
     Private CreateLogin As Boolean = True
-    Private PicSuccess As New PictureBox
+
     Private Sub TopBarButtonClick(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
-        Select Case CInt(Sender.Tag)
-            Case 0
-                ResetForm()
-                Parent.Index = 1
-        End Select
+        ResetForm()
+        If Not Sender.IsLogout Then
+            Parent.Index = 2
+        Else
+            Logout()
+        End If
     End Sub
     Private Sub SendClick() Handles SendKnapp.Click
         If Not PasswordFormVisible Then
@@ -227,6 +226,9 @@ Public Class Personopplysninger
                 .Numeric = True
                 .MinLength = 11
                 .MaxLength = 11
+            End With
+            With DirectCast(.Last, FlatForm.FormTextField).TextField
+                AddHandler .TextChanged, AddressOf CheckGender
             End With
             .AddField(FormElementType.TextField, 107)
             With .Last
@@ -430,6 +432,16 @@ Public Class Personopplysninger
         FormPanel.Show()
         ResumeLayout()
     End Sub
+    Private Sub CheckGender(Sender As Object, e As EventArgs)
+        Dim Chars() As Char = DirectCast(Sender, TextBox).Text.ToCharArray
+        If Chars.Length > 8 Then
+            If (Convert.ToInt32(Chars(8)) Mod 2 = 1) Then
+                Personalia.Field(2, 0).Value = True
+            Else
+                Personalia.Field(2, 1).Value = True
+            End If
+        End If
+    End Sub
     Private Sub PanInTest() Handles Me.DoubleClick
         InfoLab.PanIn()
     End Sub
@@ -488,9 +500,9 @@ Public Class Personopplysninger
             RemoveHandler PasswordForm.Field(1, 0).ValueChanged, AddressOf PasswordChanged
             RemoveHandler PasswordForm.Field(1, 0).ValidChanged, AddressOf PasswordValidChanged
             RemoveHandler PasswordForm.Field(2, 0).ValidChanged, AddressOf PasswordValidChanged
+            RemoveHandler DirectCast(Personalia.Field(0, 0), FlatForm.FormTextField).TextField.TextChanged, AddressOf CheckGender
             LayoutTool.Dispose()
             NotifManager.Dispose()
-
         End If
         MyBase.Dispose(disposing)
     End Sub
@@ -546,18 +558,6 @@ Public Class LoggInnNy
         Parent.Index = 2
         Egenerklæring.InitiateForm()
         LoginForm.ClearAll()
-        If HentTimer_DBC IsNot Nothing Then
-            HentTimer_DBC.Dispose()
-        End If
-        HentTimer_DBC = New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
-        With HentTimer_DBC
-            .SQLQuery = "SELECT time_id, t_dato, t_klokkeslett FROM Time WHERE b_fodselsnr = @nr AND NOT (a_id IS NOT NULL AND ansatt_godkjent = 0);"
-            .Execute({"@nr"}, {PersonalNumber})
-        End With
-        If HentEgenerklæring_DBC IsNot Nothing Then
-            HentEgenerklæring_DBC.Dispose()
-        End If
-        HentEgenerklæring_DBC = New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
         If ErrorOccurred Then
@@ -701,6 +701,7 @@ Public Class LoggInnNy
     End Sub
     Private Sub LoggInn_Click(sender As Object, e As EventArgs)
         PersonalNumber = LoginForm.Field(0, 0).Value.ToString
+        ' TODO: Loading Graphics
         UserLogin.LoginAsync(LoginForm.Field(0, 0).Value.ToString, LoginForm.Field(1, 0).Value.ToString, "Brukerkonto", "b_fodselsnr", "passord")
     End Sub
     Private Sub PasswordChanged(Sender As FormField, Value As Object)
@@ -817,7 +818,7 @@ End Class
 
 Public Class DashboardTab
     Inherits Tab
-    Public NotificationList As New UserNotificationContainer(Color.FromArgb(210, 210, 210))
+    Public WithEvents NotificationList As New UserNotificationContainer(Color.FromArgb(210, 210, 210))
     Private Header As New TopBar(Me)
     'Dim ScrollList As New Donasjoner(Me)
     Private WithEvents Beholder As New BlodBeholder(My.Resources.Tom_beholder, My.Resources.Full_beholder)
@@ -830,19 +831,90 @@ Public Class DashboardTab
     Private OrganDonorInfo As New PictureBox
     Private IsLoaded As Boolean
     Private Messages As New MessageNotification(Header)
-    Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private WithEvents DBC, HentTimer_DBC, HentEgenerklæring_DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+
+    Private Sub DBC_HentTimer_Finished(Sender As Object, e As DatabaseListEventArgs) Handles HentTimer_DBC.ListLoaded
+        If Not e.ErrorOccurred Then
+            For Each Row As DataRow In e.Data.Rows
+                Dim TimeID As Integer = DirectCast(Row.Item(0), Integer)
+                Dim AnsattGodkjent As Boolean = DirectCast(Row.Item(1), Boolean)
+                Dim Dato As Date = DirectCast(Row.Item(2), Date).Date.Add(DirectCast(Row.Item(3), TimeSpan))
+                Dim AnsattID As Object = Row.Item(4)
+                Dim Fødselsnummer As String = DirectCast(Row.Item(5), Int64).ToString
+                Dim Behandlet As Boolean = DirectCast(Row.Item(6), Boolean)
+                Dim NewTime As New StaffTimeliste.StaffTime(TimeID, Dato, AnsattGodkjent, Fødselsnummer, AnsattID)
+                TimeListe.Add(NewTime)
+            Next
+            DirectCast(Windows.Tab(4), TimebestillingTab).SetAppointment()
+            Dim AppointmentTodayID As Integer = -1
+            For Each T As StaffTimeliste.StaffTime In TimeListe.Timer
+                If T.DatoOgTid.Date = Date.Now.Date Then
+                    AppointmentTodayID = T.TimeID
+                    Exit For
+                End If
+            Next
+            If AppointmentTodayID >= 0 Then
+                With HentEgenerklæring_DBC
+                    .SQLQuery = "SELECT * FROM Egenerklæring WHERE time_id = @id LIMIT 1;"
+                    .Execute({"@id"}, {CStr(AppointmentTodayID)})
+                End With
+            Else
+                With Dashboard.NotificationList
+                    .Spin(False)
+                End With
+            End If
+        Else
+            ' TODO: Logg bruker ut med feilmelding
+            Logout()
+        End If
+    End Sub
+    Private Sub DBC_Failed() Handles HentTimer_DBC.ExecutionFailed
+        NotificationList.ShowMessage("Kunne ikke hente notifikasjoner og gjøremål. Trykk på ikonet over for å prøve på nytt. Hvis problemet fortsetter, vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert)
+    End Sub
+    Private Sub Egenerklæring_Hentet(Sender As Object, e As DatabaseListEventArgs) Handles HentEgenerklæring_DBC.ListLoaded
+        With e.Data.Rows
+            If .Count > 0 Then
+                With .Item(0)
+                    Dim TimeID As Integer = DirectCast(.Item(0), Integer)
+                    Dim SvarString As String = DirectCast(.Item(1), String)
+                    Dim Land As String = DirectCast(.Item(2), String)
+                    Dim Godkjent As Boolean = DirectCast(.Item(3), Boolean)
+                    Dim AnsattSvar As String = Nothing
+                    If Not IsDBNull(.Item(4)) Then
+                        AnsattSvar = DirectCast(.Item(4), String)
+                    End If
+                    Dim NewElement As New Egenerklæringsliste.Egenerklæring(TimeID, SvarString, Land, Godkjent)
+                    NewElement.AnsattSvar = AnsattSvar
+                    CurrentLogin.FormInfo = NewElement
+                    If AnsattSvar IsNot Nothing Then
+                        Dashboard.NotificationList.AddNotification("Du har fått svar på din egenerklæring. Klikk her for mer informasjon.", 0, AddressOf FormAnswered, Color.LimeGreen, NewElement, DatabaseElementType.Egenerklæring)
+                    Else
+                        Dashboard.NotificationList.AddNotification("Din egenerklæring for dagens time er til behandling.", 1, AddressOf CloseNotification, Color.LimeGreen, NewElement, DatabaseElementType.Egenerklæring)
+                    End If
+                End With
+            Else
+                CurrentLogin.FormInfo = Nothing
+                Dashboard.NotificationList.AddNotification("Du har ikke sendt egenerklæring for dagens time. Klikk her for å gå til skjemaet.", 2, AddressOf FormNotSent, Color.Red, TimeListe.GetElementWhere(StaffTimeliste.TimeEgenskap.Dato, Date.Now.Date), DatabaseElementType.Time)
+            End If
+        End With
+    End Sub
+    Public Sub HentBrukerTimer() Handles NotificationList.Reloaded
+        With HentTimer_DBC
+            .SQLQuery = "SELECT * FROM Time WHERE b_fodselsnr = @nr AND NOT (a_id IS NOT NULL AND ansatt_godkjent = 0);"
+            .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
+        End With
+    End Sub
+
     Private Sub TopBarButtonClick(sender As Object, e As EventArgs)
         Dim SenderButton As TopBarButton = DirectCast(sender, TopBarButton)
         If SenderButton.IsLogout Then
-            Parent.Index = 1
             Logout()
         Else
             Select Case CInt(SenderButton.Tag)
                 Case 0
                     Parent.Index = 4
                 Case 1
-                    Parent.Index = 3
-                Case 2
+                    ' TODO: Rediger profil
                     Messages.Start()
             End Select
         End If
@@ -853,7 +925,6 @@ Public Class DashboardTab
         If Not IsLoaded Then
             With Header
                 .AddButton(My.Resources.TimeBestillingIcon, "Bestill ny time", New Size(135, 36))
-                .AddButton(My.Resources.EgenerklaeringIcon, "Registrer egenerklæring", New Size(135, 36))
                 .AddButton(My.Resources.RedigerProfilIcon, "Rediger profil", New Size(135, 36))
                 .AddLogout("Logg ut", New Size(135, 36))
                 AddHandler .ButtonClick, AddressOf TopBarButtonClick
@@ -893,6 +964,7 @@ Public Class DashboardTab
             .SQLQuery = "SELECT b_fornavn, b_etternavn FROM Blodgiver WHERE b_fodselsnr = @nr;"
             .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
         End With
+        NotificationList.Reload()
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
         With e.Data
@@ -918,6 +990,9 @@ Public Class DashboardTab
         ElseIf current <= 0 Then
             increment = True
         End If
+    End Sub
+    Public Sub GetData()
+        NotificationList.Reload()
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         SuspendLayout()

@@ -104,8 +104,12 @@ Public Class FormField
         End Get
         Set(value As Integer)
             varMinMax(1) = value
+            OnMaxLengthChanged()
         End Set
     End Property
+    Protected Overridable Sub OnMaxLengthChanged()
+
+    End Sub
     Protected Friend Overridable Sub Clear(ByVal ClearNonInput As Boolean)
 
     End Sub
@@ -1320,6 +1324,10 @@ Public Class FlatForm
                 IsValid = True
             End If
         End Sub
+        Protected Overrides Sub OnMaxLengthChanged()
+            MyBase.OnMaxLengthChanged()
+            varTextField.MaxLength = varMinMax(1)
+        End Sub
         Public Property PlaceHolder As String
             Get
                 Return varPlaceHolder
@@ -1355,6 +1363,11 @@ Public Class FlatForm
                         e.Graphics.DrawString(varPlaceHolder, varTextField.Font, NewBrush, PlaceHolderPoint)
                     End With
                 End Using
+            End If
+        End Sub
+        Private Sub Field_KeyPress(Sender As Object, e As KeyPressEventArgs) Handles varTextField.KeyPress
+            If varIsNumeric AndAlso Not Char.IsNumber(e.KeyChar) AndAlso Not Char.IsControl(e.KeyChar) Then
+                e.Handled = True
             End If
         End Sub
         Private Sub Field_TextChanged() Handles varTextField.TextChanged
