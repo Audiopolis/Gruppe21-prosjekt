@@ -277,7 +277,7 @@ Public Class AnsattDashboardTab
             With SkjemaSvar
                 .Parent = Me
                 .AutoSize = False
-                .Size = New Size(300, 20)
+                .Size = New Size(500, 40)
                 .Location = New Point(20, DonorInfoLabels(DonorInfoLabels.Count - 1).Bottom + 30)
             End With
             With AutoSjekk
@@ -499,7 +499,6 @@ Public Class AnsattDashboardTab
                     End With
                     With DirectCast(.RelatedElement, Egenerklæringsliste.Egenerklæring)
                         SkjemaSvar.Text = "Sammendrag: " & .SkjemaString
-                        MsgBox(.SkjemaString & "!!!")
                     End With
                 Else
                     ' TODO: Loading graphics
@@ -1082,17 +1081,17 @@ Public Class LabRapportView
     End Sub
     Private Sub TimerPost(State As Object)
         X += 1
-        With PlasmaColumn
-            .Height = CInt(EaseInOut.GetY(0, Verdier(0), X, Xmax))
-            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 60)
-        End With
         With RBColumn
             .Height = CInt(EaseInOut.GetY(0, Verdier(1), X, Xmax))
-            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 60)
+            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 90)
+        End With
+        With PlasmaColumn
+            .Height = CInt(EaseInOut.GetY(0, Verdier(0), X, Xmax))
+            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 90)
         End With
         With TromboColumn
             .Height = CInt(EaseInOut.GetY(0, Verdier(2), X, Xmax))
-            .Location = New Point(PlasmaColumn.Right + 10, Height - .Height - 60)
+            .Location = New Point(RBColumn.Right + 10, Height - .Height - 90)
         End With
         If X < Xmax Then
             varEaseTimer.Start()
@@ -1127,34 +1126,29 @@ Public Class LabRapportView
             .Parent = Me
             .Size = New Size(50, 50)
         End With
+
+        With RBColumn
+            .Size = New Size(80, 0)
+            .BackColor = OffRed
+            .Parent = Me
+            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 90)
+        End With
         With PlasmaColumn
             .Size = New Size(80, 0)
             .BackColor = OffGreen
             .Parent = Me
             .Show()
-            .Location = New Point(20, Height - .Height - 50)
-        End With
-        With RBColumn
-            .Size = New Size(80, 0)
-            .BackColor = OffRed
-            .Parent = Me
-            .Location = New Point(110, Height - .Height - 50)
+            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 90)
         End With
         With TromboColumn
             .Size = New Size(80, 0)
             .BackColor = OffBlue
             .Parent = Me
-            .Location = New Point(200, Height - .Height - 50)
+            .Location = New Point(RBColumn.Right + 10, Height - .Height - 90)
         End With
-        With RBColumn
-            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 60)
-        End With
-        With PlasmaColumn
-            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 60)
-        End With
-        With TromboColumn
-            .Location = New Point(PlasmaColumn.Right + 10, Height - .Height - 60)
-        End With
+
+
+
         NotifManager = New NotificationManager(Header)
         LG = New LoadingGraphics(Of PictureBox)(LoadingSurface)
         With LG
@@ -1220,13 +1214,13 @@ Public Class LabRapportView
             .Location = New Point((Width - .Width) \ 2, (Height + Header.Bottom - .Height) \ 2)
         End With
         With RBColumn
-            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 60)
+            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 90)
         End With
         With PlasmaColumn
-            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 60)
+            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 90)
         End With
         With TromboColumn
-            .Location = New Point(PlasmaColumn.Right + 10, Height - .Height - 60)
+            .Location = New Point(RBColumn.Right + 10, Height - .Height - 90)
         End With
     End Sub
 End Class
