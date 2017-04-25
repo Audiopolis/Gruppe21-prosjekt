@@ -166,6 +166,9 @@
     <Compile Include="PaintMessageHelper.vb" />
     <Compile Include="PieChart.vb" />
     <Compile Include="CryptoServiceProvider.vb" />
+    <Compile Include="RedigerProfilTab.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Splash.Designer.vb">
       <DependentUpon>Splash.vb</DependentUpon>
     </Compile>
@@ -347,6 +350,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\klokke.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\rør.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\NeedleArt.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

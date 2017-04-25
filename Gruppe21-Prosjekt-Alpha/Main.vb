@@ -39,6 +39,7 @@ Public Class Main
             AnsattLoggInn = New AnsattLoggInnTab(Windows) ' Index 5
             OpprettAnsatt = New OpprettAnsattTab(Windows) ' Index 6
             AnsattDashboard = New AnsattDashboardTab(Windows) ' Index = 7
+            RedigerProfil = New RedigerProfilTab(Windows) ' Index = 8
             With Windows
                 .BackColor = Color.FromArgb(240, 240, 240)
                 .Index = 1
@@ -48,12 +49,13 @@ Public Class Main
 
             '
             ' TODO: Remove:
-            ControlBox = True
-            MaximizeBox = True
-            FormBorderStyle = FormBorderStyle.SizableToolWindow
-            ShowInTaskbar = True
-            SizeGripStyle = SizeGripStyle.Show
-            TopMost = False
+            'ControlBox = False
+            'MaximizeBox = False
+            'FormBorderStyle = FormBorderStyle.None
+            'ShowInTaskbar = False
+            'SizeGripStyle = SizeGripStyle.Hide
+            'TopMost = False
+            'WindowState = FormWindowState.Maximized
         End If
     End Sub
 
@@ -85,12 +87,7 @@ Public Class Personopplysninger
     Private CreateLogin As Boolean = True
 
     Private Sub TopBarButtonClick(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
-        ResetForm()
-        If Not Sender.IsLogout Then
-            Parent.Index = 2
-        Else
-            Logout()
-        End If
+        Logout()
     End Sub
     Private Sub SendClick() Handles SendKnapp.Click
         If Not PasswordFormVisible Then
@@ -458,6 +455,10 @@ Public Class Personopplysninger
         ResetForm()
         Parent.Index = 1
     End Sub
+    Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
+        MyBase.ResetTab(Arguments)
+        ResetForm()
+    End Sub
     Private Sub ResetForm()
         FormPanel.Hide()
         DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
@@ -824,16 +825,13 @@ Public Class DashboardTab
     Private WithEvents Beholder As New BlodBeholder(My.Resources.Tom_beholder, My.Resources.Full_beholder)
     Private WelcomeLabel As New InfoLabel(True, Direction.Right)
 
-    ' TODO: Remove
-    Private current As Integer
-    Private increment As Boolean = True
-
     Private OrganDonorInfo As New PictureBox
     Private IsLoaded As Boolean
     Private Messages As New MessageNotification(Header)
     Private WithEvents DBC, HentTimer_DBC, HentEgenerklæring_DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
 
     Private Sub DBC_HentTimer_Finished(Sender As Object, e As DatabaseListEventArgs) Handles HentTimer_DBC.ListLoaded
+        TimeListe.Clear()
         If Not e.ErrorOccurred Then
             For Each Row As DataRow In e.Data.Rows
                 Dim TimeID As Integer = DirectCast(Row.Item(0), Integer)
@@ -841,14 +839,16 @@ Public Class DashboardTab
                 Dim Dato As Date = DirectCast(Row.Item(2), Date).Date.Add(DirectCast(Row.Item(3), TimeSpan))
                 Dim AnsattID As Object = Row.Item(4)
                 Dim Fødselsnummer As String = DirectCast(Row.Item(5), Int64).ToString
-                Dim Behandlet As Boolean = DirectCast(Row.Item(6), Boolean)
-                Dim NewTime As New StaffTimeliste.StaffTime(TimeID, Dato, AnsattGodkjent, Fødselsnummer, AnsattID)
+                Dim Fullført As Boolean = DirectCast(Row.Item(6), Boolean)
+                Dim BlodgiverGodkjent As Boolean = DirectCast(Row.Item(7), Boolean)
+                Dim NewTime As New StaffTimeliste.StaffTime(TimeID, Dato, AnsattGodkjent, Fødselsnummer, AnsattID, BlodgiverGodkjent)
+                NewTime.Fullført = Fullført
                 TimeListe.Add(NewTime)
             Next
-            DirectCast(Windows.Tab(4), TimebestillingTab).SetAppointment()
+            Timebestilling.SetAppointment()
             Dim AppointmentTodayID As Integer = -1
             For Each T As StaffTimeliste.StaffTime In TimeListe.Timer
-                If T.DatoOgTid.Date = Date.Now.Date Then
+                If T.DatoOgTid.Date = Date.Now.Date AndAlso T.BlodgiverGodkjent Then
                     AppointmentTodayID = T.TimeID
                     Exit For
                 End If
@@ -899,27 +899,25 @@ Public Class DashboardTab
         End With
     End Sub
     Public Sub HentBrukerTimer() Handles NotificationList.Reloaded
+        NotificationList.Clear()
         With HentTimer_DBC
             .SQLQuery = "SELECT * FROM Time WHERE b_fodselsnr = @nr AND NOT (a_id IS NOT NULL AND ansatt_godkjent = 0);"
             .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
         End With
     End Sub
-
-    Private Sub TopBarButtonClick(sender As Object, e As EventArgs)
-        Dim SenderButton As TopBarButton = DirectCast(sender, TopBarButton)
-        If SenderButton.IsLogout Then
+    Private Sub TopBarButtonClick(Sender As TopBarButton, e As EventArgs)
+        If Sender.IsLogout Then
             Logout()
         Else
-            Select Case CInt(SenderButton.Tag)
+            Select Case CInt(Sender.Tag)
                 Case 0
                     Parent.Index = 4
                 Case 1
-                    ' TODO: Rediger profil
-                    Messages.Start()
+                    Windows.Index = 8
+                    RedigerProfil.AutoFillOutForm(CurrentLogin.RelatedDonor)
             End Select
         End If
     End Sub
-
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
         If Not IsLoaded Then
@@ -964,6 +962,7 @@ Public Class DashboardTab
             .SQLQuery = "SELECT b_fornavn, b_etternavn FROM Blodgiver WHERE b_fodselsnr = @nr;"
             .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
         End With
+        Beholder.GetBlood()
         NotificationList.Reload()
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
@@ -978,22 +977,6 @@ Public Class DashboardTab
     'Public Shadows Sub Show()
     '    MyBase.Show()
     'End Sub
-    Private Sub SubClickTest() Handles Beholder.Click
-        If increment Then
-            current += 30
-        Else
-            current -= 30
-        End If
-        Beholder.SlideToPercentage(current)
-        If current >= 90 Then
-            increment = False
-        ElseIf current <= 0 Then
-            increment = True
-        End If
-    End Sub
-    Public Sub GetData()
-        NotificationList.Reload()
-    End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         SuspendLayout()
         MyBase.OnResize(e)

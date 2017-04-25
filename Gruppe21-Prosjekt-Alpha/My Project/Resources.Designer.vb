@@ -173,6 +173,16 @@ Namespace My.Resources
         '''<summary>
         '''  Looks up a localized resource of type System.Drawing.Bitmap.
         '''</summary>
+        Friend ReadOnly Property klokke() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("klokke", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
         Friend ReadOnly Property LOADING() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("LOADING", resourceCulture)
@@ -196,6 +206,16 @@ Namespace My.Resources
         Friend ReadOnly Property Meldingsboks() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("Meldingsboks", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property NeedleArt() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("NeedleArt", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property
@@ -306,6 +326,16 @@ Namespace My.Resources
         Friend ReadOnly Property RefreshHover() As System.Drawing.Bitmap
             Get
                 Dim obj As Object = ResourceManager.GetObject("RefreshHover", resourceCulture)
+                Return CType(obj,System.Drawing.Bitmap)
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  Looks up a localized resource of type System.Drawing.Bitmap.
+        '''</summary>
+        Friend ReadOnly Property rør() As System.Drawing.Bitmap
+            Get
+                Dim obj As Object = ResourceManager.GetObject("rør", resourceCulture)
                 Return CType(obj,System.Drawing.Bitmap)
             End Get
         End Property

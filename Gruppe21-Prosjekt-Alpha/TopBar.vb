@@ -95,6 +95,7 @@ Public Class TopBar
         End Try
     End Sub
 End Class
+
 Public Class TopBarButton
     Inherits Control
     Private WithEvents TBButtonLabel As New Label
@@ -157,6 +158,14 @@ Public Class TopBarButton
         Get
             Return TBButtonLabel
         End Get
+    End Property
+    Public Shadows Property Text As String
+        Get
+            Return TBButtonLabel.Text
+        End Get
+        Set(value As String)
+            TBButtonLabel.Text = value
+        End Set
     End Property
     Private Sub SetTextHeight() Handles TBButtonLabel.TextChanged
         Dim TextSize As Size = TextRenderer.MeasureText(Label.Text, Label.Font)

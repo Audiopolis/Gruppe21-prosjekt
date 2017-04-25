@@ -168,16 +168,16 @@ Public Class ThreadStarter
     Protected Overridable Sub Dispose(disposing As Boolean)
         If Not disposedValue Then
             If disposing Then
-                If NoParamMethodTask IsNot Nothing Then
+                If NoParamMethodTask IsNot Nothing AndAlso (NoParamMethodTask.IsCanceled OrElse NoParamMethodTask.IsCompleted OrElse NoParamMethodTask.IsFaulted) Then
                     NoParamMethodTask.Dispose()
                 End If
-                If ParamMethodTask IsNot Nothing Then
+                If ParamMethodTask IsNot Nothing AndAlso (ParamMethodTask.IsCanceled OrElse ParamMethodTask.IsCompleted OrElse ParamMethodTask.IsFaulted) Then
                     ParamMethodTask.Dispose()
                 End If
-                If NoParamFuncThread IsNot Nothing Then
+                If NoParamFuncThread IsNot Nothing AndAlso (NoParamFuncThread.IsCanceled OrElse NoParamFuncThread.IsCompleted OrElse NoParamFuncThread.IsFaulted) Then
                     NoParamFuncThread.Dispose()
                 End If
-                If ParamFuncThread IsNot Nothing Then
+                If ParamFuncThread IsNot Nothing AndAlso (ParamFuncThread.IsCanceled OrElse ParamFuncThread.IsCompleted OrElse ParamFuncThread.IsFaulted) Then
                     ParamFuncThread.Dispose()
                 End If
             End If

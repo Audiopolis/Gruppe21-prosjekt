@@ -1229,7 +1229,7 @@ Public Class EgenerklæringTab
             Tekst.Show()
             NotifManager.Display("Takk for at du sparer miljøet! Egenerklæringen er sendt inn elektronisk.", NotificationPreset.GreenSuccess)
             varSelectedTime.Close()
-            Dashboard.GetData()
+            Dashboard.HentBrukerTimer()
         End If
     End Sub
     Private Sub DBC_Failed(SenderTag As Object) Handles DBC.ExecutionFailed

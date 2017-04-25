@@ -99,13 +99,22 @@ Public Class AnsattLoggInnTab
             .Parent = FormPanel
             .Left = LoginForm.Left
             .Top = LoginForm.Bottom + 10
-            AddHandler .Click, AddressOf Opprett_Click
         End With
         With LoggInnKnapp
             .Parent = FormPanel
             .Left = OpprettBrukerKnapp.Right + 10
             .Top = LoginForm.Bottom + 10
-            AddHandler .Click, AddressOf LoggInn_Click
+        End With
+        With LoadingSurface
+            .Hide()
+            .Size = New Size(50, 50)
+            .Parent = FormPanel
+            .Location = New Point((FormPanel.Width - .Width) \ 2, (FormPanel.Height - .Height + FormHeader.Bottom) \ 2)
+        End With
+        LG = New LoadingGraphics(Of PictureBox)(LoadingSurface)
+        With LG
+            .Stroke = 3
+            .Pen.Color = Color.FromArgb(162, 25, 51)
         End With
         With DBC_GetInfo
             .SQLQuery = "SELECT a_id, a_fornavn, a_etternavn FROM Ansatt WHERE a_brukernavn = @brukernavn;"
@@ -113,11 +122,15 @@ Public Class AnsattLoggInnTab
         FormPanel.Show()
         ResumeLayout()
     End Sub
-    Private Sub LoggInn_Click(sender As Object, e As EventArgs)
+    Private Sub LoggInn_Click(sender As Object, e As EventArgs) Handles LoggInnKnapp.Click
+        LoginForm.Hide()
+        LoggInnKnapp.Hide()
+        OpprettBrukerKnapp.Hide()
+        LG.Spin(30, 10)
         AnsattLogin.LoginAsync(LoginForm.Field(0, 0).Value.ToString, LoginForm.Field(1, 0).Value.ToString, "Ansatt", "a_brukernavn", "a_passord")
         ' TODO: LoadingGraphics
     End Sub
-    Private Sub Opprett_Click(sender As Object, e As EventArgs)
+    Private Sub Opprett_Click(sender As Object, e As EventArgs) Handles OpprettBrukerKnapp.Click
         Parent.Index = 6
     End Sub
     Private Sub NotificationOpened() Handles NotifManager.NotificationOpened
@@ -160,10 +173,15 @@ Public Class AnsattLoggInnTab
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetInfo.ListLoaded
         If e.ErrorOccurred OrElse e.Data.Rows.Count = 0 Then
+            LG.StopSpin()
             CurrentStaff.EraseInfo()
             CurrentStaff = Nothing
-            MsgBox("Error: " & e.ErrorMessage)
+            LoginForm.Show()
+            LoggInnKnapp.Show()
+            OpprettBrukerKnapp.Show()
+            NotifManager.Display("Feil brukernavn eller passord", NotificationPreset.OffRedAlert)
         Else
+            LG.StopSpin()
             With e.Data.Rows(0)
                 CurrentStaff.ID = DirectCast(.Item(0), Integer)
                 CurrentStaff.FirstName = DirectCast(.Item(1), String)
@@ -172,11 +190,14 @@ Public Class AnsattLoggInnTab
                 AnsattDashboard.GetData()
             End With
         End If
+        LoginForm.Show()
+        LoggInnKnapp.Show()
+        OpprettBrukerKnapp.Show()
     End Sub
     Private Sub DBC_Failed() Handles DBC_GetInfo.ExecutionFailed
         CurrentStaff.EraseInfo()
         CurrentStaff = Nothing
-        MsgBox("Uventet feil")
+        NotifManager.Display("Noe gikk galt. Kontakt administrator.", NotificationPreset.OffRedAlert)
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
         If ErrorOccurred Then

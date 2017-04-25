@@ -67,8 +67,6 @@ Public NotInheritable Class UserNotificationContainer
     Public Sub ShowMessage(Message As String, Style As NotificationAppearance)
         LG.StopSpin()
         Dim Notification As New Notification(NotificationContainer, Style, Message, 5, AddressOf NotificationFinished, FloatX.FillWidth, FloatY.FillHeight)
-        NotificationContainer.Show()
-        Notification.Display()
     End Sub
     Private Sub RemoveAt(Index As Integer)
         With NotificationList
@@ -313,7 +311,7 @@ Public NotInheritable Class UserNotificationContainer
                     Next
                 End If
             Else
-                MsgBox("match not found")
+
             End If
             NotificationCounter.Text = CStr(.Count)
         End With
@@ -324,6 +322,9 @@ Public NotInheritable Class UserNotificationContainer
                 LG.Dispose()
                 TopTimer.Dispose()
                 CloseTimer.Dispose()
+                For Each N As UserNotification In NotificationList
+                    N.Dispose()
+                Next
             End If
         Finally
             MyBase.Dispose(disposing)
@@ -746,12 +747,13 @@ Public NotInheritable Class StaffNotificationContainer
     End Sub
     Public Sub Spin(Optional SwitchOn As Boolean = True)
         If SwitchOn Then
-            DisplayEmptyLabel = False
             LG.Spin(30, 10)
+            NotificationCounter.Text = NotificationList.Count.ToString
+            DisplayEmptyLabel = False
         Else
             LG.StopSpin()
-            DisplayEmptyLabel = True
             NotificationCounter.Text = NotificationList.Count.ToString
+            DisplayEmptyLabel = True
         End If
     End Sub
     Public Property DisplayEmptyLabel As Boolean
@@ -764,6 +766,9 @@ Public NotInheritable Class StaffNotificationContainer
         End Set
     End Property
     Private Sub RefreshLabel()
+        If Not varDisplayEmptyLabel Then
+            EmptyLabel.Hide()
+        End If
         If CInt(NotificationCounter.Text) > 0 Then
             NotificationCounter.BackColor = Color.FromArgb(0, 99, 157)
             EmptyLabel.Hide()
@@ -811,6 +816,10 @@ Public NotInheritable Class StaffNotificationContainer
                 AddHandler .Click, AddressOf HeaderButton_Click
             End With
         Next
+        HeaderButtons(0).BackgroundImage = My.Resources.klokke
+        HeaderButtons(1).BackgroundImage = My.Resources.EgenerklaeringIcon
+        HeaderButtons(2).BackgroundImage = My.Resources.NeedleArt
+        HeaderButtons(3).BackgroundImage = My.Resources.rør
 
         With NotificationContainer
             .Hide()
@@ -944,7 +953,7 @@ Public NotInheritable Class StaffNotificationContainer
                     Next
                 End If
             Else
-                MsgBox("match not found")
+
             End If
             NotificationCounter.Text = CStr(.Count)
         End With
@@ -1118,7 +1127,7 @@ Public Class StaffNotification
     End Sub
     Private Sub DBC_GetInfo_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetInfo.ListLoaded
         If e.ErrorOccurred Then
-            MsgBox("Error occurred")
+
         Else
             With e.Data.Rows(0)
                 If IsDBNull(.Item(4)) Then
@@ -1137,9 +1146,7 @@ Public Class StaffNotification
                 Dim Postnummer As Integer = DirectCast(.Item(8), Integer)
                 Dim KjønnEpostSMS() As Boolean = {DirectCast(.Item(9), Boolean), DirectCast(.Item(10), Boolean), DirectCast(.Item(11), Boolean)}
                 Dim Blodtype As String = DirectCast(.Item(12), String)
-
                 varRelatedDonor = New Donor(Fødselsnummer, Navn(0), Navn(1), Telefon, EpostOgAdresse(0), EpostOgAdresse(1), Blodtype, KjønnEpostSMS(1), KjønnEpostSMS(2), KjønnEpostSMS(0), Postnummer)
-
             End With
         End If
         DBC_GetInfo.Dispose()
@@ -1159,7 +1166,7 @@ Public Class StaffNotification
             If varClickAction IsNot Nothing Then
                 varClickAction.Invoke(Me, New StaffNotificationEventArgs(varID))
             Else
-                MsgBox("Nothing")
+
             End If
             If varCloseOnClick Then
                 Parent.CloseNotification(Me)
@@ -1258,10 +1265,13 @@ Public Class Donor
             Return varAdresse
         End Get
     End Property
-    Public ReadOnly Property Blodtype As String
+    Public Property Blodtype As String
         Get
             Return varBlodtype
         End Get
+        Set(value As String)
+            varBlodtype = value
+        End Set
     End Property
     Public Sub New(Fødselsnummer As Int64, Fornavn As String, Etternavn As String, Telefon() As String, Epost As String, Adresse As String, Blodtype As String, SendEpost As Boolean, SendSMS As Boolean, Hankjønn As Boolean, Postnummer As Integer)
         varFødselsnummer = Fødselsnummer

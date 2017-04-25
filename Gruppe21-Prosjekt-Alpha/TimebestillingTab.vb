@@ -10,16 +10,21 @@ Public Class TimebestillingTab
     Private RightForm, TimeForm, EmptyForm As New BorderControl(Color.Red)
     Private WithEvents TopBar As New TopBar(Me)
     Private Footer As New Footer(Me)
-    Private WithEvents BestillTimeKnapp, AvbestillTimeKnapp As TopBarButton
+    Private WithEvents BestillTimeKnapp, GodtaDatoKnapp, AvbestillTimeKnapp As TopBarButton
     Private WithEvents Calendar As CustomCalendar
     Private varSelectedDay As Date
     Private HeaderLab, TimeHeaderLab, TimeLab, AktuellTimeLab, AvbestillInfoLab As New Label
-    Private TimeInfo, LoadingSurface, Bekreftelse As New PictureBox
+    Private TimeInfo, LoadingSurfaceBestill, LoadingSurfaceAvbestill, Bekreftelse As New PictureBox
     Private varTimeToday As StaffTimeliste.StaffTime = Nothing
     Private Tabell As New Timetabell
-    Private NotifManager As New NotificationManager(RightForm)
-    Private LG As New LoadingGraphics(Of PictureBox)(LoadingSurface)
-    Private WithEvents DBC, DBC_GetRules As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Dim PrevStyle As New CustomCalendar.CalendarDayStyle(Color.FromArgb(160, 160, 160), Color.FromArgb(195, 195, 195), Color.FromArgb(160, 160, 160))
+    Dim CurrentStyle As New CustomCalendar.CalendarDayStyle(Color.White, Color.FromArgb(162, 25, 51), Color.FromArgb(225, 111, 111))
+    Dim NextStyle As New CustomCalendar.CalendarDayStyle(Color.FromArgb(160, 160, 160), Color.FromArgb(195, 195, 195), Color.FromArgb(160, 160, 160))
+    Private NotifManagerBestill As New NotificationManager(RightForm)
+    Private NotifManagerAvbestill As New NotificationManager(TimeForm)
+    Private LGBestill As New LoadingGraphics(Of PictureBox)(LoadingSurfaceBestill)
+    Private LGAvbestill As New LoadingGraphics(Of PictureBox)(LoadingSurfaceAvbestill)
+    Private WithEvents DBC, DBC_GetRules, DBC_Delete, DBC_GodtaDato As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private Property TimeToday As StaffTimeliste.StaffTime
         Get
             Return varTimeToday
@@ -38,34 +43,35 @@ Public Class TimebestillingTab
     End Sub
     Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
         MyBase.ResetTab(Arguments)
-        Bekreftelse.Hide()
-        LG.StopSpin()
+        LGBestill.StopSpin()
         RightForm.Show()
         TimeForm.Hide()
         Bekreftelse.Hide()
+        EmptyForm.Show()
         With Calendar
             .CurrentMonth = Date.Now.Month
-            .RemoveCustomStyle(0)
+            '.RemoveCustomStyle(0)
             .Show()
         End With
     End Sub
     Public Sub SetAppointment()
+        Calendar.RemoveCustomStyle(0,, False)
         Dim iLast As Integer = TimeListe.Count - 1
         Dim Dates As New List(Of Date)
-        For i As Integer = iLast To 0
+        For i As Integer = iLast To 0 Step -1
             With TimeListe.TimeAtIndex(i)
                 Select Case .DatoOgTid.Date.CompareTo(Date.Now.Date)
                     Case 0
                         TimeToday = TimeListe.TimeAtIndex(i)
-                        Dates.Add(.DatoOgTid)
+                        Dates.Add(.DatoOgTid.Date)
                     Case > 0
-                        Dates.Add(.DatoOgTid)
+                        Dates.Add(.DatoOgTid.Date)
                     Case Else
                         TimeListe.RemoveAt(i)
                 End Select
             End With
         Next
-        Calendar.ApplyCustomStyle(Dates.ToArray, 0)
+        Calendar.ApplyCustomStyle(Dates.ToArray, 0, True)
     End Sub
     Private Sub NameSet() Handles TopBar.NameSet
         With WelcomeLabel
@@ -73,11 +79,24 @@ Public Class TimebestillingTab
             .PanIn() 'TODO: Add optional method to skip the panning
         End With
     End Sub
+    Protected Overrides Sub Dispose(disposing As Boolean)
+        If disposing Then
+            WelcomeLabel.Dispose()
+            RightForm.Dispose()
+            TimeForm.Dispose()
+            EmptyForm.Dispose()
+            Calendar.Dispose()
+            NotifManagerBestill.Dispose()
+            NotifManagerAvbestill.Dispose()
+            LGBestill.Dispose()
+            LGAvbestill.Dispose()
+            DBC.Dispose()
+            DBC_GetRules.Dispose()
+        End If
+        MyBase.Dispose(disposing)
+    End Sub
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
-        Dim PrevStyle As New CustomCalendar.CalendarDayStyle(Color.FromArgb(160, 160, 160), Color.FromArgb(195, 195, 195), Color.FromArgb(160, 160, 160))
-        Dim CurrentStyle As New CustomCalendar.CalendarDayStyle(Color.White, Color.FromArgb(162, 25, 51), Color.FromArgb(225, 111, 111))
-        Dim NextStyle As New CustomCalendar.CalendarDayStyle(Color.FromArgb(160, 160, 160), Color.FromArgb(195, 195, 195), Color.FromArgb(160, 160, 160))
         Calendar = New CustomCalendar(PrevStyle, CurrentStyle, NextStyle, 0, 0, 80, 80, 5, 5,,,, New String() {"Januar", "Februar", "Mars", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Desember"})
         With Calendar
             .SetDayNames(New String() {"Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"})
@@ -115,19 +134,19 @@ Public Class TimebestillingTab
         End With
         Dim EmptyLab As New Label
         With EmptyLab
-            .Parent = EmptyLab
+            .Parent = EmptyForm
             .AutoSize = False
             .Size = New Size(80, 20)
             .TextAlign = ContentAlignment.MiddleCenter
             .Location = New Point((EmptyForm.Width - .Width) \ 2, (EmptyForm.Height - .Height) \ 2)
             .ForeColor = Color.FromArgb(80, 80, 80)
-            .Text = "Ingenting valgt"
+            .Text = "Velg en dato"
         End With
         With HeaderLab
             .Parent = RightForm
             .AutoSize = False
             .Size = New Size(RightForm.Width - 40, 30)
-            .Location = New Point(20, 20)
+            .Location = New Point(20, 60)
             .BackColor = RightForm.BackColor
             .ForeColor = Color.FromArgb(60, 60, 60)
             .Text = "Når på dagen passer det best for deg?"
@@ -137,7 +156,7 @@ Public Class TimebestillingTab
             .Parent = TimeForm
             .AutoSize = False
             .Size = New Size(RightForm.Width - 40, 30)
-            .Location = New Point(20, 20)
+            .Location = New Point(20, 60)
             .BackColor = RightForm.BackColor
             .ForeColor = Color.FromArgb(60, 60, 60)
             .Text = "Du har en time på den valgte dagen."
@@ -171,7 +190,7 @@ Public Class TimebestillingTab
         End With
         AvbestillTimeKnapp = New TopBarButton(TimeForm, My.Resources.AvbrytIcon, "Kanseller denne timen", New Size(136, 36))
         BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36),, AvbestillTimeKnapp.Width)
-
+        GodtaDatoKnapp = New TopBarButton(TimeForm, My.Resources.OKIconHvit, "Ja, jeg kan møte", New Size(136, 36),, AvbestillTimeKnapp.Width)
         With BestillTimeKnapp
             .BackColor = Color.LimeGreen
             .ForeColor = Color.White
@@ -180,6 +199,12 @@ Public Class TimebestillingTab
         With AvbestillTimeKnapp
             .Location = New Point(20, TimeForm.Height - .Height - 20)
             .BackColor = Color.FromArgb(162, 25, 51)
+            .ForeColor = Color.White
+        End With
+        With GodtaDatoKnapp
+            .Hide()
+            .Location = New Point(20, AvbestillTimeKnapp.Top - .Height - 20)
+            .BackColor = Color.LimeGreen
             .ForeColor = Color.White
         End With
         With AvbestillInfoLab
@@ -210,28 +235,136 @@ Public Class TimebestillingTab
             .Text = "Du er logget inn som..."
             .Height = TopBar.LogoutButton.Height - 3
         End With
-        With LoadingSurface
+        With LoadingSurfaceBestill
             .Hide()
-            .Parent = Me
+            .Location = New Point((RightForm.Width - .Width) \ 2, (RightForm.Height - .Height) \ 2)
+            .Parent = RightForm
             .SendToBack()
-            .Size = New Size(100, 50)
+            .Size = New Size(50, 50)
+        End With
+        With LoadingSurfaceAvbestill
+            .Hide()
+            .Location = New Point((TimeForm.Width - .Width) \ 2, (TimeForm.Height - .Height) \ 2)
+            .Parent = TimeForm
+            .SendToBack()
+            .Size = New Size(50, 50)
+        End With
+        With LGBestill
+            .Stroke = 3
+            .Pen.Color = Color.FromArgb(162, 25, 51)
+        End With
+        With LGAvbestill
+            .Stroke = 3
+            .Pen.Color = Color.FromArgb(162, 25, 51)
         End With
         With Bekreftelse
             .Hide()
             .BackgroundImage = My.Resources.bekreftelseImg
-            .Size = .BackgroundImage.Size
+            .BackgroundImageLayout = ImageLayout.Center
+            .Size = Size
             .Parent = Me
         End With
+        DBC_Delete.SQLQuery = "DELETE FROM Time WHERE t_dato = @dato AND b_fodselsnr = @nr;"
         DBC.SQLQuery = "INSERT INTO Time (t_dato, t_klokkeslett, b_fodselsnr) VALUES (@dato, @tid, @nr);"
         DBC_GetRules.SQLQuery = "SELECT Serie FROM Ukeregler;"
         DBC_GetRules.Execute()
     End Sub
     Private Sub BestillClick() Handles BestillTimeKnapp.Click
-        DBC.Execute({"@dato", "@tid", "@nr"}, {varSelectedDay.ToString("yyyy-MM-dd"), Tabell.SelectedTime.ToString("HH:mm"), CurrentLogin.PersonalNumber})
-        RightForm.Hide()
+        If Not Tabell.SelectedTime = Nothing Then
+            Dim FoundElement As StaffTimeliste.StaffTime = TimeListe.GetElementWhere(StaffTimeliste.TimeEgenskap.DatoOgTid, Date.Now.Date.AddDays(1), StaffTimeliste.ComparisonOperator.GreaterThan)
+            If FoundElement Is Nothing Then
+                Dim DateMinusThree As Date = varSelectedDay.AddMonths(-3)
+                If CurrentLogin.LatestAppointment = Nothing OrElse CurrentLogin.LatestAppointment.CompareTo(DateMinusThree) <= 0 Then
+                    DBC.Execute({"@dato", "@tid", "@nr"}, {varSelectedDay.ToString("yyyy-MM-dd"), Tabell.SelectedTime.ToString("HH:mm"), CurrentLogin.PersonalNumber})
+                    For Each C As Control In RightForm.Controls
+                        C.Hide()
+                    Next
+                    LGBestill.Spin(30, 10)
+                Else
+                    NotifManagerBestill.Display("Det må ha gått minst 3 måneder siden du sist tappet blod" & vbNewLine & "for å sende en timeforespørsel for denne dagen.", NotificationPreset.OffRedAlert)
+                End If
+            Else
+                NotifManagerBestill.Display("Du har allerede utestående timeforespørsler.", NotificationPreset.OffRedAlert)
+            End If
+        Else
+            NotifManagerBestill.Display("Vennligst velg et tidspunkt fra timetabellen.", NotificationPreset.OffRedAlert, 3)
+        End If
+    End Sub
+    Private Sub DeleteAppointment()
+        Dim Element As StaffTimeliste.StaffTime = TimeListe.GetElementWhere(StaffTimeliste.TimeEgenskap.Dato, varSelectedDay.Date)
+        Dim Allow As Boolean
+        If Element IsNot Nothing Then
+            If Element.DatoOgTid.CompareTo(Date.Now.AddDays(1)) < 0 Then
+                NotifManagerAvbestill.Display("Minst 24 timer", NotificationPreset.OffRedAlert)
+            Else
+                Allow = True
+            End If
+        Else
+            Allow = True
+        End If
+        If Allow Then
+            DBC_Delete.Execute({"@dato", "@nr"}, {Element.DatoOgTid.ToString("yyyy-MM-dd"), CurrentLogin.PersonalNumber})
+            For Each C As Control In TimeForm.Controls
+                C.Hide()
+            Next
+            LGAvbestill.Spin(30, 10)
+        End If
+    End Sub
+    Private Sub AvbestillClick() Handles AvbestillTimeKnapp.Click
+        DeleteAppointment()
+    End Sub
+    Private Sub GodtaDatoClick() Handles GodtaDatoKnapp.Click
+        Dim Element As StaffTimeliste.StaffTime = TimeListe.GetElementWhere(StaffTimeliste.TimeEgenskap.Dato, varSelectedDay)
+        If Element IsNot Nothing Then
+            DBC_GodtaDato.SQLQuery = "UPDATE Time SET b_godkjent = 1 WHERE time_id = @id;"
+            DBC_GodtaDato.Execute({"@id"}, {Element.TimeID.ToString})
+            For Each C As Control In TimeForm.Controls
+                C.Hide()
+            Next
+            LGAvbestill.Spin(30, 10)
+        End If
+    End Sub
+    Private Sub DBC_GodtaFinished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GodtaDato.ListLoaded
+        LGAvbestill.StopSpin()
         TimeForm.Hide()
-        Calendar.Hide()
-        LG.Spin(30, 10)
+        For Each C As Control In TimeForm.Controls
+            C.Show()
+        Next
+        'Dim PreviouslySelected As CustomCalendar.CalendarDay = Calendar.Day(varSelectedDay)
+        'If PreviouslySelected IsNot Nothing Then
+        '    PreviouslySelected.SetColors(CurrentStyle)
+        'End If
+        varSelectedDay = Date.Now.Date
+        Tabell.CurrentDate = varSelectedDay
+        For Each C As Control In TimeForm.Controls
+            C.Show()
+        Next
+        If e.ErrorOccurred Then
+
+        End If
+        EmptyForm.Show()
+        Dashboard.HentBrukerTimer()
+    End Sub
+    Private Sub DBC_GodtaFailed(Sender As Integer) Handles DBC_GodtaDato.ExecutionFailed
+
+    End Sub
+    Private Sub DBC_DeleteFinished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_Delete.ListLoaded
+        If e.ErrorOccurred Then
+
+        End If
+        LGAvbestill.StopSpin()
+        TimeForm.Hide()
+        Dim PreviouslySelected As CustomCalendar.CalendarDay = Calendar.Day(varSelectedDay)
+        If PreviouslySelected IsNot Nothing Then
+            PreviouslySelected.SetColors(CurrentStyle)
+        End If
+        varSelectedDay = Date.Now.Date
+        Tabell.CurrentDate = varSelectedDay
+        For Each C As Control In TimeForm.Controls
+            C.Show()
+        Next
+        EmptyForm.Show()
+        Dashboard.HentBrukerTimer()
     End Sub
     Private Sub DBC_GetRules_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC_GetRules.ListLoaded
         With e
@@ -249,17 +382,30 @@ Public Class TimebestillingTab
                 End With
                 Tabell.Rules = New Timetabell.WeekRules(TestSeries(0), TestSeries(1), TestSeries(2), TestSeries(3), TestSeries(4), TestSeries(5), TestSeries(6))
             Else
-                NotifManager.Display("Det oppsto en uventet feil ved henting av åpningstider. Vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert, 10)
+                NotifManagerBestill.Display("Det oppsto en uventet feil ved henting av åpningstider. Vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert, 10)
             End If
         End With
     End Sub
     Private Sub DBC_Finished(sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
-        LG.StopSpin()
+        For Each C As Control In RightForm.Controls
+            C.Show()
+        Next
+        LGBestill.StopSpin()
         If e.ErrorOccurred Then
-            NotifManager.Display("Kunne ikke opprette timeforespørsel på grunn av en uventet feil. Vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert, 10)
+            NotifManagerBestill.Display("Kunne ikke opprette timeforespørsel på grunn av en uventet feil. Vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert, 10)
         Else
+            EmptyForm.Hide()
+            RightForm.Hide()
+            TimeForm.Hide()
+            varSelectedDay = Date.Now.Date
+            Calendar.Hide()
             Bekreftelse.Show()
+            Bekreftelse.BringToFront()
+            Dashboard.HentBrukerTimer()
         End If
+    End Sub
+    Protected Overrides Sub OnDoubleClick(e As EventArgs)
+        MyBase.OnDoubleClick(e)
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
         MyBase.OnResize(e)
@@ -280,21 +426,21 @@ Public Class TimebestillingTab
             With TimeForm
                 .Location = New Point(AlignRect.Right - .Width, Calendar.Top + 80)
             End With
+            With EmptyForm
+                .Location = New Point(AlignRect.Right - .Width, Calendar.Top + 80)
+            End With
             With WelcomeLabel
                 .Location = New Point(Width - 430, TopBar.LogoutButton.Top)
                 .Size = New Size(300, TopBar.LogoutButton.Height - 3)
             End With
-            With LoadingSurface
-                .Location = New Point(Width \ 2 - .Width \ 2, Height \ 2 - .Height \ 2)
-            End With
             With Bekreftelse
-                .Location = New Point(Width \ 2 - .Width \ 2, Height \ 2 - .Height \ 2)
+                .Size = New Size(Width, Height - TopBar.Bottom)
+                .Top = TopBar.Bottom
             End With
         End If
     End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
-        LG.StopSpin()
-        MsgBox("Failed")
+        LGBestill.StopSpin()
     End Sub
     Private Sub DayEnter(sender As CustomCalendar.CalendarDay) Handles Calendar.MouseEnter
         With sender
@@ -306,7 +452,8 @@ Public Class TimebestillingTab
             .BackColor = ColorHelper.Add(.BackColor, -20)
         End With
     End Sub
-    Private Sub DayClick(sender As CustomCalendar.CalendarDay) Handles Calendar.Click
+    'Private Sub SelectDay
+    Private Sub SelectDay(sender As CustomCalendar.CalendarDay)
         Dim PreviouslySelected As CustomCalendar.CalendarDay = Calendar.Day(varSelectedDay)
         If PreviouslySelected IsNot Nothing Then
             PreviouslySelected.SetColors(PreviouslySelected.LastStyleApplied)
@@ -328,33 +475,65 @@ Public Class TimebestillingTab
                 End If
             Next
             If MatchFound Then
-                With TimeListe.TimeAtIndex(MatchAt).DatoOgTid
-                    AktuellTimeLab.Text = "Dato: " & vbTab & vbTab & .ToString("d/M/yyyy") & vbNewLine & "Klokkeslett: " & .ToString("HH:mm") & vbNewLine & vbNewLine & "Lorem ipsum"
+                With TimeListe.TimeAtIndex(MatchAt)
+                    With .DatoOgTid
+                        AktuellTimeLab.Text = "Dato: " & vbTab & vbTab & .ToString("d/M/yyyy") & vbNewLine & "Klokkeslett: " & .ToString("HH:mm") & vbNewLine & vbNewLine & "Lorem ipsum"
+                    End With
+                    If .Godkjent Then
+                        If .BlodgiverGodkjent Then
+                            TimeHeaderLab.Text = "Du har en time på den valgte datoen."
+                            AvbestillTimeKnapp.Text = "Jeg kan ikke møte"
+                            GodtaDatoKnapp.Hide()
+                        Else
+                            TimeHeaderLab.Text = "Tilbud om time"
+                            AvbestillTimeKnapp.Text = "Jeg kan ikke møte"
+                            GodtaDatoKnapp.Show()
+                        End If
+                    Else
+                        TimeHeaderLab.Text = "Du har bedt om time på den valgte datoen."
+                        AvbestillTimeKnapp.Text = "Kanseller timeforespørsel"
+                        GodtaDatoKnapp.Hide()
+                    End If
                 End With
                 RightForm.Hide()
                 TimeForm.Show()
-            Else
+            ElseIf varSelectedDay.CompareTo(Date.Now.Date) > 0 Then
                 TimeForm.Hide()
                 RightForm.Show()
+            Else
+                TimeForm.Hide()
+                RightForm.Hide()
+                EmptyForm.Show()
             End If
-        Else
+        ElseIf varSelectedDay.CompareTo(Date.Now.Date) > 0 Then
             TimeForm.Hide()
             RightForm.Show()
+        Else
+            TimeForm.Hide()
+            RightForm.Hide()
+            EmptyForm.Show()
         End If
+    End Sub
+    Private Sub DayClick(sender As CustomCalendar.CalendarDay) Handles Calendar.Click
+        SelectDay(sender)
     End Sub
 End Class
 
 Public Class Timetabell
     Inherits Control
     Private Timeliste As New List(Of TimeElement)
-    Private varCurrentDate As Date = Date.Now
+    Private varCurrentDate As Date = Date.Now.Date
     Private varRuleSet As WeekRules = Nothing
     Private varSpecialRules As New List(Of SpecialDayRule)
     Private varSelected As TimeElement = Nothing
 #Region "Properties"
     Public ReadOnly Property SelectedTime As Date
         Get
-            Return varSelected.Tid
+            If varSelected IsNot Nothing Then
+                Return varSelected.Tid
+            Else
+                Return Nothing
+            End If
         End Get
     End Property
     Public Property CurrentDate As Date
@@ -362,10 +541,14 @@ Public Class Timetabell
             Return varCurrentDate
         End Get
         Set(value As Date)
-            varCurrentDate = value
+            varCurrentDate = value.Date
             RefreshStates()
         End Set
     End Property
+    Public Sub Reset()
+        varCurrentDate = Date.Now
+        varSelected = Nothing
+    End Sub
     Public Property Rules As WeekRules
         Get
             Return varRuleSet

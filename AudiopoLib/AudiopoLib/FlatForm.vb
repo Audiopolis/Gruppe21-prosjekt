@@ -1375,6 +1375,9 @@ Public Class FlatForm
             If TextField.Text = "" AndAlso Not TextField.Focused Then
                 TextField.SendToBack()
                 PlaceHolderSurface.Show()
+            Else
+                TextField.BringToFront()
+                PlaceHolderSurface.Hide()
             End If
             With PlaceHolderSurface
                 PlaceHolderPoint = New Point(PaddingLeft - 6, .Height \ 2 - TextRenderer.MeasureText(varTextField.Text, varTextField.Font).Height \ 2 - 6)

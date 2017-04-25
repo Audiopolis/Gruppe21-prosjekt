@@ -14,7 +14,7 @@ Public Class OpprettAnsattTab
     Private NotifManager As New NotificationManager(FirstHeader)
     Private CreateLogin As Boolean = True
     Private ValidityChecker As MySqlAdminLogin
-    Private LoadingSurface, SuccessPic As New PictureBox
+    Private LoadingSurface As New PictureBox
     Private LG As LoadingGraphics(Of PictureBox)
     Private TSL As ThreadStarterLight
     Public Sub New(Window As MultiTabWindow)
@@ -182,13 +182,6 @@ Public Class OpprettAnsattTab
             .Stroke = 3
             .Pen.Color = Color.FromArgb(230, 50, 80)
         End With
-        With SuccessPic
-            .Hide()
-            .Parent = FormPanel
-            .BackgroundImage = My.Resources.bekreftelseImg
-            .Size = .BackgroundImage.Size
-            .Location = New Point((FormPanel.Width - Width) \ 2, (FirstHeader.Bottom + Height - .Height) \ 2)
-        End With
         FormPanel.Show()
         ResumeLayout()
     End Sub
@@ -333,7 +326,6 @@ Public Class OpprettAnsattTab
             .Label.Font = New Font(.Font, FontStyle.Regular)
             .Text = "Videre"
         End With
-        SuccessPic.Hide()
         PasswordFormVisible = False
         DBC.SQLQuery = ""
         DBC.Password = ""
@@ -344,6 +336,9 @@ Public Class OpprettAnsattTab
             RemoveHandler PasswordForm.Field(1, 0).ValidChanged, AddressOf PasswordValidChanged
             RemoveHandler PasswordForm.Field(2, 0).ValidChanged, AddressOf PasswordValidChanged
             NotifManager.Dispose()
+            LG.Dispose()
+            TSL.Dispose()
+            ValidityChecker.Dispose()
         End If
         MyBase.Dispose(disposing)
     End Sub
@@ -355,8 +350,21 @@ Public Class OpprettAnsattTab
                 .Left = (Width - .Width) \ 2
                 .Top = TopBar.Bottom + (Height - Footer.Height - .Height - TopBar.Bottom) \ 2
             End With
+            With LoadingSurface
+                .Location = New Point((FormPanel.Width - .Width) \ 2, (FirstHeader.Bottom + FormPanel.Height - .Height) \ 2)
+            End With
         End If
         ResumeLayout(True)
+    End Sub
+    Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
+        MyBase.ResetTab(Arguments)
+        LG.StopSpin()
+        SendKnapp.Enabled = True
+        Personalia.Show()
+        PasswordForm.Hide()
+        SendKnapp.Show()
+        AvbrytKnapp.Show()
+        ResetForm()
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
         LG.StopSpin()
@@ -368,7 +376,6 @@ Public Class OpprettAnsattTab
             NotifManager.Display("Det oppsto en uventet feil.", NotificationPreset.OffRedAlert)
         Else
             NotifManager.Display("Den nye brukeren er klar.", NotificationPreset.GreenSuccess)
-            SuccessPic.Show()
         End If
     End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed

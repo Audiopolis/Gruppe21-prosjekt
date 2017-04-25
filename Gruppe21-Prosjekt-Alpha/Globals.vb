@@ -32,6 +32,8 @@ Module Globals
     Public OpprettAnsatt As OpprettAnsattTab
     Public Credentials As DatabaseCredentials
     Public AnsattDashboard As AnsattDashboardTab
+    Public RedigerProfil As RedigerProfilTab
+
     Public TimerHentet As Boolean
 
 
@@ -52,7 +54,8 @@ Module Globals
         Sender.close
     End Sub
     Public Sub FormAnswered(Sender As UserNotification, e As UserNotificationEventArgs)
-        MsgBox("Godkjent: " & CurrentLogin.FormInfo.Godkjent.ToString & ", begrunnelse: " & CurrentLogin.FormInfo.AnsattSvar)
+        MsgBox(DirectCast(Sender.RelatedElement, Egenerklæringsliste.Egenerklæring).AnsattSvar)
+        Sender.Close()
     End Sub
     Public Sub FormNotSent(Sender As UserNotification, e As UserNotificationEventArgs)
         Egenerklæring.SelectTime(Sender, e)
@@ -163,6 +166,60 @@ End Class
 Public Class UserInfo
     Private Number, varFirstName, varLastName As String
     Private varFormInfo As Egenerklæringsliste.Egenerklæring
+    Private varLatestAppointment As Date
+    Private varRelatedDonor As Donor
+    Private WithEvents DBC_GetDonorInfo As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private WithEvents DBC_GetLastAppointment As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Public Property RelatedDonor As Donor
+        Get
+            Return varRelatedDonor
+        End Get
+        Set(value As Donor)
+            varRelatedDonor = value
+        End Set
+    End Property
+    Public Property LatestAppointment As Date
+        Get
+            Return varLatestAppointment
+        End Get
+        Set(value As Date)
+            varLatestAppointment = value
+        End Set
+    End Property
+    Private Sub DBC_GetLast_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetLastAppointment.ListLoaded
+        If e.ErrorOccurred Then
+            varLatestAppointment = Nothing
+        ElseIf e.Data.Rows.Count > 0 Then
+            varLatestAppointment = DirectCast(e.Data.Rows(0).Item(0), Date).Date
+        End If
+        DBC_GetLastAppointment.Dispose()
+    End Sub
+    Private Sub DBC_GetDonor_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetDonorInfo.ListLoaded
+        If e.ErrorOccurred Then
+            Logout()
+        Else
+            With e.Data.Rows(0)
+                If IsDBNull(.Item(4)) Then
+                    .Item(4) = "Ikke registrert"
+                End If
+                If IsDBNull(.Item(5)) Then
+                    .Item(5) = "Ikke registrert"
+                End If
+                If IsDBNull(.Item(12)) Then
+                    .Item(12) = "Ukjent"
+                End If
+                Dim Fødselsnummer As Long = DirectCast(.Item(0), Long)
+                Dim Navn() As String = {DirectCast(.Item(1), String), DirectCast(.Item(2), String)}
+                Dim Telefon() As String = {DirectCast(.Item(3), String), DirectCast(.Item(4), String), DirectCast(.Item(5), String)}
+                Dim EpostOgAdresse() As String = {DirectCast(.Item(6), String), DirectCast(.Item(7), String)}
+                Dim Postnummer As Integer = DirectCast(.Item(8), Integer)
+                Dim KjønnEpostSMS() As Boolean = {DirectCast(.Item(9), Boolean), DirectCast(.Item(10), Boolean), DirectCast(.Item(11), Boolean)}
+                Dim Blodtype As String = DirectCast(.Item(12), String)
+                varRelatedDonor = New Donor(Fødselsnummer, Navn(0), Navn(1), Telefon, EpostOgAdresse(0), EpostOgAdresse(1), Blodtype, KjønnEpostSMS(1), KjønnEpostSMS(2), KjønnEpostSMS(0), Postnummer)
+            End With
+        End If
+        DBC_GetDonorInfo.Dispose()
+    End Sub
     Public Property FormInfo As Egenerklæringsliste.Egenerklæring
         Get
             Return varFormInfo
@@ -175,6 +232,9 @@ Public Class UserInfo
         Number = Nothing
         varFirstName = Nothing
         varLastName = Nothing
+        varFormInfo = Nothing
+        varLatestAppointment = Nothing
+        varRelatedDonor = Nothing
     End Sub
     Public ReadOnly Property FullName As String
         Get
@@ -201,6 +261,11 @@ Public Class UserInfo
         Number = PersonalNumber
         varFirstName = "Undefined"
         varLastName = "Undefined"
+        DBC_GetLastAppointment.SQLQuery = "SELECT t_dato FROM Time WHERE fullført = 1 AND b_fodselsnr = @nr ORDER BY t_dato DESC LIMIT 1;"
+        DBC_GetLastAppointment.Execute({"@nr"}, {PersonalNumber})
+
+        DBC_GetDonorInfo.SQLQuery = "SELECT * FROM Blodgiver WHERE b_fodselsnr = @id LIMIT 1;"
+        DBC_GetDonorInfo.Execute({"@id"}, {PersonalNumber})
     End Sub
     Public Property PersonalNumber As String
         Get
