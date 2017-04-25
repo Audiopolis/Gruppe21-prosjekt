@@ -66,8 +66,8 @@ Public Class AnsattDashboardTab
                         Dim BlodgiverGodkjent As Boolean = DirectCast(Row.Item(7), Boolean)
                         Dim NewTime As New StaffTimeliste.StaffTime(TimeID, Dato, AnsattGodkjent, Fødselsnummer, AnsattID, BlodgiverGodkjent)
                     NewTime.Fullført = Fullført
-                    Lab_NotificationList.AddNotification("Blodmengde klar for behandling", 0, AddressOf SelectLab, Color.Blue, NewTime, DatabaseElementType.Time)
-                    Next
+                    Lab_NotificationList.AddNotification("Blodmengde klar for behandling", 0, AddressOf SelectLab, OffBlue, NewTime, DatabaseElementType.Time)
+                Next
                 End If
             End With
         'End If
@@ -115,7 +115,7 @@ Public Class AnsattDashboardTab
                         NewTime.Fullført = Fullført
                         Timer.Add(NewTime)
                         If NewTime.AnsattID <> CurrentStaff.ID Then
-                            T_NotificationList.AddNotification("Timeforespørsel fra " & NewTime.Fødselsnummer.ToString, 0, AddressOf SelectTime, Color.Blue, NewTime, DatabaseElementType.Time)
+                            T_NotificationList.AddNotification("Timeforespørsel fra " & NewTime.Fødselsnummer.ToString, 0, AddressOf SelectTime, OffBlue, NewTime, DatabaseElementType.Time)
                         End If
                     Next
                 End If
@@ -124,7 +124,7 @@ Public Class AnsattDashboardTab
             Dim MyAppointments As List(Of StaffTimeliste.StaffTime) = Timer.GetAllElementsWhere(StaffTimeliste.TimeEgenskap.AnsattID, CurrentStaff.ID)
             For Each T As StaffTimeliste.StaffTime In MyAppointments
                 If T.BlodgiverGodkjent = True AndAlso T.DatoOgTid.Date = Date.Now.Date Then
-                    Tapping_NotificationList.AddNotification("Klar for tapping: " & T.Fødselsnummer, 0, AddressOf SelectTapping, Color.Blue, T, DatabaseElementType.Time)
+                    Tapping_NotificationList.AddNotification("Klar for tapping: " & T.Fødselsnummer, 0, AddressOf SelectTapping, OffBlue, T, DatabaseElementType.Time)
                 End If
             Next
             Tapping_NotificationList.Spin(False)
@@ -150,7 +150,7 @@ Public Class AnsattDashboardTab
                             NewEgenerklæring.AnsattSvar = DirectCast(Row.Item(4), String)
                         End If
                         Egenerklæringer.Add(NewEgenerklæring)
-                        E_NotificationList.AddNotification("Egenerklæring klar", 0, AddressOf SelectErklæring, Color.Blue, NewEgenerklæring, DatabaseElementType.Egenerklæring)
+                        E_NotificationList.AddNotification("Egenerklæring klar", 0, AddressOf SelectErklæring, OffBlue, NewEgenerklæring, DatabaseElementType.Egenerklæring)
                     Next
                 End If
             End With
@@ -277,7 +277,7 @@ Public Class AnsattDashboardTab
             With SkjemaSvar
                 .Parent = Me
                 .AutoSize = False
-                .Size = New Size(300, 20)
+                .Size = New Size(500, 40)
                 .Location = New Point(20, DonorInfoLabels(DonorInfoLabels.Count - 1).Bottom + 30)
             End With
             With AutoSjekk
@@ -921,7 +921,7 @@ Public Class TappingView
             EndreBlodtype.Show()
             Registrer.Show()
         Else
-            NotifManager.Display("Tapping registrert.", NotificationPreset.GreenSuccess)
+            NotifManager.Display("Tapping registrert.", NotificationPreset.GreenSuccess, 2, , FloatY.FillHeight)
             ' Oppdater fullført til 1
             DBC_FullførTime.SQLQuery = "UPDATE Time SET fullført = 1 WHERE time_id = @timeid;"
             DBC_FullførTime.Execute({"@timeid"}, {DirectCast(varSelectedNotification.RelatedElement, StaffTimeliste.StaffTime).TimeID.ToString})
@@ -1081,17 +1081,17 @@ Public Class LabRapportView
     End Sub
     Private Sub TimerPost(State As Object)
         X += 1
-        With PlasmaColumn
-            .Height = CInt(EaseInOut.GetY(0, Verdier(0), X, Xmax))
-            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 60)
-        End With
         With RBColumn
             .Height = CInt(EaseInOut.GetY(0, Verdier(1), X, Xmax))
-            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 60)
+            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 90)
+        End With
+        With PlasmaColumn
+            .Height = CInt(EaseInOut.GetY(0, Verdier(0), X, Xmax))
+            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 90)
         End With
         With TromboColumn
             .Height = CInt(EaseInOut.GetY(0, Verdier(2), X, Xmax))
-            .Location = New Point(PlasmaColumn.Right + 10, Height - .Height - 60)
+            .Location = New Point(RBColumn.Right + 10, Height - .Height - 90)
         End With
         If X < Xmax Then
             varEaseTimer.Start()
@@ -1126,34 +1126,29 @@ Public Class LabRapportView
             .Parent = Me
             .Size = New Size(50, 50)
         End With
+
+        With RBColumn
+            .Size = New Size(80, 0)
+            .BackColor = OffRed
+            .Parent = Me
+            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 90)
+        End With
         With PlasmaColumn
             .Size = New Size(80, 0)
-            .BackColor = Color.Yellow
+            .BackColor = OffGreen
             .Parent = Me
             .Show()
-            .Location = New Point(20, Height - .Height - 50)
-        End With
-        With RBColumn
-            .Size = New Size(80, 0)
-            .BackColor = Color.Red
-            .Parent = Me
-            .Location = New Point(110, Height - .Height - 50)
+            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 90)
         End With
         With TromboColumn
             .Size = New Size(80, 0)
-            .BackColor = Color.Blue
+            .BackColor = OffBlue
             .Parent = Me
-            .Location = New Point(200, Height - .Height - 50)
+            .Location = New Point(RBColumn.Right + 10, Height - .Height - 90)
         End With
-        With RBColumn
-            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 60)
-        End With
-        With PlasmaColumn
-            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 60)
-        End With
-        With TromboColumn
-            .Location = New Point(PlasmaColumn.Right + 10, Height - .Height - 60)
-        End With
+
+
+
         NotifManager = New NotificationManager(Header)
         LG = New LoadingGraphics(Of PictureBox)(LoadingSurface)
         With LG
@@ -1196,7 +1191,7 @@ Public Class LabRapportView
                 varProductStep += 1
                 With DBC_LagreProdukter
                     .SQLQuery = "UPDATE Blodtapping SET analysert = 1 WHERE rapport_id = @rapportid;"
-                    .Execute({"@rapportid"}, {"TR", "0", Verdier(2).ToString})
+                    .Execute({"@type", "@rapportid", "@mengde"}, {"TR", "0", Verdier(2).ToString})
                 End With
             Case Else
                 LG.StopSpin()
@@ -1219,13 +1214,13 @@ Public Class LabRapportView
             .Location = New Point((Width - .Width) \ 2, (Height + Header.Bottom - .Height) \ 2)
         End With
         With RBColumn
-            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 60)
+            .Location = New Point(Width \ 2 - .Width \ 2, Height - .Height - 90)
         End With
         With PlasmaColumn
-            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 60)
+            .Location = New Point(RBColumn.Left - .Width - 10, Height - .Height - 90)
         End With
         With TromboColumn
-            .Location = New Point(PlasmaColumn.Right + 10, Height - .Height - 60)
+            .Location = New Point(RBColumn.Right + 10, Height - .Height - 90)
         End With
     End Sub
 End Class

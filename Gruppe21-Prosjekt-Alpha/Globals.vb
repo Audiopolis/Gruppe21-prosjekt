@@ -6,23 +6,13 @@ Module Globals
     Public CurrentStaff As StaffInfo
 
     Public Windows As MultiTabWindow
-
     Public TimeListe As New StaffTimeliste
 
     ' Regex
     Public RegExEmail As New Regex("([\w-+]+(?:\.[\w-+]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7})")
 
 
-    ' ALPHA
-
-    'Public Testlogginn As LoggInn_Admin
-
-    'Public Testspørreskjema As Skjema
-    'Public BlodgiverApning As LoginBlodgiver
-
     Public PersonaliaTest As Personopplysninger
-
-    ' BETA
     Public MainWindow As Main
     Public LoggInnTab As LoggInnNy
     Public Dashboard As DashboardTab
@@ -33,8 +23,11 @@ Module Globals
     Public Credentials As DatabaseCredentials
     Public AnsattDashboard As AnsattDashboardTab
     Public RedigerProfil As RedigerProfilTab
-
     Public TimerHentet As Boolean
+
+    Public OffGreen As Color = Color.FromArgb(94, 166, 21)
+    Public OffBlue As Color = Color.FromArgb(47, 111, 149)
+    Public OffRed As Color = Color.FromArgb(162, 23, 27)
 
 
     Public Sub Logout(Optional ByVal StaffLogout As Boolean = False)

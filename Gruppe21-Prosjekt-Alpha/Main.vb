@@ -532,7 +532,7 @@ Public Class LoggInnNy
     Private FormInfo As New Label
     Private InfoLab As New InfoLabel
     Private WithEvents LoggInnKnapp As New TopBarButton(FormPanel, My.Resources.NesteIcon, "Logg inn", New Size(0, 36))
-    Private OpprettBrukerKnapp As New TopBarButton(FormPanel, My.Resources.RedigerProfilIcon, "Opprett bruker", New Size(0, 36))
+    Private WithEvents OpprettBrukerKnapp As New TopBarButton(FormPanel, My.Resources.RedigerProfilIcon, "Opprett bruker", New Size(0, 36))
     Private LayoutTool As New FormLayoutTools(Me)
     Private Footer As New Footer(Me)
     'Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
@@ -541,6 +541,8 @@ Public Class LoggInnNy
     Private WithEvents NotifManager As New NotificationManager(FormHeader)
     Private LeftSide As New BorderControl(Color.FromArgb(210, 210, 210))
     Private PersonalNumber As String
+    Private LoadingSurface As New PictureBox
+    Private LG As New LoadingGraphics(Of PictureBox)(LoadingSurface)
     Private Sub NotificationOpened() Handles NotifManager.NotificationOpened
         Gear.Hide()
     End Sub
@@ -554,13 +556,21 @@ Public Class LoggInnNy
         Parent.Index = 5
     End Sub
     Private Sub LoginValid()
+        Parent.Index = 2
         CurrentLogin = New UserInfo(PersonalNumber)
         Dashboard.Initiate()
-        Parent.Index = 2
         Egenerklæring.InitiateForm()
         LoginForm.ClearAll()
+        For Each C As Control In FormPanel.Controls
+            C.Show()
+        Next
+        LG.StopSpin()
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
+        For Each C As Control In FormPanel.Controls
+            C.Show()
+        Next
+        LG.StopSpin()
         If ErrorOccurred Then
             NotifManager.Display("Noe gikk galt. Vennligst kontakt betjeningen.", NotificationPreset.OffRedAlert)
         Else
@@ -656,13 +666,11 @@ Public Class LoggInnNy
             .Parent = LeftSide
             .Left = LoginForm.Left
             .Top = LoginForm.Bottom + 10
-            AddHandler .Click, AddressOf OpprettBruker_Click
         End With
         With LoggInnKnapp
             .Parent = LeftSide
             .Left = OpprettBrukerKnapp.Right + 10
             .Top = LoginForm.Bottom + 10
-            AddHandler .Click, AddressOf LoggInn_Click
         End With
         With FormInfo
             .Parent = FormPanel
@@ -694,13 +702,28 @@ Public Class LoggInnNy
             .Parent = FormHeader
             .Location = New Point(FormHeader.Width - .Width - 5, FormHeader.Height \ 2 - .Height \ 2)
         End With
+        With LoadingSurface
+            .Hide()
+            .Size = New Size(50, 50)
+            .Parent = FormPanel
+            .Location = New Point((FormPanel.Width - .Width) \ 2, (FormPanel.Height + FormHeader.Bottom - .Height) \ 2)
+        End With
+        With LG
+            .Stroke = 3
+            .Pen.Color = Color.FromArgb(162, 25, 51)
+        End With
         FormPanel.Show()
         ResumeLayout()
     End Sub
-    Private Sub OpprettBruker_Click(sender As Object, e As EventArgs)
+    Private Sub OpprettBruker_Click(sender As Object, e As EventArgs) Handles OpprettBrukerKnapp.Click
         Parent.Index = 0
     End Sub
-    Private Sub LoggInn_Click(sender As Object, e As EventArgs)
+    Private Sub LoggInn_Click(sender As Object, e As EventArgs) Handles LoggInnKnapp.Click
+        For Each C As Control In FormPanel.Controls
+            C.Hide()
+        Next
+        FormHeader.Show()
+        LG.Spin(30, 10)
         PersonalNumber = LoginForm.Field(0, 0).Value.ToString
         ' TODO: Loading Graphics
         UserLogin.LoginAsync(LoginForm.Field(0, 0).Value.ToString, LoginForm.Field(1, 0).Value.ToString, "Brukerkonto", "b_fodselsnr", "passord")
@@ -720,12 +743,14 @@ Public Class LoggInnNy
             .ClearAll()
         End With
     End Sub
+    Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
+        MyBase.ResetTab(Arguments)
+        ResetForm()
+    End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
         If disposing Then
             NotifManager.Dispose()
             LayoutTool.Dispose()
-            RemoveHandler OpprettBrukerKnapp.Click, AddressOf OpprettBruker_Click
-            RemoveHandler LoggInnKnapp.Click, AddressOf LoggInn_Click
         End If
         MyBase.Dispose(disposing)
     End Sub
@@ -828,7 +853,7 @@ Public Class DashboardTab
     Private OrganDonorInfo As New PictureBox
     Private IsLoaded As Boolean
     Private Messages As New MessageNotification(Header)
-    Private WithEvents DBC, HentTimer_DBC, HentEgenerklæring_DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private WithEvents DBC, HentTimer_DBC, HentEgenerklæring_DBC, DBC_Delete As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
 
     Private Sub DBC_HentTimer_Finished(Sender As Object, e As DatabaseListEventArgs) Handles HentTimer_DBC.ListLoaded
         TimeListe.Clear()
@@ -844,6 +869,19 @@ Public Class DashboardTab
                 Dim NewTime As New StaffTimeliste.StaffTime(TimeID, Dato, AnsattGodkjent, Fødselsnummer, AnsattID, BlodgiverGodkjent)
                 NewTime.Fullført = Fullført
                 TimeListe.Add(NewTime)
+                With NewTime
+                    If Not .BlodgiverGodkjent AndAlso AnsattGodkjent Then
+                        NotificationList.AddNotification("Du har mottatt en ny innkalling. Klikk her for nærmere opplysninger om dato og tid.", 0, AddressOf NyInnkalling, OffGreen, NewTime, DatabaseElementType.Time)
+                    ElseIf Not .BlodgiverGodkjent AndAlso Not AnsattGodkjent AndAlso .AnsattID < 0 Then
+                        NotificationList.AddNotification("Timeforespørselen din er til behandling.", 0, AddressOf CloseNotification, OffBlue, NewTime, DatabaseElementType.Time)
+                    ElseIf Not AnsattGodkjent AndAlso .AnsattID >= 0 Then
+                        NotificationList.AddNotification("Du har fått avslag på din timeforespørsel. Nærmere beskjed er sendt via epost.", 1, AddressOf DeleteRejected, OffRed, NewTime, DatabaseElementType.Time)
+                    ElseIf AnsattGodkjent Then
+                        If .DatoOgTid.Date.CompareTo(Date.Now.Date) > 0 Then
+                            NotificationList.AddNotification("Du har en kommende time. Klikk her for nærmere informasjon.", 0, AddressOf NyInnkalling, OffBlue, NewTime, DatabaseElementType.Time)
+                        End If
+                    End If
+                End With
             Next
             Timebestilling.SetAppointment()
             Dim AppointmentTodayID As Integer = -1
@@ -868,6 +906,23 @@ Public Class DashboardTab
             Logout()
         End If
     End Sub
+    Private Sub DeleteRejected(Sender As UserNotification, e As UserNotificationEventArgs)
+        Dim Element As StaffTimeliste.StaffTime = DirectCast(Sender.RelatedElement, StaffTimeliste.StaffTime)
+        With DBC_Delete
+            .SQLQuery = "DELETE FROM Time WHERE time_id = @id;"
+            .Execute({"@id"}, {Element.TimeID.ToString})
+        End With
+        Sender.Close()
+    End Sub
+    Private Sub NyInnkalling(Sender As UserNotification, e As UserNotificationEventArgs)
+        Dim RelatedElement As StaffTimeliste.StaffTime = DirectCast(Sender.RelatedElement, StaffTimeliste.StaffTime)
+        With Timebestilling
+            Parent.Index = 4
+            .Calendar.CurrentMonth = RelatedElement.DatoOgTid.Month
+            .SelectDay(.Calendar.Day(RelatedElement.DatoOgTid.Date))
+            Sender.Close()
+        End With
+    End Sub
     Private Sub DBC_Failed() Handles HentTimer_DBC.ExecutionFailed
         NotificationList.ShowMessage("Kunne ikke hente notifikasjoner og gjøremål. Trykk på ikonet over for å prøve på nytt. Hvis problemet fortsetter, vennligst logg ut og varsle personalet.", NotificationPreset.OffRedAlert)
     End Sub
@@ -887,21 +942,23 @@ Public Class DashboardTab
                     NewElement.AnsattSvar = AnsattSvar
                     CurrentLogin.FormInfo = NewElement
                     If AnsattSvar IsNot Nothing Then
-                        Dashboard.NotificationList.AddNotification("Du har fått svar på din egenerklæring. Klikk her for mer informasjon.", 0, AddressOf FormAnswered, Color.LimeGreen, NewElement, DatabaseElementType.Egenerklæring)
+                        Dashboard.NotificationList.AddNotification("Du har fått svar på din egenerklæring. Klikk her for mer informasjon.", 0, AddressOf FormAnswered, OffGreen, NewElement, DatabaseElementType.Egenerklæring)
                     Else
-                        Dashboard.NotificationList.AddNotification("Din egenerklæring for dagens time er til behandling.", 1, AddressOf CloseNotification, Color.LimeGreen, NewElement, DatabaseElementType.Egenerklæring)
+                        Dashboard.NotificationList.AddNotification("Din egenerklæring for dagens time er til behandling.", 1, AddressOf CloseNotification, OffGreen, NewElement, DatabaseElementType.Egenerklæring)
                     End If
                 End With
             Else
                 CurrentLogin.FormInfo = Nothing
-                Dashboard.NotificationList.AddNotification("Du har ikke sendt egenerklæring for dagens time. Klikk her for å gå til skjemaet.", 2, AddressOf FormNotSent, Color.Red, TimeListe.GetElementWhere(StaffTimeliste.TimeEgenskap.Dato, Date.Now.Date), DatabaseElementType.Time)
+                Dashboard.NotificationList.AddNotification("Du har ikke sendt egenerklæring for dagens time. Klikk her for å gå til skjemaet.", 2, AddressOf FormNotSent, OffRed, TimeListe.GetElementWhere(StaffTimeliste.TimeEgenskap.Dato, Date.Now.Date), DatabaseElementType.Time)
             End If
         End With
     End Sub
     Public Sub HentBrukerTimer() Handles NotificationList.Reloaded
         NotificationList.Clear()
         With HentTimer_DBC
-            .SQLQuery = "SELECT * FROM Time WHERE b_fodselsnr = @nr AND NOT (a_id IS NOT NULL AND ansatt_godkjent = 0);"
+            ' IF ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! UNCOMMENT
+            '.SQLQuery = "SELECT * FROM Time WHERE b_fodselsnr = @nr AND NOT (a_id IS NOT NULL AND ansatt_godkjent = 0);"
+            .SQLQuery = "SELECT * FROM Time WHERE b_fodselsnr = @nr;"
             .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
         End With
     End Sub
@@ -912,6 +969,9 @@ Public Class DashboardTab
             Select Case CInt(Sender.Tag)
                 Case 0
                     Parent.Index = 4
+                    With Timebestilling
+                        .SelectDay(.Calendar.Day(Date.Now.Date))
+                    End With
                 Case 1
                     Windows.Index = 8
                     RedigerProfil.AutoFillOutForm(CurrentLogin.RelatedDonor)
@@ -963,16 +1023,20 @@ Public Class DashboardTab
             .Execute({"@nr"}, {CurrentLogin.PersonalNumber})
         End With
         Beholder.GetBlood()
-        NotificationList.Reload()
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
-        With e.Data
-            CurrentLogin.FirstName = .Rows(0).Item(0).ToString
-            CurrentLogin.LastName = .Rows(0).Item(1).ToString
-            Header.RaiseNameSetEvent()
-            WelcomeLabel.Text = "Du er logget inn som " & CurrentLogin.FirstName & " " & CurrentLogin.LastName
-            WelcomeLabel.PanIn()
-        End With
+        If Not e.ErrorOccurred Then
+            With e.Data
+                CurrentLogin.FirstName = .Rows(0).Item(0).ToString
+                CurrentLogin.LastName = .Rows(0).Item(1).ToString
+                Header.RaiseNameSetEvent()
+                WelcomeLabel.Text = "Du er logget inn som " & CurrentLogin.FirstName & " " & CurrentLogin.LastName
+                WelcomeLabel.PanIn()
+            End With
+            NotificationList.Reload()
+        Else
+            NotificationList.ShowMessage("Kunne ikke hente informasjonen din, men du kan fortsatt bruke programmet.", NotificationPreset.OffRedAlert)
+        End If
     End Sub
     'Public Shadows Sub Show()
     '    MyBase.Show()
@@ -1002,7 +1066,11 @@ Public Class DashboardTab
         ResumeLayout(True)
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        RemoveHandler Header.ButtonClick, AddressOf TopBarButtonClick
+        If disposing Then
+            DBC.Dispose()
+            HentEgenerklæring_DBC.Dispose()
+            HentTimer_DBC.Dispose()
+        End If
         MyBase.Dispose(disposing)
     End Sub
 End Class
