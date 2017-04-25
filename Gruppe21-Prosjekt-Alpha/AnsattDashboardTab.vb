@@ -1197,6 +1197,7 @@ Public Class LabRapportView
                 LG.StopSpin()
                 varProductStep = 0
                 NotifManager.Display("Labrapporten er registrert, og produktene er lagt i systemet.", NotificationPreset.GreenSuccess,, FloatX.FillWidth, FloatY.FillHeight)
+                varSelectedNotification.Close()
         End Select
     End Sub
 
