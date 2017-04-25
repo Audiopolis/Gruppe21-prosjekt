@@ -10,18 +10,34 @@ Public Class BlodBeholder
     Private WithEvents Empty As New PictureBox
     Private EmptyBrush As New SolidBrush(Color.FromArgb(15, 79, 117))
     Private FullBrush As New SolidBrush(Color.White)
-    Private LargeFont As New Font(Font.FontFamily, 120, FontStyle.Bold)
+    Private LargeFont As New Font(Font.FontFamily, 110)
     Private SmallFont As New Font(Font.FontFamily, 12)
-    Private LargeText As String = "4x"
+    Private LargeText As String = "0%"
     Private TextSizes(2) As Size
     Private LargeTextSize As Size = Size.Empty
-    Private SmallText() As String = {"Du har donert X ganger", "så mye blod som en gjennomsnittlig", "person har i kroppen."}
+    Private SmallText() As String = {"Du har hittil donert ca. 0%", "av blodvolumet i et", "gjennomsnittlig menneske."}
     Private SC As SynchronizationContext = SynchronizationContext.Current
     Private WithEvents SlideTimer As New Timers.Timer(1000 \ 50)
     Private Initial, Current, Goal As Double
     Private Const MengdeBlodIMenneskeILiter As Double = 4.5
     Private Const XLast As Integer = 40
     Private CurrentX As Integer = 0
+    Private WithEvents DBC_GetBloodAmount As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Public Sub GetBlood()
+        DBC_GetBloodAmount.SQLQuery = "SELECT A.ant_liter FROM Blodtapping A INNER JOIN Time B ON A.time_id = B.time_id WHERE B.b_fodselsnr = @nr;"
+        DBC_GetBloodAmount.Execute({"@nr"}, {CurrentLogin.PersonalNumber})
+    End Sub
+    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetBloodAmount.ListLoaded
+        If e.ErrorOccurred Then
+
+        Else
+            Dim Sum As Double = 0
+            For Each R As DataRow In e.Data.Rows
+                Sum += DirectCast(R.Item(0), Double)
+            Next
+            TotalBloodInLiters = Sum
+        End If
+    End Sub
     Public Sub New(EmptyBitmap As Bitmap, FullBitmap As Bitmap)
         DoubleBuffered = True
         With Empty
@@ -52,11 +68,12 @@ Public Class BlodBeholder
     End Sub
     Public WriteOnly Property TotalBloodInLiters As Double
         Set(value As Double)
-            Dim RoundedValue As String = Math.Round(value / MengdeBlodIMenneskeILiter, 1).ToString
-            LargeText = RoundedValue & "x"
+            Dim NewPercentage As Double = Math.Floor(value * 100 / MengdeBlodIMenneskeILiter)
+            LargeText = NewPercentage & "%"
             LargeTextSize = TextRenderer.MeasureText(LargeText, LargeFont)
-            SmallText = {"Du har donert " & RoundedValue & " ganger", "så mye blod som en gjennomsnittlig", "person har i kroppen."}
+            SmallText = {"Du har hittil donert ca. " & NewPercentage & "%", "av blodvolumet i et", "gjennomsnittlig menneske."}
             TextSizes = {TextRenderer.MeasureText(SmallText(0), SmallFont), TextRenderer.MeasureText(SmallText(1), SmallFont), TextRenderer.MeasureText(SmallText(2), SmallFont)}
+            SlideToPercentage(NewPercentage)
         End Set
     End Property
     Private Sub EmptyPaint(sender As Object, e As PaintEventArgs) Handles Empty.Paint
@@ -96,13 +113,6 @@ Public Class BlodBeholder
         If CurrentX < XLast Then
             SlideTimer.Start()
         End If
-    End Sub
-    Public Sub SetPercentage(Percent As Integer)
-        SuspendLayout()
-        With Empty
-            .Height = CInt(Height - (Height / 100) * Percent)
-        End With
-        ResumeLayout(True)
     End Sub
     Public Sub SlideToPercentage(Percent As Double)
         Initial = Current

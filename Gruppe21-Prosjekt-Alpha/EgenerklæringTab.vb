@@ -35,6 +35,20 @@ Public Class EgenerklæringTab
     Private NotificationArea As FullWidthControl
     Private NotifManager As NotificationManager
     Private Forms() As FlatForm = {New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite)}
+    Private varSelectedTime As UserNotification
+
+    Public Sub SelectTime(Sender As UserNotification, e As UserNotificationEventArgs)
+        If varSelectedTime IsNot Nothing Then
+            With varSelectedTime
+                .IsSelected = False
+            End With
+        End If
+        varSelectedTime = Sender
+        Windows.Index = 3
+        With DirectCast(varSelectedTime.RelatedElement, StaffTimeliste.StaffTime)
+            MsgBox(.Fødselsnummer & ": " & .DatoOgTid.ToShortDateString)
+        End With
+    End Sub
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
         Dim LabelSize As Integer = 360
@@ -1182,22 +1196,21 @@ Public Class EgenerklæringTab
     End Sub
     Private Sub TopBar_Click(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
         If Sender.IsLogout Then
-            Parent.Index = 4
-            For Each F As FlatForm In Forms
-                F.ClearAll()
-            Next
-            Questionnaire.FormIndex = 0
             Logout()
         Else
             Select Case CInt(Sender.Tag)
                 Case 0
-                    Parent.Index = 5
-                    For Each F As FlatForm In Forms
-                        F.ClearAll()
-                    Next
-                    Questionnaire.FormIndex = 0
+                    ResetTab()
+                    Parent.Index = 2
             End Select
         End If
+    End Sub
+    Public Overrides Sub ResetTab(Optional Arguments As Object = Nothing)
+        MyBase.ResetTab(Arguments)
+        For Each F As FlatForm In Forms
+            F.ClearAll()
+        Next
+        Questionnaire.FormIndex = 0
     End Sub
     Protected Overrides Sub OnDoubleClick(e As EventArgs)
         'TODO: Remove this sub
@@ -1215,6 +1228,8 @@ Public Class EgenerklæringTab
             BorderControl.Show()
             Tekst.Show()
             NotifManager.Display("Takk for at du sparer miljøet! Egenerklæringen er sendt inn elektronisk.", NotificationPreset.GreenSuccess)
+            varSelectedTime.Close()
+            Dashboard.HentBrukerTimer()
         End If
     End Sub
     Private Sub DBC_Failed(SenderTag As Object) Handles DBC.ExecutionFailed
@@ -1229,7 +1244,7 @@ Public Class EgenerklæringTab
             BorderControl.Hide()
             Tekst.Hide()
             With DBC
-                .Execute({"@timeid", "@series", "@country"}, {"1", Series, DirectCast(Questionnaire.Form(8).Last.Value, String)})
+                .Execute({"@timeid", "@series", "@country"}, {CStr(DirectCast(varSelectedTime.RelatedElement, StaffTimeliste.StaffTime).TimeID), Series, DirectCast(Questionnaire.Form(8).Last.Value, String)})
             End With
             LG.Spin(30, 10)
         Else

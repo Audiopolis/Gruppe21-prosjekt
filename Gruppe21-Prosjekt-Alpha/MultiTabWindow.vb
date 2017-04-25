@@ -72,7 +72,6 @@ Public NotInheritable Class MultiTabWindow
                     .BringToFront()
                 End With
             Else
-                MsgBox("2: " & value)
                 SelectedIndex = -1
             End If
         End Set
@@ -82,34 +81,6 @@ Public NotInheritable Class MultiTabWindow
         ScaleTabs
         TabCount
     End Enum
-    'Private Sub OnTabResize()
-    '    Dim RaiseTabResizedEvent As Boolean
-    '    Dim NewTabSize() As Integer
-    '    With CurrentTab
-    '        NewTabSize = { .Width, .Height}
-    '        If NewTabSize(0) <> Width Then
-    '            If ScaleXY(0) Then
-    '                NewTabSize(0) = Width
-    '                RaiseTabResizedEvent = True
-    '            ElseIf .Width > Width Then
-    '                HScroll = True
-    '            Else
-    '                HScroll = False
-    '            End If
-    '        End If
-    '        If NewTabSize(1) <> Height Then
-    '            If ScaleXY(1) Then
-    '                NewTabSize(1) = Height
-    '                RaiseTabResizedEvent = True
-    '            ElseIf NewTabSize(1) > Height Then
-    '                VScroll = True
-    '            Else
-    '                VScroll = False
-    '            End If
-    '        End If
-    '        .Size = New Size(NewTabSize(0), NewTabSize(1))
-    '    End With
-    'End Sub
     Public ReadOnly Property CurrentTab As Tab
         Get
             If SelectedIndex >= 0 AndAlso SelectedIndex < TabList.Count Then
@@ -132,6 +103,11 @@ Public NotInheritable Class MultiTabWindow
             .Show()
         End With
         AddHandler Parent.Resize, AddressOf OnParentResize
+    End Sub
+    Public Sub ResetAll(Optional ArgumentAll As Object = Nothing)
+        For Each T As Tab In TabList
+            T.ResetTab(ArgumentAll)
+        Next
     End Sub
     Public Overloads Sub AddTab(Tab As Tab)
         AddTab(Tab, TabList.Count)
@@ -226,6 +202,7 @@ Public Class Tab
     Private varScaleToParent As Boolean = True
     Protected Friend ListIndex As Integer = -1
     Public Event LayoutRefreshed(Sender As Tab)
+   
     Public Property ScaleToWindow As Boolean
         Get
             Return varScaleToParent
@@ -247,6 +224,9 @@ Public Class Tab
     Protected Friend Overridable Shadows Sub Show()
         RefreshLayout()
         MyBase.Show()
+    End Sub
+    Public Overridable Sub ResetTab(Optional Arguments As Object = Nothing)
+
     End Sub
     Public Shadows Property Parent As MultiTabWindow
         Get

@@ -143,9 +143,11 @@ Public Class AdminUnlockWrapper
         LG.StopSpin()
         LoadingSurface.SendToBack()
         TB.Clear()
-        'For Each C As Control In InnerContainer.Controls
-        '    C.Show()
-        'Next
+        If Not Valid Then
+            For Each C As Control In InnerContainer.Controls
+                C.Show()
+            Next
+        End If
         'If Valid Then
         '    TB.Hide()
         'End If
@@ -153,19 +155,19 @@ Public Class AdminUnlockWrapper
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
         If disposing Then
-            HeaderControl.Dispose()
-            Lab.Dispose()
-            TB.Dispose()
-            LoggInn.Dispose()
+            'HeaderControl.Dispose()
+            'Lab.Dispose()
+            'TB.Dispose()
+            'LoggInn.Dispose()
             If TSL IsNot Nothing Then
                 TSL.Dispose()
             End If
             LG.Dispose()
-            LoadingSurface.Dispose()
+            'LoadingSurface.Dispose()
             If ValidityChecker IsNot Nothing Then
                 ValidityChecker.Dispose()
             End If
-            InnerContainer.Dispose()
+            'InnerContainer.Dispose()
         End If
         MyBase.Dispose(disposing)
     End Sub

@@ -3,194 +3,239 @@ Imports AudiopoLib
 
 Module Globals
     Public CurrentLogin As UserInfo
+    Public CurrentStaff As StaffInfo
+
     Public Windows As MultiTabWindow
-    Public WithEvents HentTimer_DBC As DatabaseClient
-    Public WithEvents HentEgenerklæring_DBC As DatabaseClient
-    Public TimeListe As New DatabaseTimeListe
-    Public EventManager As New BloodBankEventManager
+
+    Public TimeListe As New StaffTimeliste
+
     ' Regex
     Public RegExEmail As New Regex("([\w-+]+(?:\.[\w-+]+)*@(?:[\w-]+\.)+[a-zA-Z]{2,7})")
 
 
     ' ALPHA
 
-    Public Testoversikt As Timeoversikt
-    Public Testdashbord As BlodgiverDashboard
-    Public Testlogginn As LoggInn_Admin
+    'Public Testlogginn As LoggInn_Admin
+
     'Public Testspørreskjema As Skjema
-    Public BlodgiverApning As LoginBlodgiver
-    Public FirstTabTest As FirstTab
-    Public SecondTabTest As SecondTab
-    Public ThirdTabTest As ThirdTab
+    'Public BlodgiverApning As LoginBlodgiver
+
     Public PersonaliaTest As Personopplysninger
 
     ' BETA
     Public MainWindow As Main
-    Public Credentials As DatabaseCredentials
     Public LoggInnTab As LoggInnNy
     Public Dashboard As DashboardTab
     Public Egenerklæring As EgenerklæringTab
     Public Timebestilling As TimebestillingTab
     Public AnsattLoggInn As AnsattLoggInnTab
     Public OpprettAnsatt As OpprettAnsattTab
+    Public Credentials As DatabaseCredentials
+    Public AnsattDashboard As AnsattDashboardTab
+    Public RedigerProfil As RedigerProfilTab
 
     Public TimerHentet As Boolean
 
-    Public Sub Logout()
+
+    Public Sub Logout(Optional ByVal StaffLogout As Boolean = False)
+        TimeListe.Clear()
+        TimerHentet = False
+        Windows.ResetAll()
+        If Not StaffLogout Then
+            Windows.Index = 1
+        Else
+            Windows.Index = 5
+        End If
         ' TODO: Erase all traces of user data
     End Sub
 
-    Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles HentTimer_DBC.ListLoaded
-        If Not e.ErrorOccurred Then
-            For Each R As DataRow In e.Data.Rows
-                Dim NewDate As Date = DirectCast(R.Item(1), Date)
-                Dim TimeComponent As TimeSpan = DirectCast(R.Item(2), TimeSpan)
-                NewDate = NewDate.Add(TimeComponent)
-                TimeListe.Add(New DatabaseTimeElement(CInt(R.Item(0)), NewDate))
-            Next
-            DirectCast(Windows.Tab(7), TimebestillingTab).SetAppointment()
-            Dim AppointmentTodayID As Integer = -1
-            For Each T As DatabaseTimeElement In TimeListe.TimeListe
-                If T.DatoOgTid.Date = Date.Now.Date Then
-                    AppointmentTodayID = T.TimeID
-                End If
-            Next
-            If AppointmentTodayID >= 0 Then
-                With HentEgenerklæring_DBC
-                    .SQLQuery = "SELECT godkjent, svar FROM Egenerklæring WHERE time_id = @id;"
-                    .Execute({"@id"}, {CStr(AppointmentTodayID)})
-                    Dashboard.NotificationList.Spin()
-                End With
-            Else
-                ' TODO: Recommend new appointment 4 months after last one
-                Dashboard.NotificationList.DisplayEmptyLabel = True
-            End If
-        Else
-            ' TODO: Logg bruker ut med feilmelding
-            MsgBox("Error: " & e.ErrorMessage)
-        End If
+
+    Public Sub CloseNotification(Sender As UserNotification, e As UserNotificationEventArgs)
+        Sender.close
     End Sub
-    Private Sub DBC_Failed() Handles HentTimer_DBC.ExecutionFailed
-        MsgBox("Failed")
-        ' TODO: Logg ut bruker med feilmelding
+    Public Sub FormAnswered(Sender As UserNotification, e As UserNotificationEventArgs)
+        MsgBox(DirectCast(Sender.RelatedElement, Egenerklæringsliste.Egenerklæring).AnsattSvar)
+        Sender.Close()
     End Sub
-    Private Sub Egenerklæring_Hentet(Sender As Object, e As DatabaseListEventArgs) Handles HentEgenerklæring_DBC.ListLoaded
-        With e.Data.Rows
-            If .Count > 0 Then
-                CurrentLogin.FormSent = True
-                With .Item(0)
-                    CurrentLogin.FormAccepted = DirectCast(.Item(0), Boolean)
-                    If Not IsDBNull(.Item(1)) Then
-                        CurrentLogin.FormAnswer = DirectCast(.Item(1), String)
-                        Dashboard.NotificationList.AddNotification("Du har fått svar på din egenerklæring. Klikk her for mer informasjon.", 0, AddressOf NotificationClick, Color.LimeGreen)
-                    Else
-                        CurrentLogin.FormAnswer = Nothing
-                        Dashboard.NotificationList.AddNotification("Vi behandler din egenerklæring.", 1, AddressOf NotificationClick, Color.FromArgb(0, 99, 157))
-                        Dashboard.NotificationList.AddNotification("Vi behandler din egenerklæring.", 3, AddressOf NotificationClick, Color.FromArgb(0, 99, 157))
-                        Dashboard.NotificationList.AddNotification("Vi behandler din egenerklæring.", 4, AddressOf NotificationClick, Color.FromArgb(0, 99, 157))
-                    End If
-                End With
-            Else
-                Dashboard.NotificationList.AddNotification("Du har ikke sendt egenerklæring for dagens time. Klikk her for å gå til skjemaet.", 2, AddressOf NotificationClick, Color.Red)
-                CurrentLogin.FormSent = False
-            End If
-        End With
-    End Sub
-    Public Sub NotificationClick(Sender As Object, e As UserNotificationEventArgs)
-        Select Case DirectCast(e.ID, Integer)
-            Case 0
-                MsgBox("Godkjent: " & CurrentLogin.FormAccepted.ToString & ", begrunnelse: " & CurrentLogin.FormAnswer)
-            Case 1
-                Beep()
-            Case 2
-                Windows.Index = 6
-        End Select
+    Public Sub FormNotSent(Sender As UserNotification, e As UserNotificationEventArgs)
+        Egenerklæring.SelectTime(Sender, e)
     End Sub
 End Module
 
-Public Class BloodBankEventManager
-    Public Event LoggedIn()
-    Public Event LoggedOut()
+'Public Class DatabaseTimeListe
+'    Private varTimer As New List(Of StaffTimeliste.StaffTime)
+'    Public Sub New()
 
-    Public Sub New()
+'    End Sub
+'    Public ReadOnly Property Count As Integer
+'        Get
+'            Return varTimer.Count
+'        End Get
+'    End Property
+'    Public Sub Clear()
+'        varTimer.Clear()
+'    End Sub
+'    Public Sub Add(ByRef Element As DatabaseTimeElement)
+'        varTimer.Add(Element)
+'    End Sub
+'    Public ReadOnly Property Time(ByVal Index As Integer) As DatabaseTimeElement
+'        Get
+'            Return varTimer(Index)
+'        End Get
+'    End Property
+'    Public ReadOnly Property TimeListe As List(Of StaffTimeliste.StaffTime)
+'        Get
+'            Return varTimer
+'        End Get
+'    End Property
+'End Class
 
+'Public Class DatabaseTimeElement
+'    Private varTimeID As Integer
+'    Private varDatoOgTid As Date
+'    Public ReadOnly Property TimeID As Integer
+'        Get
+'            Return varTimeID
+'        End Get
+'    End Property
+'    Public ReadOnly Property DatoOgTid As Date
+'        Get
+'            Return varDatoOgTid
+'        End Get
+'    End Property
+'    Public Sub New(ByVal TimeID As Integer, ByVal DatoOgTid As Date)
+'        varTimeID = TimeID
+'        varDatoOgTid = DatoOgTid
+'    End Sub
+'End Class
+
+Public Class StaffInfo
+    Private varID As Integer
+    Private varUsername, varFirstName, varLastName As String
+    Public Property ID As Integer
+        Get
+            Return varID
+        End Get
+        Set(value As Integer)
+            varID = value
+        End Set
+    End Property
+    Public Property Username As String
+        Get
+            Return varUsername
+        End Get
+        Set(value As String)
+            varUsername = value
+        End Set
+    End Property
+    Public Property FirstName As String
+        Get
+            Return varFirstName
+        End Get
+        Set(value As String)
+            varFirstName = value
+        End Set
+    End Property
+    Public Property LastName As String
+        Get
+            Return varLastName
+        End Get
+        Set(value As String)
+            varLastName = value
+        End Set
+    End Property
+    Public ReadOnly Property FullName As String
+        Get
+            Return varFirstName & " " & varLastName
+        End Get
+    End Property
+    Public Sub New(Username As String)
+        varUsername = Username
+        ID = -1
+        varFirstName = "Undefined"
+        varLastName = "Undefined"
     End Sub
-End Class
-
-Public Class DatabaseTimeListe
-    Private varTimer As New List(Of DatabaseTimeElement)
-    Public Sub New()
-
-    End Sub
-    Public ReadOnly Property Count As Integer
-        Get
-            Return varTimer.Count
-        End Get
-    End Property
-    Public Sub Clear()
-        varTimer.Clear()
-    End Sub
-    Public Sub Add(ByRef Element As DatabaseTimeElement)
-        varTimer.Add(Element)
-    End Sub
-    Public ReadOnly Property Time(ByVal Index As Integer) As DatabaseTimeElement
-        Get
-            Return varTimer(Index)
-        End Get
-    End Property
-    Public ReadOnly Property TimeListe As List(Of DatabaseTimeElement)
-        Get
-            Return varTimer
-        End Get
-    End Property
-End Class
-
-Public Class DatabaseTimeElement
-    Private varTimeID As Integer
-    Private varDatoOgTid As Date
-    Public ReadOnly Property TimeID As Integer
-        Get
-            Return varTimeID
-        End Get
-    End Property
-    Public ReadOnly Property DatoOgTid As Date
-        Get
-            Return varDatoOgTid
-        End Get
-    End Property
-    Public Sub New(ByVal TimeID As Integer, ByVal DatoOgTid As Date)
-        varTimeID = TimeID
-        varDatoOgTid = DatoOgTid
+    Public Sub EraseInfo()
+        varID = Nothing
+        varUsername = Nothing
+        varFirstName = Nothing
+        varLastName = Nothing
     End Sub
 End Class
 
 Public Class UserInfo
-    Private Number, varFirstName, varLastName, varFormAnswer As String
-    Private varFormSent, varFormAccepted As Boolean
-    Public Property FormSent As Boolean
+    Private Number, varFirstName, varLastName As String
+    Private varFormInfo As Egenerklæringsliste.Egenerklæring
+    Private varLatestAppointment As Date
+    Private varRelatedDonor As Donor
+    Private WithEvents DBC_GetDonorInfo As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Private WithEvents DBC_GetLastAppointment As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
+    Public Property RelatedDonor As Donor
         Get
-            Return varFormSent
+            Return varRelatedDonor
         End Get
-        Set(value As Boolean)
-            varFormSent = value
+        Set(value As Donor)
+            varRelatedDonor = value
         End Set
     End Property
-    Public Property FormAccepted As Boolean
+    Public Property LatestAppointment As Date
         Get
-            Return varFormAccepted
+            Return varLatestAppointment
         End Get
-        Set(value As Boolean)
-            varFormAccepted = value
+        Set(value As Date)
+            varLatestAppointment = value
         End Set
     End Property
-    Public Property FormAnswer As String
+    Private Sub DBC_GetLast_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetLastAppointment.ListLoaded
+        If e.ErrorOccurred Then
+            varLatestAppointment = Nothing
+        ElseIf e.Data.Rows.Count > 0 Then
+            varLatestAppointment = DirectCast(e.Data.Rows(0).Item(0), Date).Date
+        End If
+        DBC_GetLastAppointment.Dispose()
+    End Sub
+    Private Sub DBC_GetDonor_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetDonorInfo.ListLoaded
+        If e.ErrorOccurred Then
+            Logout()
+        Else
+            With e.Data.Rows(0)
+                If IsDBNull(.Item(4)) Then
+                    .Item(4) = "Ikke registrert"
+                End If
+                If IsDBNull(.Item(5)) Then
+                    .Item(5) = "Ikke registrert"
+                End If
+                If IsDBNull(.Item(12)) Then
+                    .Item(12) = "Ukjent"
+                End If
+                Dim Fødselsnummer As Long = DirectCast(.Item(0), Long)
+                Dim Navn() As String = {DirectCast(.Item(1), String), DirectCast(.Item(2), String)}
+                Dim Telefon() As String = {DirectCast(.Item(3), String), DirectCast(.Item(4), String), DirectCast(.Item(5), String)}
+                Dim EpostOgAdresse() As String = {DirectCast(.Item(6), String), DirectCast(.Item(7), String)}
+                Dim Postnummer As Integer = DirectCast(.Item(8), Integer)
+                Dim KjønnEpostSMS() As Boolean = {DirectCast(.Item(9), Boolean), DirectCast(.Item(10), Boolean), DirectCast(.Item(11), Boolean)}
+                Dim Blodtype As String = DirectCast(.Item(12), String)
+                varRelatedDonor = New Donor(Fødselsnummer, Navn(0), Navn(1), Telefon, EpostOgAdresse(0), EpostOgAdresse(1), Blodtype, KjønnEpostSMS(1), KjønnEpostSMS(2), KjønnEpostSMS(0), Postnummer)
+            End With
+        End If
+        DBC_GetDonorInfo.Dispose()
+    End Sub
+    Public Property FormInfo As Egenerklæringsliste.Egenerklæring
         Get
-            Return varFormAnswer
+            Return varFormInfo
         End Get
-        Set(value As String)
-            varFormAnswer = value
+        Set(value As Egenerklæringsliste.Egenerklæring)
+            varFormInfo = value
         End Set
     End Property
+    Public Sub EraseInfo()
+        Number = Nothing
+        varFirstName = Nothing
+        varLastName = Nothing
+        varFormInfo = Nothing
+        varLatestAppointment = Nothing
+        varRelatedDonor = Nothing
+    End Sub
     Public ReadOnly Property FullName As String
         Get
             Return varFirstName & " " & varLastName
@@ -216,6 +261,11 @@ Public Class UserInfo
         Number = PersonalNumber
         varFirstName = "Undefined"
         varLastName = "Undefined"
+        DBC_GetLastAppointment.SQLQuery = "SELECT t_dato FROM Time WHERE fullført = 1 AND b_fodselsnr = @nr ORDER BY t_dato DESC LIMIT 1;"
+        DBC_GetLastAppointment.Execute({"@nr"}, {PersonalNumber})
+
+        DBC_GetDonorInfo.SQLQuery = "SELECT * FROM Blodgiver WHERE b_fodselsnr = @id LIMIT 1;"
+        DBC_GetDonorInfo.Execute({"@id"}, {PersonalNumber})
     End Sub
     Public Property PersonalNumber As String
         Get

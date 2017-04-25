@@ -95,6 +95,7 @@ Public Class TopBar
         End Try
     End Sub
 End Class
+
 Public Class TopBarButton
     Inherits Control
     Private WithEvents TBButtonLabel As New Label
@@ -115,6 +116,15 @@ Public Class TopBarButton
         End Get
         Set(value As Integer)
             varMinWidth = value
+        End Set
+    End Property
+    Public Shadows Property BackColor As Color
+        Get
+            Return MyBase.BackColor
+        End Get
+        Set(value As Color)
+            varDefaultBG = value
+            MyBase.BackColor = varDefaultBG
         End Set
     End Property
     Public Property IconImage As Image
@@ -148,6 +158,14 @@ Public Class TopBarButton
         Get
             Return TBButtonLabel
         End Get
+    End Property
+    Public Shadows Property Text As String
+        Get
+            Return TBButtonLabel.Text
+        End Get
+        Set(value As String)
+            TBButtonLabel.Text = value
+        End Set
     End Property
     Private Sub SetTextHeight() Handles TBButtonLabel.TextChanged
         Dim TextSize As Size = TextRenderer.MeasureText(Label.Text, Label.Font)
@@ -187,7 +205,7 @@ Public Class TopBarButton
         Else
             varDefaultBG = Color.FromArgb(235, 235, 235)
         End If
-        BackColor = varDefaultBG
+        MyBase.BackColor = varDefaultBG
         BorderPen.Color = ColorHelper.Multiply(varDefaultBG, 0.7)
         ResumeLayout(True)
         Show()
@@ -228,7 +246,7 @@ Public Class TopBarButton
         Else
             varDefaultBG = Color.FromArgb(235, 235, 235)
         End If
-        BackColor = varDefaultBG
+        MyBase.BackColor = varDefaultBG
         BorderPen.Color = ColorHelper.Multiply(varDefaultBG, 0.7)
         ResumeLayout(True)
         Show()
@@ -269,9 +287,9 @@ Public Class TopBarButton
     End Sub
     Protected Friend Sub SelectButton(ByVal DoSelect As Boolean)
         If DoSelect Then
-            BackColor = ColorHelper.Add(varDefaultBG, 10)
+            MyBase.BackColor = ColorHelper.Add(varDefaultBG, 10)
         Else
-            BackColor = varDefaultBG
+            MyBase.BackColor = varDefaultBG
         End If
     End Sub
     Protected Overrides Sub OnResize(e As EventArgs)
