@@ -140,10 +140,12 @@ Public NotInheritable Class UserNotificationContainer
     Public Sub Spin(Optional SwitchOn As Boolean = True)
         If SwitchOn Then
             LG.Spin(30, 10)
+            NotificationCounter.Text = NotificationList.Count.ToString
+            DisplayEmptyLabel = False
         Else
             LG.StopSpin()
-            DisplayEmptyLabel = True
             NotificationCounter.Text = NotificationList.Count.ToString
+            DisplayEmptyLabel = True
         End If
     End Sub
     Public Property DisplayEmptyLabel As Boolean
@@ -156,6 +158,9 @@ Public NotInheritable Class UserNotificationContainer
         End Set
     End Property
     Private Sub RefreshLabel()
+        If Not varDisplayEmptyLabel Then
+            EmptyLabel.Hide()
+        End If
         If CInt(NotificationCounter.Text) > 0 Then
             NotificationCounter.BackColor = Color.FromArgb(0, 99, 157)
             EmptyLabel.Hide()
@@ -337,7 +342,6 @@ Public Class UserNotification
     Inherits Control
     Private WithEvents Textlab As New Label
     Private varDefaultColor, varHoverColor, varPressColor As Color
-    '   Private varColor As Color = Color.Green
     Private varID, varRelatedElement As Object
     Private varIsClosed, varCloseOnClick, varIsSelected, varInfoLoaded As Boolean
     Private varClickAction As Action(Of UserNotification, UserNotificationEventArgs)

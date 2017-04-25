@@ -105,7 +105,6 @@ Public Class TopBarButton
     Protected Friend HighlightBrush As New SolidBrush(Color.FromArgb(200, Color.White))
     Private BorderPen As New Pen(Color.FromArgb(155, 155, 155))
     Private ShadowBrush As New SolidBrush(Color.FromArgb(91, 100, 106))
-    'Private LinePen As New Pen(Color.FromArgb(220, 220, 220))
     Private DrawRect, ShadowRect As Rectangle
     Private TextPoint As Point
     Private varDefaultBG As Color

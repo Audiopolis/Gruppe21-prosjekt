@@ -172,22 +172,26 @@ Public Class AnsattLoggInnTab
         LoginForm.ClearAll()
     End Sub
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC_GetInfo.ListLoaded
+        LG.StopSpin()
         If e.ErrorOccurred OrElse e.Data.Rows.Count = 0 Then
-            LG.StopSpin()
-            CurrentStaff.EraseInfo()
-            CurrentStaff = Nothing
+            If CurrentStaff IsNot Nothing Then
+                CurrentStaff.EraseInfo()
+                CurrentStaff = Nothing
+            End If
             LoginForm.Show()
             LoggInnKnapp.Show()
             OpprettBrukerKnapp.Show()
             NotifManager.Display("Feil brukernavn eller passord", NotificationPreset.OffRedAlert)
         Else
-            LG.StopSpin()
             With e.Data.Rows(0)
                 CurrentStaff.ID = DirectCast(.Item(0), Integer)
                 CurrentStaff.FirstName = DirectCast(.Item(1), String)
                 CurrentStaff.LastName = DirectCast(.Item(2), String)
                 Parent.Index = 7
                 AnsattDashboard.GetData()
+                LoginForm.Show()
+                LoggInnKnapp.Show()
+                OpprettBrukerKnapp.Show()
             End With
         End If
         LoginForm.Show()
@@ -195,16 +199,25 @@ Public Class AnsattLoggInnTab
         OpprettBrukerKnapp.Show()
     End Sub
     Private Sub DBC_Failed() Handles DBC_GetInfo.ExecutionFailed
-        CurrentStaff.EraseInfo()
-        CurrentStaff = Nothing
+        If CurrentStaff IsNot Nothing Then
+            CurrentStaff.EraseInfo()
+            CurrentStaff = Nothing
+        End If
+        LG.StopSpin()
+        LoginForm.Show()
+        LoggInnKnapp.Show()
+        OpprettBrukerKnapp.Show()
         NotifManager.Display("Noe gikk galt. Kontakt administrator.", NotificationPreset.OffRedAlert)
     End Sub
     Private Sub LoginInvalid(ErrorOccurred As Boolean, ErrorMessage As String)
+        LG.StopSpin()
+        LoginForm.Show()
+        LoggInnKnapp.Show()
+        OpprettBrukerKnapp.Show()
         If ErrorOccurred Then
             NotifManager.Display("Noe gikk galt. Kontakt administrator.", NotificationPreset.OffRedAlert)
         Else
             NotifManager.Display("Brukernavnet eller passordet er feil.", NotificationPreset.OffRedAlert)
         End If
     End Sub
-
 End Class

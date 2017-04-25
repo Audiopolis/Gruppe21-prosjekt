@@ -477,7 +477,6 @@ Public NotInheritable Class CustomCalendar
         For i As Integer = iLast To 0 Step -1
             With AppliedStylesList(i)
                 If .StyleKey = StyleKey Then
-                    Day(.MyDate).LastStyleApplied = Nothing
                     AppliedStylesList.RemoveAt(i)
                 End If
             End With

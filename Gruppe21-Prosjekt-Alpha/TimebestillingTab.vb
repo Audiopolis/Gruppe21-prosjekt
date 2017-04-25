@@ -11,7 +11,7 @@ Public Class TimebestillingTab
     Private WithEvents TopBar As New TopBar(Me)
     Private Footer As New Footer(Me)
     Private WithEvents BestillTimeKnapp, GodtaDatoKnapp, AvbestillTimeKnapp As TopBarButton
-    Private WithEvents Calendar As CustomCalendar
+    Public WithEvents Calendar As CustomCalendar
     Private varSelectedDay As Date
     Private HeaderLab, TimeHeaderLab, TimeLab, AktuellTimeLab, AvbestillInfoLab As New Label
     Private TimeInfo, LoadingSurfaceBestill, LoadingSurfaceAvbestill, Bekreftelse As New PictureBox
@@ -188,9 +188,9 @@ Public Class TimebestillingTab
             .Location = New Point(20, TimeLab.Bottom + 20)
             .AddSpecialDayRules(Date.Now.AddDays(4), New Timetabell.DayStateSeries({0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}))
         End With
-        AvbestillTimeKnapp = New TopBarButton(TimeForm, My.Resources.AvbrytIcon, "Kanseller denne timen", New Size(136, 36))
-        BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36),, AvbestillTimeKnapp.Width)
-        GodtaDatoKnapp = New TopBarButton(TimeForm, My.Resources.OKIconHvit, "Ja, jeg kan møte", New Size(136, 36),, AvbestillTimeKnapp.Width)
+        AvbestillTimeKnapp = New TopBarButton(TimeForm, My.Resources.AvbrytIcon, "Kanseller denne timen", New Size(136, 36),, 166)
+        BestillTimeKnapp = New TopBarButton(RightForm, My.Resources.OKIconHvit, "Send timeforespørsel", New Size(136, 36),, 166)
+        GodtaDatoKnapp = New TopBarButton(TimeForm, My.Resources.OKIconHvit, "Ja, jeg kan møte", New Size(136, 36),, 166)
         With BestillTimeKnapp
             .BackColor = Color.LimeGreen
             .ForeColor = Color.White
@@ -453,7 +453,7 @@ Public Class TimebestillingTab
         End With
     End Sub
     'Private Sub SelectDay
-    Private Sub SelectDay(sender As CustomCalendar.CalendarDay)
+    Public Sub SelectDay(sender As CustomCalendar.CalendarDay)
         Dim PreviouslySelected As CustomCalendar.CalendarDay = Calendar.Day(varSelectedDay)
         If PreviouslySelected IsNot Nothing Then
             PreviouslySelected.SetColors(PreviouslySelected.LastStyleApplied)
@@ -491,7 +491,7 @@ Public Class TimebestillingTab
                         End If
                     Else
                         TimeHeaderLab.Text = "Du har bedt om time på den valgte datoen."
-                        AvbestillTimeKnapp.Text = "Kanseller timeforespørsel"
+                        AvbestillTimeKnapp.Text = "Slett timeforespørsel"
                         GodtaDatoKnapp.Hide()
                     End If
                 End With

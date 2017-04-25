@@ -80,10 +80,10 @@ Public Class BlodBeholder
         With e.Graphics
             .TextRenderingHint = TextRenderingHint.AntiAlias
             ' TODO: Make more efficient
-            .DrawString(LargeText, LargeFont, EmptyBrush, New Point(Width \ 2 - LargeTextSize.Width \ 2, Height \ 2 - LargeTextSize.Height \ 2 - 60))
-            .DrawString(SmallText(0), SmallFont, EmptyBrush, New Point(Width \ 2 - TextSizes(0).Width \ 2, Height \ 2 - TextSizes(0).Height \ 2 + 50))
-            .DrawString(SmallText(1), SmallFont, EmptyBrush, New Point(Width \ 2 - TextSizes(1).Width \ 2, Height \ 2 - TextSizes(1).Height \ 2 + 70))
-            .DrawString(SmallText(2), SmallFont, EmptyBrush, New Point(Width \ 2 - TextSizes(2).Width \ 2, Height \ 2 - TextSizes(2).Height \ 2 + 90))
+            .DrawString(LargeText, LargeFont, EmptyBrush, New Point((Width - LargeTextSize.Width) \ 2, (Height - LargeTextSize.Height) \ 2 - 60))
+            .DrawString(SmallText(0), SmallFont, EmptyBrush, New Point((Width - TextSizes(0).Width) \ 2, (Height - TextSizes(0).Height) \ 2 + 50))
+            .DrawString(SmallText(1), SmallFont, EmptyBrush, New Point((Width - TextSizes(1).Width) \ 2, (Height - TextSizes(1).Height) \ 2 + 70))
+            .DrawString(SmallText(2), SmallFont, EmptyBrush, New Point((Width - TextSizes(2).Width) \ 2, (Height - TextSizes(2).Height) \ 2 + 90))
         End With
     End Sub
     Protected Overrides Sub OnPaintBackground(pevent As PaintEventArgs)
@@ -91,14 +91,14 @@ Public Class BlodBeholder
         With pevent.Graphics
             .TextRenderingHint = TextRenderingHint.AntiAlias
             ' TODO: Make more efficient
-            .DrawString(LargeText, LargeFont, FullBrush, New Point(Width \ 2 - LargeTextSize.Width \ 2, Height \ 2 - LargeTextSize.Height \ 2 - 60))
-            .DrawString(SmallText(0), SmallFont, FullBrush, New Point(Width \ 2 - TextSizes(0).Width \ 2, Height \ 2 - TextSizes(0).Height \ 2 + 50))
-            .DrawString(SmallText(1), SmallFont, FullBrush, New Point(Width \ 2 - TextSizes(1).Width \ 2, Height \ 2 - TextSizes(1).Height \ 2 + 70))
-            .DrawString(SmallText(2), SmallFont, FullBrush, New Point(Width \ 2 - TextSizes(2).Width \ 2, Height \ 2 - TextSizes(2).Height \ 2 + 90))
+            .DrawString(LargeText, LargeFont, FullBrush, New Point((Width - LargeTextSize.Width) \ 2, (Height - LargeTextSize.Height) \ 2 - 60))
+            .DrawString(SmallText(0), SmallFont, FullBrush, New Point((Width - TextSizes(0).Width) \ 2, (Height - TextSizes(0).Height) \ 2 + 50))
+            .DrawString(SmallText(1), SmallFont, FullBrush, New Point((Width - TextSizes(1).Width) \ 2, (Height - TextSizes(1).Height) \ 2 + 70))
+            .DrawString(SmallText(2), SmallFont, FullBrush, New Point((Width - TextSizes(2).Width) \ 2, (Height - TextSizes(2).Height) \ 2 + 90))
         End With
     End Sub
     Private Sub SlideTimer_Tick(Sender As Object, e As EventArgs) Handles SlideTimer.Elapsed
-        SC.Send(AddressOf Send_Tick, Nothing)
+        SC.Post(AddressOf Send_Tick, Nothing)
     End Sub
     Protected Overrides Sub OnLocationChanged(e As EventArgs)
         SuspendLayout()

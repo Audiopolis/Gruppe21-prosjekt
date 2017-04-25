@@ -23,10 +23,8 @@ Public Class OpprettAnsattTab
         SuspendLayout()
         BackColor = Color.FromArgb(240, 240, 240)
         With FormPanel
-            .Hide()
             .Parent = Me
-            .Width = 408
-            .Height = 480
+            .Size = New Size(408, 480)
             .BackColor = Color.FromArgb(225, 225, 225)
         End With
         With FirstHeader
@@ -208,13 +206,16 @@ Public Class OpprettAnsattTab
                 Personalia.Hide()
                 PasswordForm.Show()
                 PasswordFormVisible = True
+                SendKnapp.Text = "Registrer"
             Else
                 NotifManager.Display("Skjemaet er ufullstendig eller uriktig utfylt.", NotificationPreset.OffRedAlert)
             End If
         Else
             If PasswordForm.Validate Then
                 SuspendLayout()
-                SendKnapp.Enabled = False
+                SendKnapp.Hide()
+                PasswordForm.Hide()
+                AvbrytKnapp.Hide()
                 If TSL IsNot Nothing Then
                     TSL.Dispose()
                 End If
@@ -223,9 +224,6 @@ Public Class OpprettAnsattTab
                     .WhenFinished = AddressOf CredManager_Finished
                     .Start(New String() {Application.StartupPath & "/cred/", "auth.txt", DirectCast(PasswordForm.Last.Value, String)})
                 End With
-                PasswordForm.Hide()
-                SendKnapp.Hide()
-                AvbrytKnapp.Hide()
                 ResumeLayout(True)
                 LG.Spin(30, 10)
             Else
@@ -298,7 +296,6 @@ Public Class OpprettAnsattTab
                 .Execute({"@fodselsnr", "@fornavn", "@etternavn", "@adresse", "@postnr", "@telefon1", "@telefon2", "@epost", "@brukernavn", "@passord"}, DataArr)
             End With
         Else
-            SendKnapp.Enabled = True
             PasswordForm.Show()
             SendKnapp.Show()
             AvbrytKnapp.Show()
@@ -307,13 +304,10 @@ Public Class OpprettAnsattTab
         End If
     End Sub
     Private Sub AvbrytKnapp_Klikk(Sender As Object, e As EventArgs) Handles AvbrytKnapp.Click
-        ResetForm()
-        LG.StopSpin()
-        DBC.SQLQuery = ""
         Parent.Index = 5
+        ResetTab()
     End Sub
     Private Sub ResetForm()
-        FormPanel.Hide()
         With PasswordForm
             .ClearAll()
             .Hide()
@@ -323,8 +317,7 @@ Public Class OpprettAnsattTab
             .Show()
         End With
         With SendKnapp
-            .Label.Font = New Font(.Font, FontStyle.Regular)
-            .Text = "Videre"
+            .Text = "Neste"
         End With
         PasswordFormVisible = False
         DBC.SQLQuery = ""
@@ -369,18 +362,22 @@ Public Class OpprettAnsattTab
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
         LG.StopSpin()
         If e.ErrorOccurred Then
-            SendKnapp.Enabled = True
             PasswordForm.Show()
             SendKnapp.Show()
             AvbrytKnapp.Show()
             NotifManager.Display("Det oppsto en uventet feil.", NotificationPreset.OffRedAlert)
         Else
-            NotifManager.Display("Den nye brukeren er klar.", NotificationPreset.GreenSuccess)
+            Dim NewNotif As New Notification(FirstHeader, NotificationPreset.GreenSuccess, "Den nye brukeren er klar.", 2, AddressOf NotificationClosed)
+            NewNotif.Display()
         End If
+    End Sub
+    Private Sub NotificationClosed(Sender As Notification)
+        Sender.Dispose()
+        Parent.Index = 5
+        ResetTab()
     End Sub
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
         LG.StopSpin()
-        SendKnapp.Enabled = True
         PasswordForm.Show()
         SendKnapp.Show()
         AvbrytKnapp.Show()
