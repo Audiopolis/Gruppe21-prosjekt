@@ -618,7 +618,7 @@ Public Class FlatForm
 #Region "FlatForm"
     Inherits Control
     Private varFieldSpacing As Integer
-    Private RadioContextList As List(Of RadioButtonContext)
+    Private RadioContextList As New List(Of RadioButtonContext)
     Private RowList As List(Of FormRow)
     Private varRowHeight As Integer = 57
     Private varNewFieldStyle As New FormFieldStyle()
@@ -759,7 +759,6 @@ Public Class FlatForm
             varNewFieldStyle = NewFieldStyle
         End If
         RowList = New List(Of FormRow)
-        RadioContextList = New List(Of RadioButtonContext)
         varFieldSpacing = FieldSpacing
         With Me
             .SuspendLayout()
@@ -966,19 +965,28 @@ Public Class FlatForm
         End With
     End Sub
     Protected Overrides Sub Dispose(disposing As Boolean)
-        With RadioContextList
-            Dim nLast As Integer = .Count - 1
-            For n As Integer = 0 To nLast
-                .Item(n).Dispose()
-            Next
-        End With
-        RadioContextList = Nothing
-        With RowList
-            Dim iLast As Integer = .Count - 1
-            For i As Integer = 0 To iLast
-                .Item(i).Dispose()
-            Next
-        End With
+        If disposing Then
+            Try
+                If RadioContextList IsNot Nothing Then
+                    With RadioContextList
+                        Dim nLast As Integer = .Count - 1
+                        For n As Integer = 0 To nLast
+                            .Item(n).Dispose()
+                        Next
+                    End With
+                End If
+                RadioContextList = Nothing
+                If RowList IsNot Nothing Then
+                    With RowList
+                        Dim iLast As Integer = .Count - 1
+                        For i As Integer = 0 To iLast
+                            .Item(i).Dispose()
+                        Next
+                    End With
+                End If
+            Catch
+            End Try
+        End If
         MyBase.Dispose(disposing)
     End Sub
 #End Region

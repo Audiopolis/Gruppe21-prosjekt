@@ -1,6 +1,9 @@
 ﻿Imports System.Text
 Imports AudiopoLib
 
+''' <summary>
+''' Inherits panel and sets UserPaint, OptimizedDoubleBuffer and AllPaintingInWmPaint to True.
+''' </summary>
 Public Class DoubleBufferedPanel
     Inherits Panel
     Public Sub New()
@@ -12,6 +15,9 @@ Public Class DoubleBufferedPanel
     End Sub
 End Class
 
+''' <summary>
+''' A picture shown in the questionnaire tab. Inherits Control.
+''' </summary>
 Public Class EgenerklæringTekst
     Inherits Control
     Public Sub New()
@@ -21,6 +27,9 @@ Public Class EgenerklæringTekst
     End Sub
 End Class
 
+''' <summary>
+''' The questionnaire tab.
+''' </summary>
 Public Class EgenerklæringTab
     Inherits Tab
     Private Questionnaire As New Questionnaire(, 120, -15)
@@ -36,7 +45,12 @@ Public Class EgenerklæringTab
     Private NotifManager As NotificationManager
     Private Forms() As FlatForm = {New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite), New FlatForm(500, 500, 3, FormFieldStylePresets.PlainWhite)}
     Private varSelectedTime As UserNotification
-
+    ''' <summary>
+    ''' Accepts the UserNotification that notifies the user that a form needs to be submitted, sets it as the linked notification and shows the tab.
+    ''' This method should be called by the ClickAction of the UserNotification.
+    ''' </summary>
+    ''' <param name="Sender">The notification from the list in the dashboard tab that notifies the user that a form needs to be sent.</param>
+    ''' <param name="e">The UserNotificationEventArgs that was passed to the ClickAction method of the notification.</param>
     Public Sub SelectTime(Sender As UserNotification, e As UserNotificationEventArgs)
         If varSelectedTime IsNot Nothing Then
             With varSelectedTime
@@ -45,9 +59,6 @@ Public Class EgenerklæringTab
         End If
         varSelectedTime = Sender
         Windows.Index = 3
-        With DirectCast(varSelectedTime.RelatedElement, StaffTimeliste.StaffTime)
-            MsgBox(.Fødselsnummer & ": " & .DatoOgTid.ToShortDateString)
-        End With
     End Sub
     Public Sub New(ParentWindow As MultiTabWindow)
         MyBase.New(ParentWindow)
@@ -1141,6 +1152,9 @@ Public Class EgenerklæringTab
             .Add(Forms(3))
             .Add(Forms(4))
             .Add(Forms(5))
+            .Add(Forms(6))
+            .Add(Forms(8))
+            .Add(Forms(9))
             Dim FinishedButton As New TopBarButton(Me, My.Resources.OKIconHvit, "Send inn", New Size(135, 36), False, 100)
             FinishedButton.BackColor = Color.LimeGreen
             FinishedButton.ForeColor = Color.White
@@ -1184,13 +1198,12 @@ Public Class EgenerklæringTab
     End Sub
     Public Sub InitiateForm()
         With Questionnaire
+            .Forms.RemoveAt(6)
             If CurrentLogin.IsMale Then
-                .Add(Forms(6))
+                .Forms.Insert(6, Forms(6))
             Else
-                .Add(Forms(7))
+                .Forms.Insert(6, Forms(7))
             End If
-            .Add(Forms(8))
-            .Add(Forms(9))
             .Display(0)
         End With
     End Sub

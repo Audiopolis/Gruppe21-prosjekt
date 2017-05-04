@@ -8,30 +8,26 @@ Imports AudiopoLib
 Public Class Main
     Private IsLoaded As Boolean = False
     Public Sub New()
+        ' Make sure the form is loaded once it's created (while the splash screen is showing) in order to prevent a delay when it's shown for the first time.
+        ' Required:
         InitializeComponent()
+        ' Raise the Load event:
         MyBase.OnLoad(New EventArgs)
     End Sub
-    Protected Overrides Sub OnKeyDown(e As KeyEventArgs)
-        MyBase.OnKeyDown(e)
-        If e.KeyCode = Keys.Escape Then
-            Windows.Index = 1
-        End If
-    End Sub
     Private Sub Main_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        ' Checks to see if the form is already initialized. If the form has simply been shown, there should be no initialization performed.
         If Not IsLoaded Then
             Hide()
             KeyPreview = True
+
+            ' Creates a new MultiTabWindow instance (AudiopoLib) and assigns it to the Globals.Windows reference.
             Windows = New MultiTabWindow(Me)
 
-            ' ALPHA
-            'FirstTabTest = New FirstTab(Windows) ' Index = 0
-            'SecondTabTest = New SecondTab(Windows) ' Index = 1
-            'ThirdTabTest = New ThirdTab(Windows) ' Index = 2
-
-            ' MÅ GJØRES FERDIG
+            ' Initialize each tab/view in the project and specify the parent MultiTabWindow as the only argument.
+            ' When switching tabs, the corresponding index must be supplied, so double-check that the number is correct.
+            ' If tabs are added or removed out of order, all usage of the Index property must be updated. Such usage can
+            ' be found in two ways: Parent.Index = X (in classes derived from Tab), or Windows.Index = X (elsewhere). 
             PersonaliaTest = New Personopplysninger(Windows) ' Index = 0
-
-            ' BETA
             LoggInnTab = New LoggInnNy(Windows) ' Index = 1
             Dashboard = New DashboardTab(Windows) ' Index = 2
             Egenerklæring = New EgenerklæringTab(Windows) ' Index = 3
@@ -42,32 +38,34 @@ Public Class Main
             RedigerProfil = New RedigerProfilTab(Windows) ' Index = 8
             With Windows
                 .BackColor = Color.FromArgb(240, 240, 240)
+                ' Switches to the tab at index 1 (LoggInnTab; see above).
                 .Index = 1
             End With
+            ' The form is now initialized and loaded. Do not initialize again.
             IsLoaded = True
-
-
-            '
-            ' TODO: Remove:
-            'ControlBox = False
-            'MaximizeBox = False
-            'FormBorderStyle = FormBorderStyle.None
-            'ShowInTaskbar = False
-            'SizeGripStyle = SizeGripStyle.Hide
-            'TopMost = False
-            'WindowState = FormWindowState.Maximized
         End If
     End Sub
-
-    Private Sub Main_Closing(sender As Object, e As CancelEventArgs) Handles Me.Closing
-        'TODO: Dispose
+    Protected Overrides Sub OnFormClosing(e As FormClosingEventArgs)
+        ' If closing the form would cause a memory leak, database corruption or other errors, set e.Cancel = True.
+        ' We'll leave it as is for now.
+        MyBase.OnFormClosing(e)
+    End Sub
+    Private Sub Me_Closing(Sender As Object, e As FormClosedEventArgs) Handles Me.FormClosed
+        ' If memory usage gets bad, explicitly and carefully dispose of resources before ending.
         End
     End Sub
 End Class
 
+''' <summary>
+''' Inherits Tab. The sign-up tab for new donors.
+''' </summary>
 Public Class Personopplysninger
     Inherits Tab
+    ' The FlatForm (AudiopoLib) for filling out personal information.
+    ' We specify a width of 400, a height of 300 (the FlatForm automatically sets its height based on its contents), a field-spacing of 3 pixels,
+    ' and the FormFieldStylePresets.PlainWhite (AudiopoLib) preset. Custom FormFieldStyles (AudiopoLib) can be created.
     Private Personalia As New FlatForm(400, 300, 3, FormFieldStylePresets.PlainWhite)
+    ' A separate FlatForm with small alterations to the style (thus a custom style) for the password part of the sign-up view.
     Private PasswordForm As New FlatForm(270, 100, 3, New FormFieldStyle(Color.FromArgb(245, 245, 245), Color.FromArgb(70, 70, 70), Color.White, Color.FromArgb(80, 80, 80), Color.White, Color.Black, {True, True, True, True}, 20))
     Private WithEvents TopBar As New TopBar(Me)
     Private FormPanel As New BorderControl(Color.FromArgb(210, 210, 210))
@@ -80,31 +78,64 @@ Public Class Personopplysninger
     Private PasswordFormVisible As Boolean
     Private LayoutTool As New FormLayoutTools(Me)
     Private Footer As New Footer(Me)
+    ' The DatabaseClient (AudiopoLib) that will take care of inserting the table entries
     Private WithEvents DBC As New DatabaseClient(Credentials.Server, Credentials.Database, Credentials.UserID, Credentials.Password)
     Private FirstHeader As New FullWidthControl(FormPanel)
+    ' To store the information entered into the forms by the user
     Private FormResult(), PasswordResult() As String
+    ' A NotificationManager (AudiopoLib) to display messages to the user.
     Private NotifManager As New NotificationManager(FirstHeader)
+    ' Will be set to false if the user declines to create an account:
     Private CreateLogin As Boolean = True
-
+    ''' <summary>
+    ''' Raised when the TopBar has one of its buttons clicked.
+    ''' </summary>
+    ''' <param name="Sender">The TopBarButton that was clicked.</param>
     Private Sub TopBarButtonClick(Sender As TopBarButton, e As EventArgs) Handles TopBar.ButtonClick
+        ' There is only one possible course of action. Whether there are two buttons (logout + "back") or just one (logout),
+        ' the result is the same, so we do not need to check if Sender.IsLogout = True.
         Logout()
     End Sub
+    ''' <summary>
+    ''' Handles the Click event of the submit button.
+    ''' </summary>
     Private Sub SendClick() Handles SendKnapp.Click
+        ' If the password form is not visible, it means the personal information form has been filled out, and the "next" button
+        ' (the same button as the submit button, but with different text and design) has been clicked, so we can go ahead and get
+        ' the result of the forms and attempt to submit the information to the database.
         If Not PasswordFormVisible Then
+            ' FlatForm.Validate (AudiopoLib) returns True if the requirements (IsNumeric, MaxLength, etc.) specified when the fields
+            ' were created are met, or draws a red border around fields with illegal values and returns False otherwise.
             If Personalia.Validate Then
+                ' Get the values of all input-type fields in the form of an array of HeaderValuePairs (AudiopoLib) containing the
+                ' value of the header, the primary value (True or False for checkboxes, for example), and the secondary value
+                ' (the text component of checkboxes, for example) if applicable.
                 Dim Result() As HeaderValuePair = Personalia.Result
+                ' Create a String array for storing the information to be passed to the parameterized query.
                 Dim DataArr(11) As String
+                ' The first five fields are text fields, so we can store these fields in the array without any special treatment,
+                ' as the fields have already been validated. We do need to cast all of the values to their original data type, however,
+                ' as all AudiopoLib classes are strongly typed. For text fields, we cast to String. DirectCast(obj, type) is faster
+                ' than obj.ToString, and should be used when we are sure that the value is in fact a String type value.
                 For i As Integer = 0 To 4
-                    DataArr(i) = Result(i).Value.ToString
+                    DataArr(i) = DirectCast(Result(i).Value, String)
                 Next
+                ' The 5th and 6th input fields are radio button type fields with Boolean values. In our database, Boolean values are
+                ' either 0 or 1 (TinyInt(1) values), so we will not insert the String representation of the value directly ("True" or "False").
+                ' 1 represents male and 0 represents female, meaning the leftmost radio button's value is True if male.
+                'Also note that attempting to skip the conditional check by converting the Boolean value to an Integer and then converting to
+                ' String might result in True being represented by -1 or similar (depending on the conversion method), so this is the safest approach.
                 If DirectCast(Result(5).Value, Boolean) Then
                     DataArr(5) = "1"
                 Else
                     DataArr(5) = "0"
                 End If
+                ' We do not check the value of the 6th input field, as its value is implied by the result of the previous field.
+                ' The next 4 fields are text fields, so we can insert them directly.
                 For i As Integer = 7 To 10
-                    DataArr(i - 1) = Result(i).Value.ToString
+                    DataArr(i - 1) = DirectCast(Result(i).Value, String)
                 Next
+                ' We cast the values of the checkboxes to their original Boolean type and insert "1" for checked and "0" otherwise.
                 If DirectCast(Result(11).Value, Boolean) Then
                     DataArr(10) = "1"
                 Else
@@ -115,7 +146,9 @@ Public Class Personopplysninger
                 Else
                     DataArr(11) = "0"
                 End If
+                ' Because this information will be used briefly outside this block, we assign the array to the FormResult field in the declarations.
                 FormResult = DataArr
+                ' Hide the visual elements specific to the first part (personal information) of the sign-up view.
                 Personalia.Hide()
                 PicDoktor.Hide()
                 FormInfo.Hide()
@@ -123,8 +156,14 @@ Public Class Personopplysninger
                 NeiTakkKnapp.Hide()
                 With AvbrytKnapp
                     .Hide()
+                    ' Move the cancel button to make room for the "no thanks" button.
                     .Left = FormInfo.Left
                 End With
+                ' Where needed, apply changes to the elements while they're hidden. Another approach is to create controls with the appropriate
+                ' styles and properties, and show/hide those controls instead of changing existing ones. This should be especially considered
+                ' for controls whose fonts are changed, as font objects are apparently not immediately disposed of. This would involve separate
+                ' handling of the Click event. For now, the font style is set to bold, and the UseCompatibleTextRendering is set to True, as
+                ' the text looks irregularly compressed when drawn without it. The icon and location are also changed.
                 With SendKnapp
                     .IconImage = My.Resources.OKIcon
                     With .Label
@@ -137,29 +176,48 @@ Public Class Personopplysninger
                         .Text = .Text
                     End With
                 End With
+                ' Because the personal ID number is used as the account's username, get the first value of the previously created String array
+                ' (the personal ID number/Norwegian social security number was requested in the first field of the personal information form)
+                ' and assign it to the first field of the account creation form, which is a label and cannot be changed by the user.
+                PasswordForm.Field(0, 0).Value = FormResult(0)
+                ' Show the "decline" button to allow the user to register as a donor without without creating a user account. Show it.
                 With NeiTakkKnapp
                     .Top = SendKnapp.Top
                     .Left = SendKnapp.Left - .Width - 10
                     .Show()
                 End With
+                ' Show the altered elements, as well as elements specific to the user account creation view.
                 AvbrytKnapp.Show()
                 SendKnapp.Show()
                 PicOpprettKontoInfo.Show()
                 PicDoktorPassord.Show()
-                PasswordForm.Field(0, 0).Value = FormResult(0)
+                ' Show the account creation form and set the PasswordFormVisible field to True, so that clicking the submit button will result in the query being executed.
                 PasswordForm.Show()
                 PasswordFormVisible = True
             Else
+                ' If an error occurred, it means the validation returned False, and the offending fields should now be displaying a red border.
                 NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fylt inn riktig.", NotificationPreset.OffRedAlert)
             End If
+            ' If the account creation form is visible, it means the personal information form was validated, and the user is attempting to
+            ' create the account. If the passwords are equal and within the allowed length, PasswordForm.Validate returns true.
+            ' Known issue: The password fields do not display red borders if the minimum length requirement is not met, but the fields are equal.
         ElseIf PasswordForm.Validate Then
+            ' If the passwords are equal and within the allowed length range, the personal information is sent to the database. The account is not created yet.
             DBC.Execute({"@fodselsnr", "@b_fornavn", "@b_etternavn", "@b_adresse", "@b_postnr", "@b_kjonn", "@b_telefon1", "@b_telefon2", "@b_telefon3", "@b_epost", "@send_epost", "@send_sms"}, FormResult)
         End If
     End Sub
+    ''' <summary>
+    ''' Handles the ListLoaded event of the DatabaseClient that inserts personal information.
+    ''' </summary>
+    ''' <param name="Sender">The DatabaseClient that finished </param>
+    ''' <param name="e">Contains error information and an empty DataTable, as nothing has been selected.</param>
     Private Sub DBC_Finished(Sender As Object, e As DatabaseListEventArgs) Handles DBC.ListLoaded
+        ' If an error occured, display a suitable message. This should not happen, and implies improper form validation.
         If e.ErrorOccurred Then
             NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fylt inn riktig.", NotificationPreset.OffRedAlert)
         Else
+            ' If the user chose to create an account, get the personal ID number and the chosen password from the second form and insert them into the
+            ' user account table.
             If CreateLogin = True Then
                 CreateLogin = False
                 Dim Result() As HeaderValuePair = PasswordForm.Result
@@ -167,6 +225,7 @@ Public Class Personopplysninger
                 DBC.SQLQuery = "INSERT INTO Brukerkonto (b_fodselsnr, passord) VALUES (@fodselsnr, @passord);"
                 DBC.Execute({"@fodselsnr", "@passord"}, {PasswordResult(0), PasswordResult(1)})
             Else
+                ' Otherwise:
                 PasswordForm.Hide()
                 PicDoktorPassord.Hide()
                 SendKnapp.Hide()
@@ -180,10 +239,14 @@ Public Class Personopplysninger
             End If
         End If
     End Sub
+    ''' <summary>
+    ''' Handles the ExecutionFailed event of the DatabaseClient (AudiopoLib) that inserts information. Implies a failed connection.
+    ''' </summary>
     Private Sub DBC_Failed() Handles DBC.ExecutionFailed
-        NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at skjemaet er fylt ut riktig.", NotificationPreset.OffRedAlert)
+        NotifManager.Display("Noe gikk galt. Vennligst forsikre deg om at du er koblet til internett.", NotificationPreset.OffRedAlert)
     End Sub
     Public Shadows Sub Show()
+        ' An attempt at reducing flicker when showing the tab.
         FormPanel.Hide()
         MyBase.Show()
     End Sub
@@ -192,30 +255,33 @@ Public Class Personopplysninger
             FormPanel.Show()
         End If
     End Sub
-    Public Sub New(Window As MultiTabWindow)
-        MyBase.New(Window)
-        DoubleBuffered = True
+    ' Classes derived from Tab require a constructor that accepts a MultiTabWindow instance.
+    Public Sub New(ParentWindow As MultiTabWindow)
+        ' A call to MyBase.New(ParentWindow As MultiTabWindow) is required for classes derived from Tab.
+        MyBase.New(ParentWindow)
+        ' Suspend layout events while building the tab's contents.
         SuspendLayout()
         BackColor = Color.FromArgb(240, 240, 240)
+        ' A BorderControl (AudiopoLib) that will contain forms and graphics related to account creation.
         With FormPanel
             .Hide()
             .Parent = Me
-            .Top = TopBar.Bottom + 20
-            .Left = 30
-            .Width = 817
-            .Height = 480
+            ' The height and location of the TopBar is automatically set in its constructor
+            .Location = New Point(30, TopBar.Bottom + 20)
+            .Size = New Size(817, 480)
             .BackColor = Color.FromArgb(225, 225, 225)
         End With
         With FirstHeader
-            .Width = 817
-            .Height = 40
+            .Size = New Size(817, 40)
             .Text = "Registrering"
             .BackColor = Color.FromArgb(183, 187, 191)
             .ForeColor = Color.White
         End With
 #Region "Form"
+        ' Build the first form (personal information questionnaire)
         With Personalia
             .NewRowHeight = 50
+            ' We specify a width of 180. If no width is specified, the field fills the remaining available width, and a new row is created.
             .AddField(FormElementType.TextField, 180)
             With .Last
                 .Header.Text = "Fødselsnummer* (11 siffer)"
@@ -224,6 +290,8 @@ Public Class Personopplysninger
                 .MinLength = 11
                 .MaxLength = 11
             End With
+            ' Cast the FormField to the FormTextField class so we can access its TextBox and add an event handler for its TextChanged event,
+            ' in which we will dynamically predict the sex of the user and automatically check the corresponding radio button.
             With DirectCast(.Last, FlatForm.FormTextField).TextField
                 AddHandler .TextChanged, AddressOf CheckGender
             End With
@@ -233,6 +301,7 @@ Public Class Personopplysninger
                 .Required = True
                 .MaxLength = 30
             End With
+            ' This field will fill the remaining width, and the next field that's added will appear in a new row.
             .AddField(FormElementType.TextField)
             With .Last
                 .Header.Text = "Etternavn*"
@@ -255,6 +324,7 @@ Public Class Personopplysninger
             End With
             .NewRowHeight = 50
             .AddField(FormElementType.Radio, 200)
+            ' Check the "male" radio button to bypass the need to check if the RadioButtonContext (AudiopoLib) has a checked radio button.
             With .Last
                 .Value = True
                 .Header.Text = "Kjønn*"
@@ -301,10 +371,13 @@ Public Class Personopplysninger
             With .Last
                 .Value = True
                 .SecondaryValue = "Jeg ønsker å motta innkalling, påminnelser og informasjon via SMS"
+                ' Switch to dashed borders above
                 .DrawBorder(FormField.ElementSide.Top) = False
                 .DrawDashedSepararators(FormField.ElementSide.Top) = True
+                ' Switch the header off (hide it)
                 .SwitchHeader(False)
             End With
+            ' Merge the field with the above field, so that they are neatly separated by a dim, dashed line.
             .MergeWithAbove(6, 0, 0, True)
             .Parent = FormPanel
             .Display()
@@ -326,17 +399,22 @@ Public Class Personopplysninger
                 .Required = True
                 .MinLength = 8
                 .MaxLength = 50
+                ' Add handlers for the ValueChanged and ValidChanged events, so we can make sure that the red border is displayed for both
+                ' password fields if it is displayed for one (happens when the values are unequal or illegal).
                 AddHandler .ValueChanged, AddressOf PasswordChanged
                 AddHandler .ValidChanged, AddressOf PasswordValidChanged
                 FieldHeight = .Height - .Header.Bottom
             End With
+            ' Cast the last added field to the FormTextField type (AudiopoLib) so that we can access its Placeholder property.
             With DirectCast(.Last, FlatForm.FormTextField)
                 .PlaceHolder = "Minst 8 tegn"
                 .TextField.UseSystemPasswordChar = True
             End With
             .AddField(FormElementType.TextField)
             .MergeWithAbove(2, 0)
+            ' Add a "repeat password" field
             With .Last
+                ' Handle the ValidChanged event with the same method as used for the "choose a password" field.
                 AddHandler .ValidChanged, AddressOf PasswordValidChanged
                 .DrawBorder(FormField.ElementSide.Top) = False
                 .DrawDashedSepararators(FormField.ElementSide.Top) = True
@@ -345,6 +423,8 @@ Public Class Personopplysninger
                 .Required = True
                 .RequireSpecificValue("")
             End With
+            ' Cast the "repeat password" field to its original FormTextField type, so that we can access the Placeholder property,
+            ' as there is no header in which to communicate the field's purpose.
             With DirectCast(.Last, FlatForm.FormTextField)
                 .PlaceHolder = "Gjenta passordet"
                 .TextField.UseSystemPasswordChar = True
@@ -353,28 +433,18 @@ Public Class Personopplysninger
             .Display()
         End With
 #End Region
-        With TopBar
-            .AddButton(My.Resources.HjemIcon, "Hjem", New Size(135, 36))
-            'AddHandler .Click, AddressOf 
-        End With
-        With SendKnapp
-            .Top = Personalia.Bottom + 10
-            .Left = Personalia.Right - .Width
-        End With
-        With NeiTakkKnapp
-            .Hide()
-        End With
+        TopBar.AddButton(My.Resources.HjemIcon, "Hjem", New Size(135, 36))
+        SendKnapp.Location = New Point(Personalia.Right - SendKnapp.Width, Personalia.Bottom + 10)
+        NeiTakkKnapp.Hide()
         With AvbrytKnapp
-            .Top = SendKnapp.Top
-            .Left = SendKnapp.Left - .Width - 10
+            .Location = New Point(SendKnapp.Left - .Width - 10, SendKnapp.Top)
             AddHandler .Click, AddressOf AvbrytKnapp_Klikk
         End With
         With PicDoktor
             .BackgroundImage = My.Resources.Doktor2
             .Size = .BackgroundImage.Size
             .Parent = FormPanel
-            .Top = Personalia.Bottom - .Height
-            .Left = Personalia.Right + 20
+            .Location = New Point(Personalia.Right + 20, Personalia.Bottom - .Height)
         End With
         With PicDoktorPassord
             .BackgroundImage = My.Resources.DoktorPassord
@@ -383,47 +453,38 @@ Public Class Personopplysninger
             .Location = PicDoktor.Location
         End With
         With PasswordForm
-            .Left = PicDoktorPassord.Left \ 2 - .Width \ 2
-            .Top = PicDoktorPassord.Bottom - 210 \ 2 - .Height \ 2
+            .Location = New Point((PicDoktorPassord.Left - .Width) \ 2, (PicDoktorPassord.Bottom - 210 - .Height) \ 2)
         End With
         With FormInfo
             .Parent = FormPanel
-            .Top = Personalia.Bottom + 10
-            .Left = Personalia.Left
+            .Location = New Point(Personalia.Left, Personalia.Bottom + 10)
             .AutoSize = False
-            .Height = SendKnapp.Height
-            .Width = AvbrytKnapp.Left - .Left
+            .Size = New Size(SendKnapp.Height, AvbrytKnapp.Left - .Left)
             .TextAlign = ContentAlignment.MiddleLeft
             .ForeColor = Color.FromArgb(80, 80, 80)
             .Text = "* markerer obligatoriske felt"
         End With
         With InfoLab
             .Parent = FormPanel
-            .Top = PicDoktor.Bottom + 10
-            .Left = PicDoktor.Left
-            .Width = PicDoktor.Width
-            .Height = SendKnapp.Height
+            .Location = New Point(PicDoktor.Left, PicDoktor.Bottom + 10)
+            .Size = New Size(PicDoktor.Width, SendKnapp.Height)
             .Text = "Ved å registrere deg, samtykker du i at denne informasjonen blir lagret i våre systemer. Du kan når som helst slette disse opplysningene."
-            ' TODO: Fix
             .PanIn()
         End With
         With PicOpprettKontoInfo
             .Parent = FormPanel
-            .Top = TopBar.Bottom
-            .Left = 20
+            .Location = New Point(20, TopBar.Bottom)
             .BackgroundImage = My.Resources.OpprettKontoInfo
             .BackgroundImageLayout = ImageLayout.Center
-            .Height = .BackgroundImage.Height
-            .Width = .BackgroundImage.Width
+            .Size = .BackgroundImage.Size
             .Hide()
-            '.MakeDashed(Color.Red)
         End With
         With PicSuccess
             .Hide()
             .Parent = FormPanel
             .Size = New Size(64, 64)
             .BackColor = Color.LimeGreen
-            .Location = New Point(FormPanel.Width \ 2 - .Width \ 2, FormPanel.Height \ 2 - .Height \ 2)
+            .Location = New Point((FormPanel.Width - .Width) \ 2, (FormPanel.Height - .Height) \ 2)
         End With
         DBC.SQLQuery = "INSERT INTO Blodgiver (b_fodselsnr, b_fornavn, b_etternavn, b_telefon1, b_telefon2, b_telefon3, b_epost, b_adresse, b_postnr, b_kjonn, send_epost, send_sms) VALUES (@fodselsnr, @b_fornavn, @b_etternavn, @b_telefon1, @b_telefon2, @b_telefon3, @b_epost, @b_adresse, @b_postnr, @b_kjonn, @send_epost, @send_sms);"
         FormPanel.Show()
@@ -439,11 +500,12 @@ Public Class Personopplysninger
             End If
         End If
     End Sub
-    Private Sub PanInTest() Handles Me.DoubleClick
-        InfoLab.PanIn()
-    End Sub
     Private Sub PasswordChanged(Sender As FormField, Value As Object)
-        PasswordForm.Field(2, 0).RequireSpecificValue(PasswordForm.Field(1, 0).Value.ToString)
+        With PasswordForm.Field(1, 0)
+            If .Validate Then
+                PasswordForm.Field(2, 0).RequireSpecificValue(DirectCast(.Value, String))
+            End If
+        End With
     End Sub
     Private Sub PasswordValidChanged(Sender As FormField)
         With PasswordForm
@@ -513,9 +575,7 @@ Public Class Personopplysninger
         ' TODO: Remove LayoutTool
         If LayoutTool IsNot Nothing Then
             With FormPanel
-                .Top = TopBar.Bottom + 20
-                .Left = Width \ 2 - .Width \ 2
-                .Top = TopBar.Bottom + (Height - TopBar.Bottom - Footer.Height) \ 2 - .Height \ 2
+                .Location = New Point((Width - .Width) \ 2, (Height + TopBar.Bottom - Footer.Height - .Height) \ 2)
             End With
         End If
         ResumeLayout(True)
