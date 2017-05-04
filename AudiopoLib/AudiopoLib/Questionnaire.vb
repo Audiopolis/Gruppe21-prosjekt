@@ -204,16 +204,22 @@ Public NotInheritable Class Questionnaire
     End Class
 
     Private SC As SynchronizationContext = SynchronizationContext.Current
-    Private FormList As List(Of FlatForm)
+    Private FormList As New List(Of FlatForm)
     Private WithEvents FormNav As FormNavigation
     Private varFormIndex As Integer = -1
     Private PanTimer As Timers.Timer
     Private varNavOffset(1) As Integer
     Public Event FinishedClicked()
-    Public ReadOnly Property Form(ByVal Index As Integer) As FlatForm
+    Public Property Form(ByVal Index As Integer) As FlatForm
         Get
             Return FormList(Index)
         End Get
+        Set(value As FlatForm)
+            If FormList(Index) IsNot Nothing Then
+                FormList(Index).Dispose()
+            End If
+            FormList(Index) = value
+        End Set
     End Property
     'Public Function Result() As QuestionnaireResult
     '    Dim iLast As Integer = FormList.Count - 1
@@ -298,7 +304,6 @@ Public NotInheritable Class Questionnaire
         RefreshNav()
     End Sub
     Private Sub Initialize(ByVal NavHeight As Integer, ByVal NavBtnSpacing As Integer)
-        FormList = New List(Of FlatForm)
         Hide()
         PanTimer = New Timers.Timer(1000 / 60)
         AddHandler PanTimer.Elapsed, AddressOf PanTimerTick

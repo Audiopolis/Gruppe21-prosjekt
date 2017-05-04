@@ -196,13 +196,27 @@ Public NotInheritable Class MultiTabWindow
 #End Region
 End Class
 
+
+Public Class TabCancelEventArgs
+    Inherits EventArgs
+    Public Cancel As Boolean
+End Class
+
+''' <summary>
+''' A view or screen to be displayed in a MultiTabWindow, used for keeping several views within a single window.
+''' </summary>
 Public Class Tab
     Inherits Control
-    'Private Shared ZeroPoint As New Point(0, 0)
     Private varScaleToParent As Boolean = True
+    Private varRefreshLayoutOnShow As Boolean = True
     Protected Friend ListIndex As Integer = -1
-    Public Event LayoutRefreshed(Sender As Tab)
-   
+    Public Event LayoutRefreshed(Sender As Object, e As EventArgs)
+    Public Event TabClosing(Sender As Object, e As TabClosingEventArgs)
+    Public Event TabClosed(Sender As Object, e As EventArgs)
+    ''' <summary>
+    ''' Gets or sets a value indicating whether or not this Tab should handle its parent's Resize event and resize itself accordingly.
+    ''' Default = True.
+    ''' </summary>
     Public Property ScaleToWindow As Boolean
         Get
             Return varScaleToParent
@@ -211,23 +225,54 @@ Public Class Tab
             varScaleToParent = value
         End Set
     End Property
+    ''' <summary>
+    ''' Gets or sets a value specifying whether or not to automatically call the RefreshLayout method when the tab is shown (default = true).
+    ''' </summary>
+    Public Property RefreshLayoutOnShow As Boolean
+        Get
+            Return varRefreshLayoutOnShow
+        End Get
+        Set(value As Boolean)
+            varRefreshLayoutOnShow = value
+        End Set
+    End Property
+    ''' <summary>
+    ''' If the ScaleToWindow property is set to true, but no new Resize event is raised by the parent, sets this tab's size to the ClientSize of its parent MultiTabWindow.
+    ''' </summary>
     Public Overridable Sub RefreshLayout()
-        If varScaleToParent Then
-            If Parent IsNot Nothing Then
-                ClientSize = Parent.ClientSize
-            Else
-                MsgBox("No Parent")
-            End If
-        End If
-        RaiseEvent LayoutRefreshed(Me)
+        OnLayoutRefreshed(New TabCancelEventArgs)
     End Sub
+    ''' <summary>
+    ''' Raises the LayoutRefreshed event.
+    ''' </summary>
+    ''' <param name="e">Contains information about this event, if any.</param>
+    Protected Overridable Sub OnLayoutRefreshed(e As TabCancelEventArgs)
+        If Not e.Cancel Then
+            If varScaleToParent AndAlso Parent IsNot Nothing Then
+                ClientSize = Parent.ClientSize
+            End If
+            RaiseEvent LayoutRefreshed(Me, EventArgs.Empty)
+        End If
+    End Sub
+    ''' <summary>
+    ''' Shows this tab. This action should only be performed internally 
+    ''' </summary>
     Protected Friend Overridable Shadows Sub Show()
-        RefreshLayout()
+        If varRefreshLayoutOnShow Then
+            RefreshLayout()
+        End If
         MyBase.Show()
     End Sub
+    ''' <summary>
+    ''' If properly overridden in a class that inherits Tab, sets all variables and states to their initial values, erasing changes made to the Tab.
+    ''' </summary>
+    ''' <param name="Arguments">Optional parameter that may or may not be used by classes derived from Tab.</param>
     Public Overridable Sub ResetTab(Optional Arguments As Object = Nothing)
-
+        ' Override and call in Globals.Logout method.
     End Sub
+    ''' <summary>
+    ''' Gets or sets the MultiTabWindow instance that contains this Tab.
+    ''' </summary>
     Public Shadows Property Parent As MultiTabWindow
         Get
             Return DirectCast(MyBase.Parent, MultiTabWindow)
@@ -242,6 +287,10 @@ Public Class Tab
             End If
         End Set
     End Property
+    ''' <summary>
+    ''' Creates a new Tab instance and inserts it into the specified MultiTabWindow (at the last index). For complex (form-like) tabs, inherit this class instead.
+    ''' </summary>
+    ''' <param name="Parent">The MultiTabWindow instance to which this tab should be added.</param>
     Public Sub New(Parent As MultiTabWindow)
         Hide()
         DoubleBuffered = True
@@ -251,30 +300,52 @@ Public Class Tab
         UpdateStyles()
         Me.Parent = Parent
     End Sub
+    ''' <summary>
+    ''' Creates a new Tab instance. See the other overload. For complex (form-like) tabs, inherit this class instead.
+    ''' </summary>
+    Public Sub New()
+        Hide()
+        DoubleBuffered = True
+        SetStyle(ControlStyles.UserPaint, True)
+        SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+        SetStyle(ControlStyles.AllPaintingInWmPaint, True)
+        UpdateStyles()
+    End Sub
+    ''' <summary>
+    ''' Closes the Tab, which may or may not result in disposal, depending on the state of the TabClosingEventArgs after it has been passed to the overridable method OnClosing(e as TabClosingEventArgs), in which the Tab's closing may be canceled.
+    ''' </summary>
+    ''' <param name="Dispose">Specifies whether or not to automatically release the resources used by this Tab after closing.</param>
     Public Sub Close(Optional Dispose As Boolean = True)
+        Dim Args As New TabClosingEventArgs(False, Dispose)
         OnClosing(New TabClosingEventArgs)
     End Sub
+    ''' <summary>
+    ''' Raises the TabClosing event and calls the OnClosed method unless canceled.
+    ''' </summary>
+    ''' <param name="e">Contains information about how to proceed.</param>
     Protected Overridable Sub OnClosing(e As TabClosingEventArgs)
+        RaiseEvent TabClosing(Me, e)
         If Not e.Cancel Then
             OnClosed(e)
         End If
     End Sub
+    ''' <summary>
+    ''' Raises the TabClosed event and calls Dispose(True), depending on the Dispose property of the TabClosingEventArgs passed to it.
+    ''' </summary>
+    ''' <param name="e">Contains information about whether or not to proceed. e.Cancel is not checked at this point.</param>
     Protected Overridable Sub OnClosed(e As TabClosingEventArgs)
+        RaiseEvent TabClosed(Me, EventArgs.Empty)
         If e.Dispose Then
-            Dispose()
+            Dispose(True)
         End If
     End Sub
+    ''' <summary>
+    ''' Raises the ParentChanged event and sets this Tab's size to the ClientSize of its parent.
+    ''' </summary>
     Protected Overrides Sub OnParentChanged(e As EventArgs)
         MyBase.OnParentChanged(e)
         ClientSize = Parent.ClientSize
     End Sub
-    'Protected Class LayoutEventArgs
-    '    Inherits EventArgs
-    '    Public LayoutHelper As FormLayoutTools = Nothing
-    '    Public Sub New(ByRef FormLayoutTool As FormLayoutTools)
-    '        LayoutHelper = FormLayoutTool
-    '    End Sub
-    'End Class
     Protected Overrides Sub Dispose(disposing As Boolean)
         MyBase.Dispose(disposing)
     End Sub
